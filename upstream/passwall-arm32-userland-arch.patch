@@ -1,0 +1,17 @@
+diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
+index 6c8b016..33d1d49 100644
+--- a/luci-app-passwall/luasrc/passwall/api.lua
++++ b/luci-app-passwall/luasrc/passwall/api.lua
+@@ -1076,6 +1076,12 @@ local function auto_get_arch()
+ 		if DISTRIB_ARCH == "" then DISTRIB_ARCH = nil end
+ 	end
+ 
++	-- Kernel uname can be AArch64 while the installed userland is ARM32.
++	local user_arch = OPENWRT_ARCH or DISTRIB_ARCH or ""
++	if (arch == "aarch64" or arch == "armv8l") and user_arch:match("^arm_") then
++		arch = "armv7"
++	end
++
+ 	if arch:match("^i[%d]86$") then
+ 		arch = "x86"
+ 	elseif arch:match("armv5") then  -- armv5l

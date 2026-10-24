@@ -1,0 +1,921 @@
+diff --git a/package/libs/ncurses/Makefile b/package/libs/ncurses/Makefile
+index bd9c55369..646ff9b93 100644
+--- a/package/libs/ncurses/Makefile
++++ b/package/libs/ncurses/Makefile
+@@ -118,7 +118,7 @@ define Build/Install/Default
+ 	$(MAKE_VARS) \
+ 	$(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) \
+ 		$(MAKE_INSTALL_FLAGS) \
+-		$(1) install.libs install.data;
++		$(1) install.libs install.includes install.data;
+ endef
+ 
+ define Package/terminfo/install
+diff --git a/target/linux/airoha/an7563/base-files/etc/board.d/02_network b/target/linux/airoha/an7563/base-files/etc/board.d/02_network
+index 22e5daf26..31f7405b9 100644
+--- a/target/linux/airoha/an7563/base-files/etc/board.d/02_network
++++ b/target/linux/airoha/an7563/base-files/etc/board.d/02_network
+@@ -11,6 +11,9 @@ an7563_setup_interfaces()
+ 	local board="$1"
+ 
+ 	case "$board" in
++	tenda,be6l-pro)
++		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "eth1"
++		;;
+ 	xiaomi,be5000)
+ 		ucidef_set_interface_lan "lan1 lan2 lan3 eth1"
+ 		;;
+diff --git a/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh b/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
+index f2a2ed7f8..c1d105cf7 100644
+--- a/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
++++ b/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
+@@ -45,6 +45,10 @@ xiaomi_be5000_do_upgrade() {
+ 
+ platform_do_upgrade() {
+ 	case "$(board_name)" in
++	tenda,be6l-pro)
++		echo "BE6L Pro RAM-only bring-up: flash upgrades disabled." >&2
++		return 1
++		;;
+ 	xiaomi,be5000)
+ 		xiaomi_be5000_do_upgrade "$1"
+ 		;;
+diff --git a/target/linux/airoha/an7563/config-6.18 b/target/linux/airoha/an7563/config-6.18
+index f36b688b5..7d425a7fe 100644
+--- a/target/linux/airoha/an7563/config-6.18
++++ b/target/linux/airoha/an7563/config-6.18
+@@ -357,3 +357,5 @@ CONFIG_NET_DSA_MT7530=y
+ CONFIG_NET_DSA_MT7530_MMIO=y
+ CONFIG_NET_DSA_TAG_MTK=y
+ # CONFIG_NET_DSA_MT7530_MDIO is not set
++CONFIG_SUSPEND=y
++# CONFIG_FW_CACHE is not set
+diff --git a/target/linux/airoha/image/an7563.mk b/target/linux/airoha/image/an7563.mk
+index fee0cd5ce..fcdb16863 100644
+--- a/target/linux/airoha/image/an7563.mk
++++ b/target/linux/airoha/image/an7563.mk
+@@ -28,3 +28,17 @@ define Device/xiaomi_be5000
+   ARTIFACTS := u-boot.bin
+ endef
+ TARGET_DEVICES += xiaomi_be5000
++
++# First-stage hardware bring-up: this profile deliberately has no flash image.
++define Device/tenda_be6l-pro
++  DEVICE_VENDOR := Tenda
++  DEVICE_MODEL := BE6L Pro
++  DEVICE_DTS := an7563-tenda-be6l-pro
++  DEVICE_PACKAGES := an7552-npu-firmware airoha-en8811h-firmware \
++	kmod-phy-airoha-en8811h kmod-mt7996e kmod-mt7992-23-firmware \
++	wpad-mbedtls iw
++  KERNEL_LOADADDR := 0x80088000
++  IMAGES :=
++  ARTIFACTS :=
++endef
++TARGET_DEVICES += tenda_be6l-pro
+diff --git a/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch b/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch
+new file mode 100644
+index 000000000..5f226c4f2
+--- /dev/null
++++ b/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch
+@@ -0,0 +1,50 @@
++Subject: [PATCH] mt7996: quarantine retired native RX WCIDs until DMA reset
++
++Removing a station retires its generation-less native RX identity.
++The allocator previously reused that WCID immediately, causing the
++key gate to reject ordinary reassociation and request a full reset.
++Keep retired WCIDs allocated and skip any retired free slot. When
++the table fills, request the existing full reset before reuse.
++Replay, identity, DMA ownership and key-reinstall checks remain intact.
++
++---
++
++--- a/mt7996/main.c
+++++ b/mt7996/main.c
++@@ -1791,9 +1791,22 @@
++ 		idx = msta->reset_wcid[link_id] - 1;
++ 		msta->reset_wcid[link_id] = 0;
++ 	} else {
++-		idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7996_WTBL_STA);
++-		if (idx < 0)
++-			return -ENOSPC;
+++		/* Native RX descriptors carry no generation. Keep a retired WCID
+++		 * reserved until the existing full radio/RRO/DMA reset completes.
+++		 * Never give a new peer or key an old descriptor identity.
+++		 */
+++		do {
+++			idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7996_WTBL_STA);
+++			if (idx < 0) {
+++				if (dev->mt76.mmio.an7552 &&
+++				    !bitmap_empty(dev->npu_rx_retired, MT76_N_WCIDS)) {
+++					dev->recovery.restart = true;
+++					queue_work(dev->mt76.wq, &dev->reset_work);
+++				}
+++				return -ENOSPC;
+++			}
+++		} while (dev->mt76.mmio.an7552 &&
+++			 test_bit(idx, dev->npu_rx_retired));
++ 	}
++ 
++ 	if (mt7996_sta_deflink_busy(dev, msta)) {
++@@ -1906,7 +1919,9 @@
++ 
++ 		rcu_assign_pointer(msta->link[link_id], NULL);
++ 		rcu_assign_pointer(dev->mt76.wcid[msta_link->wcid.idx], NULL);
++-		mt76_wcid_mask_clear(dev->mt76.wcid_mask, msta_link->wcid.idx);
+++		if (!dev->mt76.mmio.an7552 ||
+++		    !test_bit(msta_link->wcid.idx, dev->npu_rx_retired))
+++			mt76_wcid_mask_clear(dev->mt76.wcid_mask, msta_link->wcid.idx);
++ 		if (msta_link != &msta->deflink)
++ 			kfree_rcu(msta_link, rcu_head);
++ 	}
+diff --git a/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts b/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts
+new file mode 100644
+index 000000000..51b66512d
+--- /dev/null
++++ b/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts
+@@ -0,0 +1,277 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/dts-v1/;
++
++/memreserve/ 0x80000000 0x88000;
++
++#include "an7563.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Tenda BE6L Pro";
++	compatible = "tenda,be6l-pro", "airoha,an7563", "airoha,en7581";
++
++	aliases {
++		serial0 = &uart1;
++		led-boot = &led_status_green;
++		led-failsafe = &led_status_red;
++		led-running = &led_status_green;
++		led-upgrade = &led_status_red;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++		bootargs = "console=ttyS0,115200n8 earlycon";
++	};
++
++	memory@80000000 {
++		device_type = "memory";
++		reg = <0x80000000 0x20000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		/* Matching workspace for the source-built AN7552 firmware ABI. */
++		npu_firmware: npu-firmware@84000000 {
++			reg = <0x84000000 0x400000>;
++			no-map;
++		};
++
++		npu_pkt: npu-pkt@84400000 {
++			reg = <0x84400000 0x1600000>;
++			no-map;
++		};
++	};
++
++	keys {
++		compatible = "gpio-keys";
++
++		reset {
++			label = "reset";
++			linux,code = <KEY_RESTART>;
++			gpios = <&an7563_pinctrl 5 GPIO_ACTIVE_LOW>;
++			debounce-interval = <10>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_status_green: led-0 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_GREEN>;
++			gpios = <&an7563_pinctrl 8 GPIO_ACTIVE_HIGH>;
++		};
++
++		led_status_red: led-1 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_RED>;
++			gpios = <&an7563_pinctrl 9 GPIO_ACTIVE_LOW>;
++		};
++	};
++};
++
++&an7563_pinctrl {
++	wifi-reset-hog {
++		gpio-hog;
++		gpios = <6 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "wifi-reset";
++	};
++
++	mdio_pins: mdio-pins {
++		mux {
++			function = "mdio";
++			groups = "mdio";
++		};
++	};
++
++	pcie0_rst_pins: pcie0-rst-pins {
++		conf {
++			pins = "pcie_reset0";
++			drive-open-drain;
++		};
++	};
++};
++
++&npu {
++	memory-region = <&npu_firmware>, <&npu_pkt>;
++	memory-region-names = "firmware", "pkt";
++	status = "okay";
++};
++
++&eth {
++	status = "okay";
++};
++
++&gdm1 {
++	status = "okay";
++	nvmem-cells = <&macaddr_factory_4 (-16)>;
++	nvmem-cell-names = "mac-address";
++};
++
++&gdm2 {
++	phy-handle = <&phy15>;
++	status = "okay";
++	nvmem-cells = <&macaddr_factory_4 (-15)>;
++	nvmem-cell-names = "mac-address";
++};
++
++&hsgmii_pcs {
++	status = "okay";
++};
++
++&switch {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio_pins>;
++};
++
++&gsw_port2 {
++	label = "lan2";
++	status = "okay";
++};
++
++&gsw_port3 {
++	label = "lan3";
++	status = "okay";
++};
++
++&gsw_port4 {
++	label = "lan4";
++	status = "okay";
++};
++
++&gsw_mdio {
++	phy15: ethernet-phy@f {
++		compatible = "ethernet-phy-id03a2.a411";
++		reg = <15>;
++		reset-gpios = <&an7563_pinctrl 13 GPIO_ACTIVE_LOW>;
++		reset-assert-us = <250000>;
++		reset-deassert-us = <20000>;
++	};
++};
++
++&pcie0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie0_rst_pins>;
++	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x4000000>;
++	status = "okay";
++
++	pcie@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		device_type = "pci";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		wifi@0,0 {
++			compatible = "pci14c3,7992";
++			reg = <0x0000 0 0 0 0>;
++			airoha,npu = <&npu>;
++			airoha,eth = <&eth>;
++			nvmem-cells = <&eeprom_factory_0>;
++			nvmem-cell-names = "eeprom";
++		};
++	};
++};
++
++&pcie1 {
++	ranges = <0x82000000 0 0x24000000 0x24000000 0 0x4000000>;
++	status = "okay";
++};
++
++&snfi {
++	status = "okay";
++};
++
++&spi_nand {
++	airoha,bmt;
++	/* Prevent BMT metadata creation and automatic repair during RAM tests. */
++	airoha,bmt-read-only;
++
++	partitions {
++		compatible = "fixed-partitions";
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		partition@0 {
++			label = "Bootloader";
++			reg = <0x0 0x80000>;
++			read-only;
++		};
++
++		partition@80000 {
++			label = "u-boot-env";
++			reg = <0x80000 0x80000>;
++			read-only;
++		};
++
++		partition@100000 {
++			label = "Factory";
++			reg = <0x100000 0x400000>;
++			read-only;
++
++			nvmem-layout {
++				compatible = "fixed-layout";
++				#address-cells = <1>;
++				#size-cells = <1>;
++
++				eeprom_factory_0: eeprom@0 {
++					reg = <0x0 0x1e00>;
++				};
++
++				macaddr_factory_4: macaddr@4 {
++					compatible = "mac-base";
++					reg = <0x4 0x6>;
++					#nvmem-cell-cells = <1>;
++				};
++			};
++		};
++
++		partition@500000 {
++			label = "KernelFS1";
++			reg = <0x500000 0x27c0000>;
++			read-only;
++		};
++
++		partition@2cc0000 {
++			label = "KernelFS2";
++			reg = <0x2cc0000 0x27c0000>;
++			read-only;
++		};
++
++		partition@5480000 {
++			label = "CFM";
++			reg = <0x5480000 0x800000>;
++			read-only;
++		};
++
++		partition@5c80000 {
++			label = "CFM_BACKUP";
++			reg = <0x5c80000 0x800000>;
++			read-only;
++		};
++
++		partition@6480000 {
++			label = "CFG";
++			reg = <0x6480000 0x400000>;
++			read-only;
++		};
++
++		partition@6880000 {
++			label = "MISC2";
++			reg = <0x6880000 0x400000>;
++			read-only;
++		};
++
++		partition@6c80000 {
++			label = "art";
++			reg = <0x6c80000 0x380000>;
++			read-only;
++		};
++	};
++};
+diff --git a/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch b/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch
+new file mode 100644
+index 000000000..aad848051
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch
+@@ -0,0 +1,51 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] mtd: honor flash read-only before BMT initialization
++
++RAM-only testing must also prohibit internal BMT metadata creation and repair.
++Keep reads and address translation available for factory calibration data.
++Fail probe if existing metadata cannot be loaded without a physical write.
++Retain Airoha's transaction locking wrappers around every translated operation.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/drivers/mtd/nand/mtk_bmt.c
+++++ b/drivers/mtd/nand/mtk_bmt.c
++@@ -367,6 +367,22 @@
++ 	return ret;
++ }
++ 
+++static int mtk_bmt_readonly_write(struct mtd_info *mtd, loff_t to,
+++				  struct mtd_oob_ops *ops)
+++{
+++	return -EROFS;
+++}
+++
+++static int mtk_bmt_readonly_erase(struct mtd_info *mtd, struct erase_info *instr)
+++{
+++	return -EROFS;
+++}
+++
+++static int mtk_bmt_readonly_markbad(struct mtd_info *mtd, loff_t ofs)
+++{
+++	return -EROFS;
+++}
+++
++ static void
++ mtk_bmt_replace_ops(struct mtd_info *mtd)
++ {
++@@ -375,6 +391,15 @@
++ 	bmtd._erase = mtd->_erase;
++ 	bmtd._block_isbad = mtd->_block_isbad;
++ 	bmtd._block_markbad = mtd->_block_markbad;
+++
+++	if (bmtd.ops == &airoha_bmt_ops &&
+++	    of_property_read_bool(mtd_get_of_node(mtd), "airoha,bmt-read-only")) {
+++		bmtd._write_oob = mtk_bmt_readonly_write;
+++		bmtd._erase = mtk_bmt_readonly_erase;
+++		bmtd._block_markbad = mtk_bmt_readonly_markbad;
+++		mtd->flags &= ~MTD_WRITEABLE;
+++		pr_info("mtk-bmt: physical writes disabled for RAM-only bring-up\n");
+++	}
++ 
++ 	mtd->_read_oob = airoha_locked_read;
++ 	mtd->_write_oob = airoha_locked_write;
+diff --git a/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch b/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch
+new file mode 100755
+index 000000000..791892ea8
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch
+@@ -0,0 +1,17 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] dt-bindings: arm: airoha: add Tenda BE6L Pro
++
++Describe the AN7563-based Tenda BE6L Pro board.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/Documentation/devicetree/bindings/arm/airoha.yaml
+++++ b/Documentation/devicetree/bindings/arm/airoha.yaml
++@@ -22,6 +22,7 @@ properties:
++       - items:
++           - enum:
++               - airoha,an7563-evb
+++              - tenda,be6l-pro
++               - xiaomi,be5000
++           - const: airoha,an7563
++           - const: airoha,en7581
+diff --git a/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch b/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch
+new file mode 100644
+index 000000000..dd6dc240c
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch
+@@ -0,0 +1,32 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] dt-bindings: mtd: describe Airoha BMT read-only mode
++
++Describe the existing Airoha BMT selector and an opt-in mode that also
++prevents metadata writes and automatic repair below the MTD partition layer.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/Documentation/devicetree/bindings/mtd/spi-nand.yaml
+++++ b/Documentation/devicetree/bindings/mtd/spi-nand.yaml
++@@ -21,6 +21,21 @@ properties:
++     description: Encode the chip-select line on the SPI bus
++     maxItems: 1
++ 
+++  airoha,bmt:
+++    type: boolean
+++    description:
+++      Enable the Airoha bad-block mapping and factory-bad-block translation
+++      used by the bootloader.
+++
+++  airoha,bmt-read-only:
+++    type: boolean
+++    description:
+++      Require existing BBT/BMT metadata and reject physical write, erase and
+++      bad-block-marking operations, including automatic metadata repair.
+++
+++dependencies:
+++  airoha,bmt-read-only: [ airoha,bmt ]
+++
++ required:
++   - compatible
++   - reg
+diff --git a/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch b/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch
+new file mode 100644
+index 000000000..ad5cb5bbe
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch
+@@ -0,0 +1,78 @@
++From: BE6L Pro RAM bring-up
++Subject: [PATCH] net: airoha: quiesce an inherited idle SDK TX ring
++
++--- a/drivers/net/ethernet/airoha/an7552_npu.c
+++++ b/drivers/net/ethernet/airoha/an7552_npu.c
++@@ -516,17 +516,58 @@
++ 	}
++ }
++ 
+++/* A warm boot can retain the SDK's idle SRAM TX ring. Its NPU producer
+++ * has already been stopped by boot_firmware(). Never claim another ring,
+++ * pending descriptors, or a live DMA transaction. Timeout leaves TX stopped.
+++ */
+++static int native_ppe_quiesce_boot_tx(struct an7552_npu *ctx)
+++{
+++	u32 producer, consumer, global, value;
+++	int ret;
+++
+++	if (readl(ctx->fe + 0x800) != 0x1e800000 ||
+++	    readl(ctx->fe + 0x804) != 0x00050400)
+++		return -EBUSY;
+++	producer = readl(ctx->fe + 0x808);
+++	consumer = readl(ctx->fe + 0x80c);
+++	global = readl(ctx->fe + 0xa04);
+++	if (producer != consumer || consumer >= 64 || (global & BIT(1)) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff))
+++		return -EBUSY;
+++
+++	writel(global & ~BIT(0), ctx->fe + 0xa04);
+++	ret = readl_poll_timeout(ctx->fe + 0xa04, value, !(value & BIT(1)),
+++				 10, 100000);
+++	if (ret)
+++		return ret;
+++	if (readl(ctx->fe + 0x800) != 0x1e800000 ||
+++	    readl(ctx->fe + 0x804) != 0x00050400 ||
+++	    readl(ctx->fe + 0x808) != producer ||
+++	    readl(ctx->fe + 0x80c) != consumer ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff))
+++		return -EBUSY;
+++
+++	dev_info(ctx->dev, "quiesced inherited idle SDK PPE TX ring\n");
+++	return 0;
+++}
+++
++ static int native_ppe_start(struct an7552_npu *ctx)
++ {
++ 	void __iomem *q = ctx->regs + 0x36c0, *ring = ctx->ram + 0x2f0000;
++ 	unsigned int i;
++ 	u32 start;
+++	int ret;
++ 
++ 	if (ctx->ppe_enabled)
++ 		return 0;
++ 	if (!ctx->bridge_domains)
++ 		return -EOPNOTSUPP;
++-	if (readl(ctx->fe + 0x800) || (readl(ctx->fe + 0xa04) & 3) ||
+++	if (readl(ctx->fe + 0x800)) {
+++		ret = native_ppe_quiesce_boot_tx(ctx);
+++		if (ret)
+++			return ret;
+++	}
+++	if ((readl(ctx->fe + 0xa04) & 3) ||
++ 	    (readl(ctx->fe + 0xfe4) & 65535))
++ 		goto busy;
++ 	start = readl(ctx->fe + 0x80c);
++@@ -747,9 +788,10 @@
++ 	writel(BIT(18), ctx->regs + 0x30d030);
++ 	/* Publish receive rings before allowing the firmware to consume them. */
++ 	wmb();
++-	if (native_ppe_start(ctx))
+++	ret = native_ppe_start(ctx);
+++	if (ret)
++ 		dev_warn(ctx->dev,
++-			 " PPE setup failed, keeping CPU receive path\n");
+++			 "PPE setup failed (%d), keeping CPU receive path\n", ret);
++ 	writel(1, q + 16);
++ 	an7552_npu_rro_irq_enable(ctx);
++ 	dev_dbg(ctx->dev,
+diff --git a/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch b/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch
+new file mode 100644
+index 000000000..8ffeceb4b
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch
+@@ -0,0 +1,64 @@
++Subject: [PATCH] net: airoha: fix AN7563 scattered RX alignment
++
++AN7563 ignores the two-byte receive offset for scattered buffers.
++The first and continuation buffers start two bytes before the normal
++software data pointer, causing frames over the 1KiB scatter boundary
++to be decoded with an invalid Ethernet header.
++
++Synchronize the actual DMA-written prefix, restore the first fragment
++to keep the IP header aligned, and correct continuation page offsets.
++Keep existing length checks and other SoCs unchanged.
++
++---
++
++diff --git a/drivers/net/ethernet/airoha/airoha_eth.c b/drivers/net/ethernet/airoha/airoha_eth.c
++--- a/drivers/net/ethernet/airoha/airoha_eth.c
+++++ b/drivers/net/ethernet/airoha/airoha_eth.c
++@@ -907,7 +907,7 @@
++ 		u32 hash, reason, msg1, desc_ctrl;
++ 		struct airoha_gdm_dev *dev;
++ 		struct net_device *netdev;
++-		int data_len, len;
+++		int data_len, len, rx_offset;
++ 		struct page *page;
++ 
++ 		desc_ctrl = le32_to_cpu(READ_ONCE(desc->ctrl));
++@@ -919,8 +919,15 @@
++ 		q->tail = (q->tail + 1) % q->ndesc;
++ 		q->queued--;
++ 
++-		dma_sync_single_for_cpu(eth->dev, e->dma_addr, e->dma_len,
++-					dir);
+++		/* AN7563 ignores the two-byte RX offset for every buffer of a
+++		 * scattered frame. The posted DMA address is rounded down,
+++		 * including the final continuation descriptor without MORE.
+++		 */
+++		rx_offset = airoha_is_7563(eth) &&
+++			    (q->skb || (desc_ctrl & QDMA_DESC_MORE_MASK)) ?
+++			    NET_IP_ALIGN : 0;
+++		dma_sync_single_for_cpu(eth->dev, e->dma_addr - rx_offset,
+++					e->dma_len + rx_offset, dir);
++ 
++ 		page = virt_to_head_page(e->buf);
++ 		len = FIELD_GET(QDMA_DESC_LEN_MASK, desc_ctrl);
++@@ -936,6 +943,11 @@
++ 		netdev = netdev_from_priv(dev);
++ 
++ 		if (!q->skb) { /* first buffer */
+++			/* Keep the IP header aligned after restoring the first
+++			 * fragment to the normal skb data position.
+++			 */
+++			if (rx_offset)
+++				memmove(e->buf, e->buf - rx_offset, len);
++ 			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
++ 						q->buf_size);
++ 			if (!q->skb)
++@@ -964,7 +976,7 @@
++ 				goto free_frag;
++ 
++ 			skb_add_rx_frag(q->skb, nr_frags, page,
++-					e->buf - page_address(page), len,
+++					e->buf - page_address(page) - rx_offset, len,
++ 					q->buf_size);
++ 		}
++ 
+diff --git a/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch b/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch
+new file mode 100644
+index 000000000..32ee7b712
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch
+@@ -0,0 +1,103 @@
++Subject: [PATCH] PCI: mediatek: restore erased MT7992 BARs on BE6L RAM handoff
++
++The stock-to-RAM handoff can erase the two MT7992 functions BARs
++after enumeration but before the wireless driver enables them.
++Use the PCI core allocation, not a rescan or hard-coded addresses.
++Restrict recovery to BE6L on AN7563 with recognized erased BARs
++and bus mastering disabled; reject unknown or active-DMA states.
++The reset trigger remains under investigation.
++
++---
++
++diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
++--- a/drivers/pci/controller/pcie-mediatek.c
+++++ b/drivers/pci/controller/pcie-mediatek.c
++@@ -1198,6 +1198,79 @@
++ 	return 0;
++ }
++ 
+++/*
+++ * BE6L stock-to-RAM handoff can reset both MT7992 functions after PCI
+++ * enumeration, erasing their BARs before mt76 probes. Keep the resources
+++ * allocated by the PCI core; restore only an erased, recognized BAR while
+++ * bus mastering is off. Unknown BAR contents or active DMA fail closed.
+++ */
+++static int an7563_pcie_enable_device(struct pci_host_bridge *host,
+++				     struct pci_dev *dev)
+++{
+++	struct pci_bus_region regions[2];
+++	u32 expected[2], values[2], upper;
+++	u16 command;
+++	unsigned int i;
+++	bool restore = false;
+++
+++	if (dev->vendor != PCI_VENDOR_ID_MEDIATEK ||
+++	    (dev->device != 0x7992 && dev->device != 0x799a))
+++		return 0;
+++
+++	if (pci_read_config_word(dev, PCI_COMMAND, &command))
+++		return -EIO;
+++	for (i = 0; i < 2; i++) {
+++		unsigned int index = i * 2;
+++		struct resource *res = pci_resource_n(dev, index);
+++
+++		if (!res->parent || !res->start ||
+++		    !(res->flags & IORESOURCE_MEM) ||
+++		    !(res->flags & IORESOURCE_MEM_64) ||
+++		    (res->flags & (IORESOURCE_UNSET | IORESOURCE_PREFETCH)) ||
+++		    resource_size(res) != (i ? 0x8000 : 0x200000))
+++			return -EINVAL;
+++		pcibios_resource_to_bus(dev->bus, &regions[i], res);
+++		if (upper_32_bits(regions[i].start))
+++			return -EINVAL;
+++		expected[i] = lower_32_bits(regions[i].start) |
+++			      PCI_BASE_ADDRESS_MEM_TYPE_64;
+++		if (pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4,
+++					  &values[i]) ||
+++		    pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (index + 1) * 4,
+++					  &upper) || upper)
+++			return -EIO;
+++		if (values[i] == expected[i])
+++			continue;
+++		if (values[i] != PCI_BASE_ADDRESS_MEM_TYPE_64)
+++			return -EIO;
+++		restore = true;
+++	}
+++	if (!restore)
+++		return 0;
+++	if (command & PCI_COMMAND_MASTER)
+++		return -EBUSY;
+++
+++	if (pci_write_config_word(dev, PCI_COMMAND,
+++				  command & ~PCI_COMMAND_MEMORY))
+++		return -EIO;
+++	for (i = 0; i < 2; i++) {
+++		unsigned int index = i * 2;
+++		u32 value;
+++
+++		if (values[i] == expected[i])
+++			continue;
+++		pci_update_resource(dev, index);
+++		if (pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4,
+++					  &value) || value != expected[i] ||
+++		    pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (index + 1) * 4,
+++					  &upper) || upper)
+++			return -EIO;
+++		pci_info(dev, "restored erased BAR%u to assigned resource %pR\n",
+++			 index, pci_resource_n(dev, index));
+++	}
+++	return pci_write_config_word(dev, PCI_COMMAND, command) ? -EIO : 0;
+++}
+++
++ static int mtk_pcie_probe(struct platform_device *pdev)
++ {
++ 	struct device *dev = &pdev->dev;
++@@ -1223,6 +1296,8 @@
++ 	host->ops = pcie->soc->ops;
++ 	host->sysdata = pcie;
++ 	host->msi_domain = pcie->soc->no_msi;
+++	if (pcie->soc->an7563 && of_machine_is_compatible("tenda,be6l-pro"))
+++		host->enable_device = an7563_pcie_enable_device;
++ 
++ 	err = pci_host_probe(host);
++ 	if (err)
+diff --git a/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch b/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch
+new file mode 100644
+index 000000000..291241c70
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch
+@@ -0,0 +1,121 @@
++Subject: [PATCH] net: airoha: preserve an idle PPE ring position on stop
++
++After native traffic the hardware TX consumer advances. Restoring
++the inherited producer from boot makes its idle SDK ring appear
++nonempty, so the next start correctly rejects it as busy.
++After stopping producers and draining, require the exact owned ring,
++equal stable indices, all DDONE bits, DMA stopped and empty PPE/FIFO.
++Only then restore an inherited idle ring at the proven idle position.
++Never write the hardware consumer or weaken takeover checks.
++
++---
++
++diff --git a/drivers/net/ethernet/airoha/an7552_npu.c b/drivers/net/ethernet/airoha/an7552_npu.c
++--- a/drivers/net/ethernet/airoha/an7552_npu.c
+++++ b/drivers/net/ethernet/airoha/an7552_npu.c
++@@ -602,11 +602,62 @@
++ 	return -EBUSY;
++ }
++ 
+++/* Call only after the native producers have stopped and PPE has drained.
+++ * The hardware consumer is not restored with the ring registers. Returning
+++ * the old producer would manufacture pending work in an inherited idle ring.
+++ * Prove every native descriptor returned before preserving this idle index.
+++ */
+++static int native_ppe_restore_idle(struct an7552_npu *ctx)
+++{
+++	void __iomem *ring = ctx->ram + 0x2f0000;
+++	u32 position = readl(ctx->fe + 0x80c);
+++	unsigned int i;
+++
+++	if (ctx->ppe_saved[0] &&
+++	    (ctx->ppe_saved[0] != 0x1e800000 ||
+++	     ctx->ppe_saved[1] != 0x00050400))
+++		return -EBUSY;
+++	if (position >= 64 || readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x800) != 0x042f0000 ||
+++	    readl(ctx->fe + 0x804) != 64 ||
+++	    (readl(ctx->fe + 0xa04) & 3) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff) ||
+++	    (readl(ctx->fe + 0xe00) & BIT(31)))
+++		return -EBUSY;
+++	for (i = 0; i < 64; i++) {
+++		if (!(readl(ring + i * 32 + 4) & BIT(31)))
+++			return -EBUSY;
+++	}
+++	/* Fail closed if ownership or any ring register changed while scanning. */
+++	if (readl(ctx->fe + 0x80c) != position ||
+++	    readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x800) != 0x042f0000 ||
+++	    readl(ctx->fe + 0x804) != 64 ||
+++	    (readl(ctx->fe + 0xa04) & 3) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff) ||
+++	    (readl(ctx->fe + 0xe00) & BIT(31)))
+++		return -EBUSY;
+++
+++	writel(ctx->ppe_saved[0], ctx->fe + 0x800);
+++	writel(ctx->ppe_saved[1], ctx->fe + 0x804);
+++	/* The consumer stays untouched, with no descriptor queued behind it. */
+++	writel(position, ctx->fe + 0x808);
+++	writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
+++	writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
+++	writel(readl(ctx->fe + 0xa04) & ~BIT(0), ctx->fe + 0xa04);
+++	if (readl(ctx->fe + 0x800) != ctx->ppe_saved[0] ||
+++	    readl(ctx->fe + 0x804) != ctx->ppe_saved[1] ||
+++	    readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x80c) != position ||
+++	    (readl(ctx->fe + 0xa04) & 3))
+++		return -EIO;
+++	return 0;
+++}
+++
++ static void native_ppe_stop(struct an7552_npu *ctx)
++ {
++ 	void __iomem *q = ctx->regs + 0x36c0;
++ 	u32 value;
++-	unsigned int i;
++ 	bool failed = false;
++ 
++ 	if (!ctx->ppe_enabled)
++@@ -632,11 +683,11 @@
++ 		ctx->failed = true;
++ 		return;
++ 	}
++-	for (i = 0; i < 3; i++)
++-		writel(ctx->ppe_saved[i], ctx->fe + 0x800 + i * 4);
++-	writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
++-	writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
++-	writel(readl(ctx->fe + 0xa04) & ~BIT(0), ctx->fe + 0xa04);
+++	if (native_ppe_restore_idle(ctx)) {
+++		ctx->failed = true;
+++		dev_err(ctx->dev, "native PPE ring still owned; retaining ring\n");
+++		return;
+++	}
++ 	ctx->ppe_enabled = false;
++ }
++ 
++@@ -1333,6 +1384,11 @@
++ 	ret = fault_drain_ppe(ctx);
++ 	if (ret)
++ 		return ret;
+++	if (ctx->ppe_enabled) {
+++		ret = native_ppe_restore_idle(ctx);
+++		if (ret)
+++			return ret;
+++	}
++ 	for (band = 0; band < 2; band++) {
++ 		writel(0, ctx->regs + 0x30d034 + band * 4);
++ 		if (ctx->txfree_irqs[band]) {
++@@ -1350,12 +1406,6 @@
++ 		ctx->rro_irq = 0;
++ 	}
++ 	ctx->rro_notify = NULL;
++-	if (ctx->ppe_enabled) {
++-		for (i = 0; i < 3; i++)
++-			writel(ctx->ppe_saved[i], ctx->fe + 0x800 + i * 4);
++-		writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
++-		writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
++-	}
++ 	ctx->ppe_enabled = false;
++ 	ctx->tdma_enabled = false;
++ 	ctx->fault_quiesced = true;

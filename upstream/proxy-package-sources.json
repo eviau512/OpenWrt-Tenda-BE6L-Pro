@@ -1,0 +1,47 @@
+{
+  "packages_commit": "770d4058b06f09d4c16321ca53401454f148095e",
+  "additional_sparse_paths": [
+    "lang/golang",
+    "net/tailscale",
+    "net/sing-box",
+    "net/microsocks",
+    "net/wget",
+    "utils/coreutils",
+    "utils/acl",
+    "utils/attr",
+    "lang/lua/lyaml",
+    "lang/lua/luarocks",
+    "libs/yaml",
+    "libs/libtirpc"
+  ],
+  "additional_core_paths": [
+    "package/libs/libnetfilter-conntrack",
+    "package/libs/libbpf",
+    "package/libs/elfutils",
+    "package/libs/nettle",
+    "package/network/utils/iptables",
+    "package/libs/gmp",
+    "package/libs/argp-standalone",
+    "package/libs/libnfnetlink",
+    "package/libs/libcap"
+  ],
+  "feeds": {
+    "passwall": {
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall.git",
+      "commit": "409d28cc7d7d2d806039bf03f7ebf4724c03ea99",
+      "paths": [
+        "luci-app-passwall"
+      ]
+    },
+    "passwall_packages": {
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git",
+      "commit": "ae518eceb8ce99cf7b6ecd3c256b8ffc945ab1e3",
+      "paths": [
+        "chinadns-ng",
+        "dns2socks",
+        "ipt2socks",
+        "tcping"
+      ]
+    }
+  }
+}

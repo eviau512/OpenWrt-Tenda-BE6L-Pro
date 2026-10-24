@@ -1,0 +1,17 @@
+#!/bin/sh
+[ "$(cat /tmp/sysinfo/board_name)" = tenda,be6l-pro ] || exit 0
+
+uci -q batch <<'EOF'
+set luci.main.lang='zh_cn'
+set luci.main.mediaurlbase='/luci-static/argon'
+set network.wan='interface'
+set network.wan.device='eth1'
+set network.wan.proto='dhcp'
+EOF
+for radio in radio0 radio1; do
+    uci -q get "wireless.$radio" >/dev/null && uci set "wireless.$radio.country=US"
+done
+uci commit luci
+uci commit network
+uci commit wireless
+exit 0

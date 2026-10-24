@@ -1,0 +1,505 @@
+{
+  "openwrt_commit": "30b833ae5b8a6ba94149268c47a8493308a0ee04",
+  "checkouts": {
+    "source": {
+      "url": "https://github.com/iscle/openwrt.git",
+      "commit": "30b833ae5b8a6ba94149268c47a8493308a0ee04",
+      "sparse_paths": [
+        "config",
+        "include",
+        "package/base-files",
+        "package/devel/riscv32-elf-binutils",
+        "package/devel/riscv32-elf-gcc",
+        "package/firmware/an7552-npu-firmware",
+        "package/firmware/linux-firmware",
+        "package/firmware/wireless-regdb",
+        "package/kernel/gpio-button-hotplug",
+        "package/kernel/linux",
+        "package/kernel/mac80211",
+        "package/kernel/mt76",
+        "package/libs/acl",
+        "package/libs/argp-standalone",
+        "package/libs/attr",
+        "package/libs/elfutils",
+        "package/libs/gmp",
+        "package/libs/jansson",
+        "package/libs/libbpf",
+        "package/libs/libcap",
+        "package/libs/libffi",
+        "package/libs/libjson-c",
+        "package/libs/libmd",
+        "package/libs/libmnl",
+        "package/libs/libnetfilter-conntrack",
+        "package/libs/libnfnetlink",
+        "package/libs/libnftnl",
+        "package/libs/libnl-tiny",
+        "package/libs/libpcap",
+        "package/libs/libselinux",
+        "package/libs/libsepol",
+        "package/libs/libubox",
+        "package/libs/mbedtls",
+        "package/libs/musl-fts",
+        "package/libs/ncurses",
+        "package/libs/nettle",
+        "package/libs/openssl",
+        "package/libs/pcre2",
+        "package/libs/toolchain",
+        "package/libs/uclient",
+        "package/libs/udebug",
+        "package/libs/ustream-ssl",
+        "package/libs/zlib",
+        "package/network/config/firewall4",
+        "package/network/config/netifd",
+        "package/network/config/wifi-scripts",
+        "package/network/ipv6/odhcp6c",
+        "package/network/services/dnsmasq",
+        "package/network/services/dropbear",
+        "package/network/services/hostapd",
+        "package/network/services/odhcpd",
+        "package/network/services/ppp",
+        "package/network/services/uhttpd",
+        "package/network/utils/ethtool",
+        "package/network/utils/iproute2",
+        "package/network/utils/iptables",
+        "package/network/utils/iw",
+        "package/network/utils/iwinfo",
+        "package/network/utils/nftables",
+        "package/network/utils/resolveip",
+        "package/network/utils/tcpdump",
+        "package/system/apk",
+        "package/system/ca-certificates",
+        "package/system/fstools",
+        "package/system/fwtool",
+        "package/system/hardware-support",
+        "package/system/mtd",
+        "package/system/openwrt-keyring",
+        "package/system/procd",
+        "package/system/rpcd",
+        "package/system/ubox",
+        "package/system/ubus",
+        "package/system/ucert",
+        "package/system/uci",
+        "package/system/urandom-seed",
+        "package/system/urngd",
+        "package/system/usign",
+        "package/utils/busybox",
+        "package/utils/jsonfilter",
+        "package/utils/lua",
+        "package/utils/mtd-utils",
+        "package/utils/ucode",
+        "package/utils/util-linux",
+        "scripts",
+        "target/imagebuilder",
+        "target/linux/airoha",
+        "target/linux/generic/backport-6.18",
+        "target/linux/generic/files",
+        "target/linux/generic/hack-6.18",
+        "target/linux/generic/image",
+        "target/linux/generic/other-files",
+        "target/linux/generic/pending-6.18",
+        "target/sdk",
+        "target/toolchain",
+        "toolchain",
+        "tools"
+      ],
+      "patch": "patches/openwrt-arm32.patch",
+      "config": "configs/arm32.config"
+    },
+    "arm64-source": {
+      "url": "https://github.com/iscle/openwrt.git",
+      "commit": "30b833ae5b8a6ba94149268c47a8493308a0ee04",
+      "sparse_paths": [
+        "config",
+        "include",
+        "package/base-files",
+        "package/devel/riscv32-elf-binutils",
+        "package/devel/riscv32-elf-gcc",
+        "package/firmware/an7552-npu-firmware",
+        "package/firmware/linux-firmware",
+        "package/firmware/wireless-regdb",
+        "package/kernel/gpio-button-hotplug",
+        "package/kernel/linux",
+        "package/kernel/mac80211",
+        "package/kernel/mt76",
+        "package/libs/jansson",
+        "package/libs/libffi",
+        "package/libs/libjson-c",
+        "package/libs/libmd",
+        "package/libs/libmnl",
+        "package/libs/libnftnl",
+        "package/libs/libnl-tiny",
+        "package/libs/libpcap",
+        "package/libs/libselinux",
+        "package/libs/libsepol",
+        "package/libs/libubox",
+        "package/libs/mbedtls",
+        "package/libs/musl-fts",
+        "package/libs/ncurses",
+        "package/libs/openssl",
+        "package/libs/pcre2",
+        "package/libs/toolchain",
+        "package/libs/uclient",
+        "package/libs/udebug",
+        "package/libs/ustream-ssl",
+        "package/libs/zlib",
+        "package/network/config/firewall4",
+        "package/network/config/netifd",
+        "package/network/config/wifi-scripts",
+        "package/network/ipv6/odhcp6c",
+        "package/network/services/dnsmasq",
+        "package/network/services/dropbear",
+        "package/network/services/hostapd",
+        "package/network/services/odhcpd",
+        "package/network/services/ppp",
+        "package/network/services/uhttpd",
+        "package/network/utils/ethtool",
+        "package/network/utils/iproute2",
+        "package/network/utils/iw",
+        "package/network/utils/iwinfo",
+        "package/network/utils/nftables",
+        "package/network/utils/resolveip",
+        "package/network/utils/tcpdump",
+        "package/system/apk",
+        "package/system/ca-certificates",
+        "package/system/fstools",
+        "package/system/fwtool",
+        "package/system/hardware-support",
+        "package/system/mtd",
+        "package/system/openwrt-keyring",
+        "package/system/procd",
+        "package/system/rpcd",
+        "package/system/ubox",
+        "package/system/ubus",
+        "package/system/ucert",
+        "package/system/uci",
+        "package/system/urandom-seed",
+        "package/system/urngd",
+        "package/system/usign",
+        "package/utils/busybox",
+        "package/utils/jsonfilter",
+        "package/utils/lua",
+        "package/utils/mtd-utils",
+        "package/utils/ucode",
+        "package/utils/util-linux",
+        "scripts",
+        "target/imagebuilder",
+        "target/linux/airoha",
+        "target/linux/generic/backport-6.18",
+        "target/linux/generic/files",
+        "target/linux/generic/hack-6.18",
+        "target/linux/generic/image",
+        "target/linux/generic/other-files",
+        "target/linux/generic/pending-6.18",
+        "target/sdk",
+        "target/toolchain",
+        "toolchain",
+        "tools"
+      ],
+      "patch": "patches/openwrt-arm64-compat.patch",
+      "config": "configs/arm64-compat.config"
+    },
+    "source/feeds/packages": {
+      "url": "https://github.com/openwrt/packages.git",
+      "commit": "770d4058b06f09d4c16321ca53401454f148095e",
+      "sparse_paths": [
+        "admin/btop",
+        "lang/golang",
+        "lang/lua/luarocks",
+        "lang/lua/luasrcdiet",
+        "lang/lua/lyaml",
+        "libs/libtirpc",
+        "libs/nghttp2",
+        "libs/yaml",
+        "net/cgi-io",
+        "net/curl",
+        "net/iperf3",
+        "net/microsocks",
+        "net/sing-box",
+        "net/tailscale",
+        "net/wget",
+        "utils/acl",
+        "utils/attr",
+        "utils/coreutils"
+      ]
+    },
+    "source/feeds/luci": {
+      "url": "https://github.com/openwrt/luci.git",
+      "commit": "1c67452adb01413e78feb109180bd15186612ead",
+      "sparse_paths": [
+        "applications/luci-app-firewall",
+        "applications/luci-app-package-manager",
+        "build",
+        "collections/luci",
+        "collections/luci-light",
+        "contrib/package/csstidy",
+        "contrib/package/lucihttp",
+        "contrib/package/ucode-mod-html",
+        "contrib/package/ucode-mod-lua",
+        "libs/liblucihttp",
+        "libs/luci-lib-base",
+        "libs/luci-lib-fs",
+        "libs/luci-lib-httpprotoutils",
+        "libs/luci-lib-ip",
+        "libs/luci-lib-ipkg",
+        "libs/luci-lib-jsonc",
+        "libs/luci-lib-nixio",
+        "libs/luci-lib-nl",
+        "libs/luci-lib-uqr",
+        "libs/rpcd-mod-luci",
+        "libs/rpcd-mod-rrdns",
+        "modules/luci-base",
+        "modules/luci-compat",
+        "modules/luci-lua-runtime",
+        "modules/luci-mod-admin-full",
+        "modules/luci-mod-network",
+        "modules/luci-mod-status",
+        "modules/luci-mod-system",
+        "protocols/luci-proto-ipv6",
+        "protocols/luci-proto-ppp",
+        "themes/luci-theme-bootstrap"
+      ]
+    },
+    "argon-feed/luci-theme-argon": {
+      "url": "https://github.com/jerrykuku/luci-theme-argon.git",
+      "commit": "9f5d1e79e67623f4006a86471116b6745ea845f7",
+      "sparse_paths": [
+        "htdocs",
+        "luasrc",
+        "po",
+        "root",
+        "ucode"
+      ]
+    },
+    "passwall": {
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall.git",
+      "commit": "409d28cc7d7d2d806039bf03f7ebf4724c03ea99",
+      "sparse_paths": [
+        "luci-app-passwall"
+      ]
+    },
+    "passwall_packages": {
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git",
+      "commit": "ae518eceb8ce99cf7b6ecd3c256b8ffc945ab1e3",
+      "sparse_paths": [
+        "chinadns-ng",
+        "dns2socks",
+        "ipt2socks",
+        "tcping"
+      ]
+    }
+  },
+  "feed_links": [
+    {
+      "link": "package/feeds/argon/luci-theme-argon",
+      "target": "argon-feed/luci-theme-argon"
+    },
+    {
+      "link": "package/feeds/luci/csstidy",
+      "target": "source/feeds/luci/contrib/package/csstidy"
+    },
+    {
+      "link": "package/feeds/luci/luci",
+      "target": "source/feeds/luci/collections/luci"
+    },
+    {
+      "link": "package/feeds/luci/luci-app-firewall",
+      "target": "source/feeds/luci/applications/luci-app-firewall"
+    },
+    {
+      "link": "package/feeds/luci/luci-app-package-manager",
+      "target": "source/feeds/luci/applications/luci-app-package-manager"
+    },
+    {
+      "link": "package/feeds/luci/luci-base",
+      "target": "source/feeds/luci/modules/luci-base"
+    },
+    {
+      "link": "package/feeds/luci/luci-compat",
+      "target": "source/feeds/luci/modules/luci-compat"
+    },
+    {
+      "link": "package/feeds/luci/luci-lib-base",
+      "target": "source/feeds/luci/libs/luci-lib-base"
+    },
+    {
+      "link": "package/feeds/luci/luci-lib-ip",
+      "target": "source/feeds/luci/libs/luci-lib-ip"
+    },
+    {
+      "link": "package/feeds/luci/luci-lib-jsonc",
+      "target": "source/feeds/luci/libs/luci-lib-jsonc"
+    },
+    {
+      "link": "package/feeds/luci/luci-lib-nixio",
+      "target": "source/feeds/luci/libs/luci-lib-nixio"
+    },
+    {
+      "link": "package/feeds/luci/luci-lib-uqr",
+      "target": "source/feeds/luci/libs/luci-lib-uqr"
+    },
+    {
+      "link": "package/feeds/luci/luci-light",
+      "target": "source/feeds/luci/collections/luci-light"
+    },
+    {
+      "link": "package/feeds/luci/luci-lua-runtime",
+      "target": "source/feeds/luci/modules/luci-lua-runtime"
+    },
+    {
+      "link": "package/feeds/luci/luci-mod-admin-full",
+      "target": "source/feeds/luci/modules/luci-mod-admin-full"
+    },
+    {
+      "link": "package/feeds/luci/luci-mod-network",
+      "target": "source/feeds/luci/modules/luci-mod-network"
+    },
+    {
+      "link": "package/feeds/luci/luci-mod-status",
+      "target": "source/feeds/luci/modules/luci-mod-status"
+    },
+    {
+      "link": "package/feeds/luci/luci-mod-system",
+      "target": "source/feeds/luci/modules/luci-mod-system"
+    },
+    {
+      "link": "package/feeds/luci/luci-proto-ipv6",
+      "target": "source/feeds/luci/protocols/luci-proto-ipv6"
+    },
+    {
+      "link": "package/feeds/luci/luci-proto-ppp",
+      "target": "source/feeds/luci/protocols/luci-proto-ppp"
+    },
+    {
+      "link": "package/feeds/luci/luci-theme-bootstrap",
+      "target": "source/feeds/luci/themes/luci-theme-bootstrap"
+    },
+    {
+      "link": "package/feeds/luci/lucihttp",
+      "target": "source/feeds/luci/contrib/package/lucihttp"
+    },
+    {
+      "link": "package/feeds/luci/rpcd-mod-luci",
+      "target": "source/feeds/luci/libs/rpcd-mod-luci"
+    },
+    {
+      "link": "package/feeds/luci/rpcd-mod-rrdns",
+      "target": "source/feeds/luci/libs/rpcd-mod-rrdns"
+    },
+    {
+      "link": "package/feeds/luci/ucode-mod-html",
+      "target": "source/feeds/luci/contrib/package/ucode-mod-html"
+    },
+    {
+      "link": "package/feeds/luci/ucode-mod-lua",
+      "target": "source/feeds/luci/contrib/package/ucode-mod-lua"
+    },
+    {
+      "link": "package/feeds/packages/acl",
+      "target": "source/feeds/packages/utils/acl"
+    },
+    {
+      "link": "package/feeds/packages/attr",
+      "target": "source/feeds/packages/utils/attr"
+    },
+    {
+      "link": "package/feeds/packages/btop",
+      "target": "source/feeds/packages/admin/btop"
+    },
+    {
+      "link": "package/feeds/packages/cgi-io",
+      "target": "source/feeds/packages/net/cgi-io"
+    },
+    {
+      "link": "package/feeds/packages/coreutils",
+      "target": "source/feeds/packages/utils/coreutils"
+    },
+    {
+      "link": "package/feeds/packages/curl",
+      "target": "source/feeds/packages/net/curl"
+    },
+    {
+      "link": "package/feeds/packages/golang",
+      "target": "source/feeds/packages/lang/golang/golang"
+    },
+    {
+      "link": "package/feeds/packages/golang-bootstrap",
+      "target": "source/feeds/packages/lang/golang/golang-bootstrap"
+    },
+    {
+      "link": "package/feeds/packages/golang1.27",
+      "target": "source/feeds/packages/lang/golang/golang1.27"
+    },
+    {
+      "link": "package/feeds/packages/iperf3",
+      "target": "source/feeds/packages/net/iperf3"
+    },
+    {
+      "link": "package/feeds/packages/libtirpc",
+      "target": "source/feeds/packages/libs/libtirpc"
+    },
+    {
+      "link": "package/feeds/packages/luarocks",
+      "target": "source/feeds/packages/lang/lua/luarocks"
+    },
+    {
+      "link": "package/feeds/packages/luasrcdiet",
+      "target": "source/feeds/packages/lang/lua/luasrcdiet"
+    },
+    {
+      "link": "package/feeds/packages/lyaml",
+      "target": "source/feeds/packages/lang/lua/lyaml"
+    },
+    {
+      "link": "package/feeds/packages/microsocks",
+      "target": "source/feeds/packages/net/microsocks"
+    },
+    {
+      "link": "package/feeds/packages/nghttp2",
+      "target": "source/feeds/packages/libs/nghttp2"
+    },
+    {
+      "link": "package/feeds/packages/sing-box",
+      "target": "source/feeds/packages/net/sing-box"
+    },
+    {
+      "link": "package/feeds/packages/tailscale",
+      "target": "source/feeds/packages/net/tailscale"
+    },
+    {
+      "link": "package/feeds/packages/wget",
+      "target": "source/feeds/packages/net/wget"
+    },
+    {
+      "link": "package/feeds/packages/yaml",
+      "target": "source/feeds/packages/libs/yaml"
+    },
+    {
+      "link": "package/feeds/passwall/luci-app-passwall",
+      "target": "passwall/luci-app-passwall"
+    },
+    {
+      "link": "package/feeds/passwall_packages/chinadns-ng",
+      "target": "passwall_packages/chinadns-ng"
+    },
+    {
+      "link": "package/feeds/passwall_packages/dns2socks",
+      "target": "passwall_packages/dns2socks"
+    },
+    {
+      "link": "package/feeds/passwall_packages/ipt2socks",
+      "target": "passwall_packages/ipt2socks"
+    },
+    {
+      "link": "package/feeds/passwall_packages/tcping",
+      "target": "passwall_packages/tcping"
+    }
+  ],
+  "policy": {
+    "images": "initramfs only",
+    "flash_writes": false,
+    "userspace_arch": "arm_cortex-a7",
+    "kernel_arch": "aarch64",
+    "wpad": "wpad-mbedtls",
+    "test_ap_secrets": "generated only after RAM boot"
+  }
+}

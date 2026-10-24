@@ -1,0 +1,6 @@
+{
+  "upstream": "https://github.com/iscle/openwrt.git",
+  "commit": "30b833ae5b8a6ba94149268c47a8493308a0ee04",
+  "image_policy": "initramfs only; all MTD/BMT write, erase and markbad paths protected",
+  "source_manifest": "sources.json"
+}

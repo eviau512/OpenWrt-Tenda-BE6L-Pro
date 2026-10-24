@@ -1,0 +1,18 @@
+# Private/generated data never belongs in this source repository.
+.work/
+artifacts/
+logs/
+__pycache__/
+*.pyc
+*.apk
+*.bin
+*.img
+*.cpio
+*.tar*
+*.zip
+*.ko
+*.key
+*.pem
+id_*
+backup*/
+private*/

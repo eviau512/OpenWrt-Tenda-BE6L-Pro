@@ -1,0 +1,2053 @@
+diff --git a/package/firmware/an7552-npu-firmware/Makefile b/package/firmware/an7552-npu-firmware/Makefile
+index ef6b53f2f..8e1bd706f 100644
+--- a/package/firmware/an7552-npu-firmware/Makefile
++++ b/package/firmware/an7552-npu-firmware/Makefile
+@@ -15,7 +15,7 @@ define Package/an7552-npu-firmware
+   SECTION:=firmware
+   CATEGORY:=Firmware
+   TITLE:=Source-built AN7552 network processor firmware
+-  DEPENDS:=@TARGET_airoha_an7563
++  DEPENDS:=@(TARGET_airoha_an7563||TARGET_airoha_an7563a64)
+ endef
+ 
+ define Package/an7552-npu-firmware/description
+diff --git a/package/kernel/mt76/Makefile b/package/kernel/mt76/Makefile
+index 03de13a00..895fff744 100644
+--- a/package/kernel/mt76/Makefile
++++ b/package/kernel/mt76/Makefile
+@@ -501,7 +501,7 @@ ifdef CONFIG_PACKAGE_kmod-mt7921e
+ endif
+ ifdef CONFIG_PACKAGE_kmod-mt7996e
+   PKG_MAKE_FLAGS += CONFIG_MT7996E=m
+-  ifneq ($(CONFIG_TARGET_airoha_an7581)$(CONFIG_TARGET_airoha_an7563),)
++  ifneq ($(CONFIG_TARGET_airoha_an7581)$(CONFIG_TARGET_airoha_an7563)$(CONFIG_TARGET_airoha_an7563a64),)
+     PKG_MAKE_FLAGS += CONFIG_MT76_NPU=y
+     PKG_MAKE_FLAGS += CONFIG_MT7996_NPU=y
+     NOSTDINC_FLAGS += -DCONFIG_MT76_NPU
+diff --git a/package/libs/ncurses/Makefile b/package/libs/ncurses/Makefile
+index bd9c55369..646ff9b93 100644
+--- a/package/libs/ncurses/Makefile
++++ b/package/libs/ncurses/Makefile
+@@ -118,7 +118,7 @@ define Build/Install/Default
+ 	$(MAKE_VARS) \
+ 	$(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) \
+ 		$(MAKE_INSTALL_FLAGS) \
+-		$(1) install.libs install.data;
++		$(1) install.libs install.includes install.data;
+ endef
+ 
+ define Package/terminfo/install
+diff --git a/target/linux/airoha/Makefile b/target/linux/airoha/Makefile
+index 84d1afaaf..676437f03 100644
+--- a/target/linux/airoha/Makefile
++++ b/target/linux/airoha/Makefile
+@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
+ ARCH:=arm
+ BOARD:=airoha
+ BOARDNAME:=Airoha ARM
+-SUBTARGETS:=en7523 an7563 an7581 an7583
++SUBTARGETS:=en7523 an7563 an7563a64 an7581 an7583
+ FEATURES:=dt dt-overlay squashfs nand ramdisk gpio
+ 
+ KERNEL_PATCHVER:=6.18
+diff --git a/target/linux/airoha/an7563/base-files/etc/board.d/02_network b/target/linux/airoha/an7563/base-files/etc/board.d/02_network
+index 22e5daf26..31f7405b9 100644
+--- a/target/linux/airoha/an7563/base-files/etc/board.d/02_network
++++ b/target/linux/airoha/an7563/base-files/etc/board.d/02_network
+@@ -11,6 +11,9 @@ an7563_setup_interfaces()
+ 	local board="$1"
+ 
+ 	case "$board" in
++	tenda,be6l-pro)
++		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "eth1"
++		;;
+ 	xiaomi,be5000)
+ 		ucidef_set_interface_lan "lan1 lan2 lan3 eth1"
+ 		;;
+diff --git a/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh b/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
+index f2a2ed7f8..c1d105cf7 100644
+--- a/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
++++ b/target/linux/airoha/an7563/base-files/lib/upgrade/platform.sh
+@@ -45,6 +45,10 @@ xiaomi_be5000_do_upgrade() {
+ 
+ platform_do_upgrade() {
+ 	case "$(board_name)" in
++	tenda,be6l-pro)
++		echo "BE6L Pro RAM-only bring-up: flash upgrades disabled." >&2
++		return 1
++		;;
+ 	xiaomi,be5000)
+ 		xiaomi_be5000_do_upgrade "$1"
+ 		;;
+diff --git a/target/linux/airoha/an7563/config-6.18 b/target/linux/airoha/an7563/config-6.18
+index f36b688b5..7d425a7fe 100644
+--- a/target/linux/airoha/an7563/config-6.18
++++ b/target/linux/airoha/an7563/config-6.18
+@@ -357,3 +357,5 @@ CONFIG_NET_DSA_MT7530=y
+ CONFIG_NET_DSA_MT7530_MMIO=y
+ CONFIG_NET_DSA_TAG_MTK=y
+ # CONFIG_NET_DSA_MT7530_MDIO is not set
++CONFIG_SUSPEND=y
++# CONFIG_FW_CACHE is not set
+diff --git a/target/linux/airoha/image/Makefile b/target/linux/airoha/image/Makefile
+index b412b0297..05ae40e50 100644
+--- a/target/linux/airoha/image/Makefile
++++ b/target/linux/airoha/image/Makefile
+@@ -2,6 +2,7 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/image.mk
+ 
+ loadaddr-$(CONFIG_TARGET_airoha_an7563) := 0x80200000
++loadaddr-$(CONFIG_TARGET_airoha_an7563a64) := 0x80200000
+ loadaddr-$(CONFIG_TARGET_airoha_an7581) := 0x80200000
+ loadaddr-$(CONFIG_TARGET_airoha_an7583) := 0x80200000
+ loadaddr-$(CONFIG_TARGET_airoha_en7523) := 0x80200000
+diff --git a/target/linux/airoha/image/an7563.mk b/target/linux/airoha/image/an7563.mk
+index fee0cd5ce..fcdb16863 100644
+--- a/target/linux/airoha/image/an7563.mk
++++ b/target/linux/airoha/image/an7563.mk
+@@ -28,3 +28,17 @@ define Device/xiaomi_be5000
+   ARTIFACTS := u-boot.bin
+ endef
+ TARGET_DEVICES += xiaomi_be5000
++
++# First-stage hardware bring-up: this profile deliberately has no flash image.
++define Device/tenda_be6l-pro
++  DEVICE_VENDOR := Tenda
++  DEVICE_MODEL := BE6L Pro
++  DEVICE_DTS := an7563-tenda-be6l-pro
++  DEVICE_PACKAGES := an7552-npu-firmware airoha-en8811h-firmware \
++	kmod-phy-airoha-en8811h kmod-mt7996e kmod-mt7992-23-firmware \
++	wpad-mbedtls iw
++  KERNEL_LOADADDR := 0x80088000
++  IMAGES :=
++  ARTIFACTS :=
++endef
++TARGET_DEVICES += tenda_be6l-pro
+diff --git a/toolchain/kernel-headers/Makefile b/toolchain/kernel-headers/Makefile
+index dc70f32c9..a63d8195e 100644
+--- a/toolchain/kernel-headers/Makefile
++++ b/toolchain/kernel-headers/Makefile
+@@ -94,7 +94,7 @@ define Host/Prepare
+ endef
+ 
+ define Host/Configure
+-	yes '' | $(HOST_KMAKE) oldconfig
++	$(HOST_KMAKE) olddefconfig
+ 	$(call Host/Configure/all)
+ 	$(call Host/Configure/post/$(ARCH))
+ endef
+diff --git a/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch b/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch
+new file mode 100644
+index 000000000..5f226c4f2
+--- /dev/null
++++ b/package/kernel/mt76/patches/996-mt7996-quarantine-retired-native-wcids.patch
+@@ -0,0 +1,50 @@
++Subject: [PATCH] mt7996: quarantine retired native RX WCIDs until DMA reset
++
++Removing a station retires its generation-less native RX identity.
++The allocator previously reused that WCID immediately, causing the
++key gate to reject ordinary reassociation and request a full reset.
++Keep retired WCIDs allocated and skip any retired free slot. When
++the table fills, request the existing full reset before reuse.
++Replay, identity, DMA ownership and key-reinstall checks remain intact.
++
++---
++
++--- a/mt7996/main.c
+++++ b/mt7996/main.c
++@@ -1791,9 +1791,22 @@
++ 		idx = msta->reset_wcid[link_id] - 1;
++ 		msta->reset_wcid[link_id] = 0;
++ 	} else {
++-		idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7996_WTBL_STA);
++-		if (idx < 0)
++-			return -ENOSPC;
+++		/* Native RX descriptors carry no generation. Keep a retired WCID
+++		 * reserved until the existing full radio/RRO/DMA reset completes.
+++		 * Never give a new peer or key an old descriptor identity.
+++		 */
+++		do {
+++			idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7996_WTBL_STA);
+++			if (idx < 0) {
+++				if (dev->mt76.mmio.an7552 &&
+++				    !bitmap_empty(dev->npu_rx_retired, MT76_N_WCIDS)) {
+++					dev->recovery.restart = true;
+++					queue_work(dev->mt76.wq, &dev->reset_work);
+++				}
+++				return -ENOSPC;
+++			}
+++		} while (dev->mt76.mmio.an7552 &&
+++			 test_bit(idx, dev->npu_rx_retired));
++ 	}
++ 
++ 	if (mt7996_sta_deflink_busy(dev, msta)) {
++@@ -1906,7 +1919,9 @@
++ 
++ 		rcu_assign_pointer(msta->link[link_id], NULL);
++ 		rcu_assign_pointer(dev->mt76.wcid[msta_link->wcid.idx], NULL);
++-		mt76_wcid_mask_clear(dev->mt76.wcid_mask, msta_link->wcid.idx);
+++		if (!dev->mt76.mmio.an7552 ||
+++		    !test_bit(msta_link->wcid.idx, dev->npu_rx_retired))
+++			mt76_wcid_mask_clear(dev->mt76.wcid_mask, msta_link->wcid.idx);
++ 		if (msta_link != &msta->deflink)
++ 			kfree_rcu(msta_link, rcu_head);
++ 	}
+diff --git a/target/linux/airoha/an7563a64/base-files/etc/board.d/02_network b/target/linux/airoha/an7563a64/base-files/etc/board.d/02_network
+new file mode 100644
+index 000000000..31f7405b9
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/base-files/etc/board.d/02_network
+@@ -0,0 +1,31 @@
++#
++# Copyright (c) 2015 The Linux Foundation. All rights reserved.
++# Copyright (c) 2011-2015 OpenWrt.org
++#
++
++. /lib/functions/uci-defaults.sh
++. /lib/functions/system.sh
++
++an7563_setup_interfaces()
++{
++	local board="$1"
++
++	case "$board" in
++	tenda,be6l-pro)
++		ucidef_set_interfaces_lan_wan "lan2 lan3 lan4" "eth1"
++		;;
++	xiaomi,be5000)
++		ucidef_set_interface_lan "lan1 lan2 lan3 eth1"
++		;;
++	*)
++		echo "Unsupported hardware. Network interfaces not initialized"
++		;;
++	esac
++}
++
++board_config_update
++board=$(board_name)
++an7563_setup_interfaces $board
++board_config_flush
++
++exit 0
+diff --git a/target/linux/airoha/an7563a64/base-files/etc/board.d/05_compat-version b/target/linux/airoha/an7563a64/base-files/etc/board.d/05_compat-version
+new file mode 100755
+index 000000000..52ab1e42c
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/base-files/etc/board.d/05_compat-version
+@@ -0,0 +1,15 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++. /lib/functions/uci-defaults.sh
++
++board_config_update
++
++case "$(board_name)" in
++xiaomi,be5000)
++	ucidef_set_compat_version "1.1"
++	;;
++esac
++
++board_config_flush
++
++exit 0
+diff --git a/target/linux/airoha/an7563a64/base-files/etc/uci-defaults/09_xiaomi-be5000-wifi-macaddr b/target/linux/airoha/an7563a64/base-files/etc/uci-defaults/09_xiaomi-be5000-wifi-macaddr
+new file mode 100644
+index 000000000..8df727420
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/base-files/etc/uci-defaults/09_xiaomi-be5000-wifi-macaddr
+@@ -0,0 +1,25 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++# Without its Wi-Fi calibration in "art", mt7996 loads the MediaTek default
++# EEPROM, whose MAC address is the same on every unit. Give each radio a
++# random locally administered base once; it is kept in the config.
++
++. /lib/functions.sh
++. /lib/functions/system.sh
++
++[ "$(board_name)" = xiaomi,be5000 ] || exit 0
++[ "$(cat /sys/class/ieee80211/phy0/macaddress 2>/dev/null)" = 00:0c:43:26:60:10 ] || exit 0
++
++# Idempotent: adds only the radios that have no wifi-device section yet.
++/sbin/wifi config
++
++base=$(macaddr_random)
++idx=0
++for radio in $(uci -q show wireless | sed -n "s/^wireless\.\([^.=]*\)=wifi-device$/\1/p"); do
++	[ -n "$(uci -q get wireless.$radio.macaddr_base)" ] && continue
++	uci set wireless.$radio.macaddr_base=$(macaddr_add "$base" $((idx * 16)))
++	idx=$((idx + 1))
++done
++uci commit wireless
++
++exit 0
+diff --git a/target/linux/airoha/an7563a64/base-files/lib/preinit/75_ubi_rootfs_data b/target/linux/airoha/an7563a64/base-files/lib/preinit/75_ubi_rootfs_data
+new file mode 100644
+index 000000000..15b87c3db
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/base-files/lib/preinit/75_ubi_rootfs_data
+@@ -0,0 +1,45 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++# JFFS2 on the SPI-NAND of the Xiaomi BE5000 corrupts pages it programs
++# twice (cleanmarker in OOB, then data), so the overlay lives in a UBI
++# volume. Attach an existing "ubi" partition and create
++# the rootfs_data volume, with its /dev node, before mount_root looks
++# for it. An initramfs may run on a factory layout, where formatting
++# would destroy stock data: leave the flash alone there.
++
++. /lib/upgrade/nand.sh
++
++ubi_rootfs_data() {
++	local mtdnum ubidev
++
++	[ "$INITRAMFS" = "1" ] && return 0
++	case "$(board_name)" in
++	xiaomi,be5000) ;;
++	*) return 0 ;;
++	esac
++
++	mtdnum="$(find_mtd_index ubi)"
++	[ -n "$mtdnum" ] || return 0
++
++	ubidev="$(nand_find_ubi ubi)"
++	if [ -z "$ubidev" ]; then
++		# A failed attachment does not mean the existing data is disposable.
++		# Formatting is reserved for an explicit sysupgrade operation.
++		ubiattach -m "$mtdnum" >/dev/null || {
++			echo "Cannot attach UBI on mtd$mtdnum; preserving flash." >&2
++			return 1
++		}
++		ubidev="$(nand_find_ubi ubi)"
++		[ -n "$ubidev" ] || return 1
++	fi
++
++	[ -n "$(nand_find_volume "$ubidev" rootfs_data)" ] && return 0
++
++	echo "- creating rootfs_data UBI volume -"
++	ubimkvol "/dev/$ubidev" -N rootfs_data -m >/dev/null || return 1
++	# The node of the new volume does not exist yet in preinit, and
++	# mount_root opens the volume by it: nand_find_volume() creates it.
++	nand_find_volume "$ubidev" rootfs_data >/dev/null
++}
++
++boot_hook_add preinit_main ubi_rootfs_data
+diff --git a/target/linux/airoha/an7563a64/base-files/lib/upgrade/platform.sh b/target/linux/airoha/an7563a64/base-files/lib/upgrade/platform.sh
+new file mode 100644
+index 000000000..c1d105cf7
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/base-files/lib/upgrade/platform.sh
+@@ -0,0 +1,59 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++PART_NAME=firmware
++REQUIRE_IMAGE_METADATA=1
++
++platform_check_image() {
++	case "$(board_name)" in
++	xiaomi,be5000|airoha,an7563-evb)
++		[ "$(get_magic_long "$1")" = "d00dfeed" ] && return 0
++		echo "Expected an AN7563 FIT firmware image."
++		return 1
++		;;
++	esac
++	echo "Unsupported board."
++	return 1
++}
++
++# The FIT stays raw in "firmware" (the bootloader reads it from there),
++# the overlay is the rootfs_data volume in the "ubi" partition.
++xiaomi_be5000_do_upgrade() {
++	local ubidev
++
++	# Old kernels do not expose the new UBI partition. Boot the new
++	# initramfs before migrating; never write an image we cannot provision.
++	[ -n "$(find_mtd_index ubi)" ] || {
++		echo "Boot the new initramfs before migrating to the UBI layout." >&2
++		return 1
++	}
++	# An explicit upgrade may initialize the overlay partition. Normal
++	# preinit only attempts attachment and never formats on an error.
++	ubidev="$(nand_attach_ubi ubi)" || return 1
++	[ -n "$ubidev" ] || return 1
++
++	get_image "$1" | mtd write - "$PART_NAME" || return 1
++
++	[ -n "$(nand_find_volume "$ubidev" rootfs_data)" ] && \
++		{ ubirmvol "/dev/$ubidev" -N rootfs_data || return 1; }
++	ubimkvol "/dev/$ubidev" -N rootfs_data -m || return 1
++
++	if [ -n "$UPGRADE_BACKUP" ]; then
++		CI_UBIPART=ubi nand_restore_config "$UPGRADE_BACKUP" || return 1
++	fi
++	return 0
++}
++
++platform_do_upgrade() {
++	case "$(board_name)" in
++	tenda,be6l-pro)
++		echo "BE6L Pro RAM-only bring-up: flash upgrades disabled." >&2
++		return 1
++		;;
++	xiaomi,be5000)
++		xiaomi_be5000_do_upgrade "$1"
++		;;
++	*)
++		default_do_upgrade "$1"
++		;;
++	esac
++}
+diff --git a/target/linux/airoha/an7563a64/config-6.18 b/target/linux/airoha/an7563a64/config-6.18
+new file mode 100644
+index 000000000..f59550784
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/config-6.18
+@@ -0,0 +1,708 @@
++CONFIG_64BIT=y
++CONFIG_AIROHA_THERMAL=y
++CONFIG_ARCH_BINFMT_ELF_EXTRA_PHDRS=y
++CONFIG_ARCH_DEFAULT_KEXEC_IMAGE_VERIFY_SIG=y
++CONFIG_ARCH_DMA_ADDR_T_64BIT=y
++CONFIG_ARCH_FORCE_MAX_ORDER=10
++CONFIG_ARCH_KEEP_MEMBLOCK=y
++CONFIG_ARCH_MHP_MEMMAP_ON_MEMORY_ENABLE=y
++CONFIG_ARCH_MMAP_RND_BITS=18
++CONFIG_ARCH_MMAP_RND_BITS_MAX=24
++CONFIG_ARCH_MMAP_RND_BITS_MIN=18
++CONFIG_ARCH_MMAP_RND_COMPAT_BITS_MIN=11
++CONFIG_ARCH_PKEY_BITS=3
++CONFIG_ARCH_PROC_KCORE_TEXT=y
++CONFIG_ARCH_SPARSEMEM_ENABLE=y
++CONFIG_ARCH_STACKWALK=y
++CONFIG_ARCH_SUSPEND_POSSIBLE=y
++CONFIG_ARCH_WANTS_EXECMEM_LATE=y
++CONFIG_ARCH_WANTS_NO_INSTR=y
++CONFIG_ARCH_WANTS_THP_SWAP=y
++CONFIG_ARM64=y
++CONFIG_ARM64_4K_PAGES=y
++CONFIG_ARM64_BRBE=y
++CONFIG_ARM64_ERRATUM_843419=y
++CONFIG_ARM64_PA_BITS=48
++CONFIG_ARM64_PA_BITS_48=y
++CONFIG_ARM64_PLATFORM_DEVICES=y
++CONFIG_ARM64_TAGGED_ADDR_ABI=y
++CONFIG_ARM64_VA_BITS=39
++CONFIG_ARM64_VA_BITS_39=y
++CONFIG_ARM_AMBA=y
++CONFIG_ARM_ARCH_TIMER=y
++CONFIG_ARM_ARCH_TIMER_EVTSTREAM=y
++CONFIG_ARM_GIC=y
++CONFIG_ARM_GIC_ITS_PARENT=y
++CONFIG_ARM_GIC_V2M=y
++CONFIG_ARM_GIC_V3=y
++CONFIG_ARM_GIC_V3_ITS=y
++CONFIG_ARM_GIC_V5=y
++CONFIG_ARM_PMU=y
++CONFIG_ARM_PMUV3=y
++CONFIG_ARM_PSCI_FW=y
++CONFIG_ARM_SMCCC_SOC_ID=y
++CONFIG_AUDIT_ARCH_COMPAT_GENERIC=y
++CONFIG_BLK_PM=y
++CONFIG_BLOCK_NOTIFIERS=y
++CONFIG_BUFFER_HEAD=y
++CONFIG_BUILTIN_RETURN_ADDRESS_STRIPS_PAC=y
++CONFIG_CC_HAVE_SHADOW_CALL_STACK=y
++CONFIG_CC_HAVE_STACKPROTECTOR_SYSREG=y
++CONFIG_CLONE_BACKWARDS=y
++CONFIG_COMPACT_UNEVICTABLE_DEFAULT=1
++CONFIG_CONTEXT_TRACKING=y
++CONFIG_CONTEXT_TRACKING_IDLE=y
++CONFIG_CPUFREQ_DT=y
++CONFIG_CPUFREQ_DT_PLATDEV=y
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=y
++# CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE is not set
++CONFIG_CPU_FREQ_GOV_ATTR_SET=y
++CONFIG_CPU_FREQ_GOV_COMMON=y
++CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
++CONFIG_CPU_FREQ_GOV_ONDEMAND=y
++CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
++CONFIG_CPU_FREQ_GOV_POWERSAVE=y
++CONFIG_CPU_FREQ_GOV_USERSPACE=y
++CONFIG_CPU_FREQ_STAT=y
++CONFIG_CPU_LITTLE_ENDIAN=y
++CONFIG_CPU_MITIGATIONS=y
++CONFIG_CPU_RMAP=y
++CONFIG_CRC16=y
++CONFIG_CRC32_ARCH=y
++CONFIG_CRC_CCITT=y
++CONFIG_CRYPTO_CRC32C=y
++CONFIG_CRYPTO_DEFLATE=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_HASH_INFO=y
++CONFIG_CRYPTO_LIB_GF128MUL=y
++CONFIG_CRYPTO_LIB_SHA1=y
++CONFIG_CRYPTO_LIB_SHA1_ARCH=y
++CONFIG_CRYPTO_LIB_SHA256_ARCH=y
++CONFIG_CRYPTO_LIB_UTILS=y
++CONFIG_CRYPTO_LZO=y
++CONFIG_CRYPTO_ZSTD=y
++CONFIG_DCACHE_WORD_ACCESS=y
++CONFIG_DEBUG_INFO=y
++CONFIG_DEBUG_MISC=y
++CONFIG_DEV_COREDUMP=y
++CONFIG_DMADEVICES=y
++CONFIG_DMA_BOUNCE_UNALIGNED_KMALLOC=y
++CONFIG_DMA_DIRECT_REMAP=y
++CONFIG_DMA_ENGINE=y
++CONFIG_DMA_NEED_SYNC=y
++CONFIG_DMA_OF=y
++CONFIG_DTC=y
++CONFIG_EDAC_SUPPORT=y
++CONFIG_EXCLUSIVE_SYSTEM_RAM=y
++CONFIG_EXT4_FS=y
++CONFIG_FIXED_PHY=y
++CONFIG_FIX_EARLYCON_MEM=y
++CONFIG_FRAME_POINTER=y
++CONFIG_FS_IOMAP=y
++CONFIG_FS_MBCACHE=y
++CONFIG_FUNCTION_ALIGNMENT=4
++CONFIG_FUNCTION_ALIGNMENT_4B=y
++CONFIG_FWNODE_MDIO=y
++CONFIG_FWNODE_PCS=y
++CONFIG_FW_LOADER_PAGED_BUF=y
++CONFIG_FW_LOADER_SYSFS=y
++# CONFIG_FW_LOADER_USER_HELPER_FALLBACK is not set
++CONFIG_GCC_SUPPORTS_DYNAMIC_FTRACE_WITH_ARGS=y
++CONFIG_GENERIC_ALLOCATOR=y
++CONFIG_GENERIC_ARCH_TOPOLOGY=y
++CONFIG_GENERIC_BUG=y
++CONFIG_GENERIC_BUG_RELATIVE_POINTERS=y
++CONFIG_GENERIC_CLOCKEVENTS=y
++CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y
++CONFIG_GENERIC_CPU_AUTOPROBE=y
++CONFIG_GENERIC_CPU_DEVICES=y
++CONFIG_GENERIC_CPU_VULNERABILITIES=y
++CONFIG_GENERIC_CSUM=y
++CONFIG_GENERIC_EARLY_IOREMAP=y
++CONFIG_GENERIC_GETTIMEOFDAY=y
++CONFIG_GENERIC_IDLE_POLL_SETUP=y
++CONFIG_GENERIC_IOREMAP=y
++CONFIG_GENERIC_IRQ_EFFECTIVE_AFF_MASK=y
++CONFIG_GENERIC_IRQ_ENTRY=y
++CONFIG_GENERIC_IRQ_KEXEC_CLEAR_VM_FORWARD=y
++CONFIG_GENERIC_IRQ_MIGRATION=y
++CONFIG_GENERIC_IRQ_SHOW=y
++CONFIG_GENERIC_IRQ_SHOW_LEVEL=y
++CONFIG_GENERIC_LIB_DEVMEM_IS_ALLOWED=y
++CONFIG_GENERIC_MSI_IRQ=y
++CONFIG_GENERIC_PCI_IOMAP=y
++CONFIG_GENERIC_PHY=y
++CONFIG_GENERIC_PINCONF=y
++CONFIG_GENERIC_PINMUX_FUNCTIONS=y
++CONFIG_GENERIC_SCHED_CLOCK=y
++CONFIG_GENERIC_SMP_IDLE_THREAD=y
++CONFIG_GENERIC_STRNCPY_FROM_USER=y
++CONFIG_GENERIC_STRNLEN_USER=y
++CONFIG_GENERIC_TIME_VSYSCALL=y
++CONFIG_GLOB=y
++CONFIG_GRO_CELLS=y
++CONFIG_HARDIRQS_SW_RESEND=y
++CONFIG_HAS_DMA=y
++CONFIG_HAS_IOMEM=y
++CONFIG_HAS_IOPORT=y
++CONFIG_HAS_IOPORT_MAP=y
++CONFIG_HOTPLUG_CORE_SYNC=y
++CONFIG_HOTPLUG_CORE_SYNC_DEAD=y
++CONFIG_HOTPLUG_CPU=y
++CONFIG_HOTPLUG_SMT=y
++CONFIG_HW_RANDOM=y
++CONFIG_I2C=y
++CONFIG_I2C_BOARDINFO=y
++CONFIG_I2C_CHARDEV=y
++CONFIG_I2C_HELPER_AUTO=y
++CONFIG_I2C_MT7621=y
++CONFIG_ILLEGAL_POINTER_VALUE=0xdead000000000000
++CONFIG_INITRAMFS_SOURCE=""
++CONFIG_IO_URING=y
++CONFIG_IO_URING_ZCRX=y
++CONFIG_IPV6=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++# CONFIG_IPV6_SUBTREES is not set
++CONFIG_IP_MROUTE=y
++CONFIG_IP_MROUTE_COMMON=y
++# CONFIG_IP_MROUTE_MULTIPLE_TABLES is not set
++CONFIG_IP_PNP=y
++# CONFIG_IP_PNP_BOOTP is not set
++# CONFIG_IP_PNP_DHCP is not set
++# CONFIG_IP_PNP_RARP is not set
++# CONFIG_IP_ROUTE_MULTIPATH is not set
++# CONFIG_IP_ROUTE_VERBOSE is not set
++CONFIG_IRQCHIP=y
++CONFIG_IRQ_DOMAIN=y
++CONFIG_IRQ_DOMAIN_HIERARCHY=y
++CONFIG_IRQ_FORCED_THREADING=y
++CONFIG_IRQ_MSI_IOMMU=y
++CONFIG_IRQ_MSI_LIB=y
++CONFIG_IRQ_WORK=y
++CONFIG_JBD2=y
++CONFIG_LIBFDT=y
++CONFIG_LOCK_DEBUGGING_SUPPORT=y
++CONFIG_LRU_GEN_WALKS_MMU=y
++CONFIG_LZO_COMPRESS=y
++CONFIG_LZO_DECOMPRESS=y
++CONFIG_MDIO_BUS=y
++CONFIG_MEDIATEK_GE_SOC_PHY=y
++CONFIG_MFD_SYSCON=y
++CONFIG_MIGRATION=y
++CONFIG_MMC=y
++CONFIG_MMC_BLOCK=y
++CONFIG_MMC_CQHCI=y
++CONFIG_MMC_HSQ=y
++CONFIG_MMC_MTK=y
++CONFIG_MMU_LAZY_TLB_REFCOUNT=y
++CONFIG_MODULES_TREE_LOOKUP=y
++CONFIG_MODULES_USE_ELF_RELA=y
++CONFIG_MTD_RAW_NAND=y
++CONFIG_MTD_UBI_NVMEM=y
++CONFIG_MTD_VIRT_CONCAT=y
++CONFIG_MTK_NET_PHYLIB=y
++CONFIG_NEED_DMA_MAP_STATE=y
++CONFIG_NEED_SG_DMA_LENGTH=y
++CONFIG_NET_DEVLINK=y
++CONFIG_NET_EGRESS=y
++CONFIG_NET_FLOW_LIMIT=y
++CONFIG_NET_INGRESS=y
++CONFIG_NET_SELFTESTS=y
++# CONFIG_NET_VENDOR_3COM is not set
++# CONFIG_NET_VENDOR_MEDIATEK is not set
++CONFIG_NET_XGRESS=y
++CONFIG_NLS=y
++CONFIG_NO_HZ_COMMON=y
++CONFIG_NO_HZ_IDLE=y
++CONFIG_NR_CPUS=4
++CONFIG_NVMEM_BLOCK=y
++CONFIG_NVMEM_LAYOUT_ASCII_ENV=y
++CONFIG_OF=y
++CONFIG_OF_ADDRESS=y
++CONFIG_OF_EARLY_FLATTREE=y
++CONFIG_OF_FLATTREE=y
++CONFIG_OF_IRQ=y
++CONFIG_OF_KOBJ=y
++CONFIG_OF_MDIO=y
++CONFIG_PAGE_BLOCK_MAX_ORDER=10
++CONFIG_PAGE_POOL=y
++CONFIG_PAGE_SIZE_LESS_THAN_256KB=y
++CONFIG_PAGE_SIZE_LESS_THAN_64KB=y
++CONFIG_PARTITION_PERCPU=y
++CONFIG_PCI=y
++CONFIG_PCIEASPM=y
++# CONFIG_PCIEASPM_DEFAULT is not set
++CONFIG_PCIEASPM_PERFORMANCE=y
++# CONFIG_PCIEASPM_POWERSAVE is not set
++# CONFIG_PCIEASPM_POWER_SUPERSAVE is not set
++CONFIG_PCIE_MEDIATEK_GEN3=y
++CONFIG_PCI_DOMAINS=y
++CONFIG_PCI_DOMAINS_GENERIC=y
++CONFIG_PCI_MSI=y
++CONFIG_PCS_AIROHA=y
++CONFIG_PERF_EVENTS=y
++CONFIG_PER_VMA_LOCK=y
++CONFIG_PGTABLE_LEVELS=3
++CONFIG_PHYLIB=y
++CONFIG_PHYLIB_LEDS=y
++CONFIG_PHYLINK=y
++CONFIG_PHYS_ADDR_T_64BIT=y
++CONFIG_PHY_PACKAGE=y
++CONFIG_PM=y
++CONFIG_PM_CLK=y
++CONFIG_PM_GENERIC_DOMAINS=y
++CONFIG_PM_GENERIC_DOMAINS_OF=y
++CONFIG_PM_OPP=y
++CONFIG_POSIX_CPU_TIMERS_TASK_WORK=y
++CONFIG_POWER_RESET=y
++CONFIG_POWER_RESET_SYSCON=y
++CONFIG_POWER_SUPPLY=y
++CONFIG_PTP_1588_CLOCK_OPTIONAL=y
++CONFIG_QUEUED_RWLOCKS=y
++CONFIG_QUEUED_SPINLOCKS=y
++CONFIG_RANDSTRUCT_NONE=y
++CONFIG_RAS=y
++CONFIG_RATIONAL=y
++CONFIG_REGMAP_IRQ=y
++CONFIG_REGULATOR=y
++CONFIG_REGULATOR_FIXED_VOLTAGE=y
++CONFIG_RELOCATABLE=y
++CONFIG_RESET_CONTROLLER=y
++CONFIG_RFS_ACCEL=y
++CONFIG_RPS=y
++CONFIG_SECCOMP=y
++CONFIG_SECCOMP_FILTER=y
++CONFIG_SERIAL_8250_NR_UARTS=5
++CONFIG_SERIAL_8250_RUNTIME_UARTS=5
++CONFIG_SMP=y
++CONFIG_SOCK_RX_QUEUE_MAPPING=y
++CONFIG_SOC_BUS=y
++CONFIG_SOFTIRQ_ON_OWN_STACK=y
++CONFIG_SPARSEMEM=y
++CONFIG_SPARSEMEM_EXTREME=y
++CONFIG_SPARSEMEM_VMEMMAP=y
++CONFIG_SPARSEMEM_VMEMMAP_ENABLE=y
++CONFIG_SPARSE_IRQ=y
++CONFIG_SPLIT_PMD_PTLOCKS=y
++CONFIG_SPLIT_PTE_PTLOCKS=y
++CONFIG_SWIOTLB=y
++CONFIG_SWPHY=y
++CONFIG_SYSCTL_EXCEPTION_TRACE=y
++CONFIG_THERMAL=y
++CONFIG_THERMAL_DEFAULT_GOV_STEP_WISE=y
++CONFIG_THERMAL_EMERGENCY_POWEROFF_DELAY_MS=0
++CONFIG_THERMAL_GOV_STEP_WISE=y
++CONFIG_THERMAL_OF=y
++CONFIG_THREAD_INFO_IN_TASK=y
++CONFIG_TICK_CPU_ACCOUNTING=y
++CONFIG_TIMER_OF=y
++CONFIG_TIMER_PROBE=y
++CONFIG_TRACE_IRQFLAGS_NMI_SUPPORT=y
++CONFIG_TREE_RCU=y
++CONFIG_TREE_SRCU=y
++CONFIG_UBIFS_FS=y
++CONFIG_UIMAGE_FIT_BLK=y
++# CONFIG_UNMAP_KERNEL_AT_EL0 is not set
++CONFIG_USB=y
++CONFIG_USB_COMMON=y
++CONFIG_USB_SUPPORT=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_MTK=y
++# CONFIG_USB_XHCI_PLATFORM is not set
++CONFIG_USER_STACKTRACE_SUPPORT=y
++CONFIG_VDSO_GETRANDOM=y
++CONFIG_VMAP_STACK=y
++CONFIG_WANT_DEV_COREDUMP=y
++CONFIG_WATCHDOG_CORE=y
++# CONFIG_WLAN is not set
++# CONFIG_WQ_POWER_EFFICIENT_DEFAULT is not set
++CONFIG_XPS=y
++CONFIG_XXHASH=y
++CONFIG_ZLIB_DEFLATE=y
++CONFIG_ZLIB_INFLATE=y
++CONFIG_ZONE_DMA32=y
++CONFIG_ZSTD_COMMON=y
++CONFIG_ZSTD_COMPRESS=y
++CONFIG_ZSTD_DECOMPRESS=y
++CONFIG_AIROHA_CPU_PM_DOMAIN=y
++CONFIG_AIROHA_WATCHDOG=y
++CONFIG_ARCH_AIROHA=y
++CONFIG_ARM_AIROHA_SOC_CPUFREQ=y
++CONFIG_COMMON_CLK=y
++CONFIG_COMMON_CLK_EN7523=y
++CONFIG_GENERIC_PINCTRL_GROUPS=y
++CONFIG_GPIOLIB_IRQCHIP=y
++CONFIG_GPIO_CDEV=y
++# CONFIG_GPIO_EN7523 is not set
++CONFIG_GPIO_GENERIC=y
++CONFIG_HW_RANDOM_AIROHA=y
++CONFIG_LEDS_PWM=y
++CONFIG_LOCK_SPIN_ON_OWNER=y
++CONFIG_MAGIC_SYSRQ_SERIAL=y
++# CONFIG_MDIO_AIROHA is not set
++CONFIG_MTD_NAND_CORE=y
++CONFIG_MTD_NAND_ECC=y
++CONFIG_MTD_NAND_ECC_SW_HAMMING=y
++CONFIG_MTD_NAND_MTK_BMT=y
++CONFIG_MTD_SPI_NAND=y
++CONFIG_MTD_SPI_NOR=y
++CONFIG_MTD_SPLIT_FIRMWARE=y
++CONFIG_MTD_SPLIT_FIT_FW=y
++CONFIG_MTD_UBI=y
++CONFIG_MTD_UBI_BEB_LIMIT=20
++CONFIG_MTD_UBI_BLOCK=y
++CONFIG_MTD_UBI_WL_THRESHOLD=4096
++CONFIG_MUTEX_SPIN_ON_OWNER=y
++CONFIG_NET_AIROHA=y
++# CONFIG_NET_AIROHA_FLOW_STATS is not set
++CONFIG_NET_AIROHA_NPU=y
++CONFIG_NET_AIROHA_AN7552_NPU=y
++CONFIG_NET_VENDOR_AIROHA=y
++CONFIG_NVMEM=y
++CONFIG_NVMEM_LAYOUTS=y
++CONFIG_NVMEM_SYSFS=y
++CONFIG_OF_GPIO=y
++CONFIG_PCIEAER=y
++CONFIG_PCIEPORTBUS=y
++CONFIG_PCIE_MEDIATEK=y
++CONFIG_PCIE_PME=y
++# CONFIG_PCS_AIROHA_AN7581 is not set
++# CONFIG_PCS_AIROHA_AN7583 is not set
++# CONFIG_PHY_AIROHA_AN7583_PCIE is not set
++# CONFIG_PHY_AIROHA_AN7583_USB is not set
++CONFIG_PHY_AIROHA_PCIE=y
++# CONFIG_PHY_AIROHA_USB is not set
++CONFIG_PINCTRL=y
++CONFIG_PINCTRL_AIROHA=y
++CONFIG_PINCTRL_AIROHA_AN7563=y
++# CONFIG_PINCTRL_AIROHA_AN7581 is not set
++# CONFIG_PINCTRL_AIROHA_AN7583 is not set
++# CONFIG_PINCTRL_AIROHA_EN7523 is not set
++CONFIG_PWM=y
++CONFIG_PWM_AIROHA=y
++CONFIG_REGMAP=y
++CONFIG_REGMAP_MMIO=y
++CONFIG_RWSEM_SPIN_ON_OWNER=y
++CONFIG_SERIAL_8250_AIROHA=y
++CONFIG_SERIAL_8250_EXTENDED=y
++CONFIG_SERIAL_8250_FSL=y
++# CONFIG_SERIAL_8250_SHARE_IRQ is not set
++CONFIG_SERIAL_MCTRL_GPIO=y
++CONFIG_SERIAL_OF_PLATFORM=y
++CONFIG_SOC_AIROHA_AN7563=y
++CONFIG_SPI=y
++CONFIG_SPI_AIROHA_SNFI=y
++CONFIG_SPI_MASTER=y
++CONFIG_SPI_MEM=y
++CONFIG_NET_DSA=y
++CONFIG_NET_DSA_MT7530=y
++CONFIG_NET_DSA_MT7530_MMIO=y
++CONFIG_NET_DSA_TAG_MTK=y
++# CONFIG_NET_DSA_MT7530_MDIO is not set
++CONFIG_KEXEC_CORE=y
++CONFIG_KEXEC=y
++CONFIG_PCS_AN7563=y
++CONFIG_CC_VERSION_TEXT="aarch64-openwrt-linux-musl-gcc (OpenWrt GCC 14.4.0 toolchain-55f076e4f3) 14.4.0"
++CONFIG_CC_IS_GCC=y
++CONFIG_GCC_VERSION=140400
++CONFIG_CLANG_VERSION=0
++CONFIG_AS_IS_GNU=y
++CONFIG_AS_VERSION=24601
++CONFIG_LD_IS_BFD=y
++CONFIG_LD_VERSION=24601
++CONFIG_LLD_VERSION=0
++CONFIG_RUSTC_VERSION=0
++CONFIG_RUSTC_LLVM_VERSION=0
++CONFIG_CC_HAS_ASM_GOTO_OUTPUT=y
++CONFIG_CC_HAS_ASM_GOTO_TIED_OUTPUT=y
++CONFIG_TOOLS_SUPPORT_RELR=y
++CONFIG_CC_HAS_ASM_INLINE=y
++CONFIG_CC_HAS_ASSUME=y
++CONFIG_CC_HAS_NO_PROFILE_FN_ATTR=y
++CONFIG_LD_CAN_USE_KEEP_IN_OVERLAY=y
++CONFIG_PAHOLE_VERSION=0
++CONFIG_SYSVIPC_COMPAT=y
++CONFIG_POSIX_MQUEUE_SYSCTL=y
++CONFIG_HAVE_ARCH_AUDITSYSCALL=y
++CONFIG_ARCH_HAS_TICK_BROADCAST=y
++CONFIG_HAVE_POSIX_CPU_TIMERS_TASK_WORK=y
++CONFIG_HAVE_EBPF_JIT=y
++CONFIG_ARCH_WANT_DEFAULT_BPF_JIT=y
++CONFIG_ARCH_HAS_PREEMPT_LAZY=y
++CONFIG_TASKS_RCU_GENERIC=y
++CONFIG_TASKS_TRACE_RCU=y
++CONFIG_ARCH_SUPPORTS_NUMA_BALANCING=y
++CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH=y
++CONFIG_CC_HAS_INT128=y
++CONFIG_CC_IMPLICIT_FALLTHROUGH="-Wimplicit-fallthrough=5"
++CONFIG_GCC10_NO_ARRAY_BOUNDS=y
++CONFIG_CC_NO_ARRAY_BOUNDS=y
++CONFIG_ARCH_SUPPORTS_INT128=y
++CONFIG_SLAB_OBJ_EXT=y
++CONFIG_PAGE_COUNTER=y
++CONFIG_CGROUP_WRITEBACK=y
++CONFIG_GROUP_SCHED_WEIGHT=y
++CONFIG_GROUP_SCHED_BANDWIDTH=y
++CONFIG_SOCK_CGROUP_DATA=y
++CONFIG_LD_ORPHAN_WARN=y
++CONFIG_LD_ORPHAN_WARN_LEVEL="error"
++CONFIG_HAVE_UID16=y
++CONFIG_ARCH_HAS_MEMBARRIER_SYNC_CORE=y
++CONFIG_ARCH_SUPPORTS_MSEAL_SYSTEM_MAPPINGS=y
++CONFIG_HAVE_PERF_EVENTS=y
++CONFIG_RUSTC_SUPPORTS_ARM64=y
++CONFIG_ARM64_CONT_PTE_SHIFT=4
++CONFIG_ARM64_CONT_PMD_SHIFT=4
++CONFIG_ARCH_SUPPORTS_UPROBES=y
++CONFIG_ARCH_SUPPORTS_KEXEC_FILE=y
++CONFIG_ARCH_SUPPORTS_KEXEC_SIG=y
++CONFIG_ARCH_SUPPORTS_KEXEC_IMAGE_VERIFY_SIG=y
++CONFIG_ARCH_SUPPORTS_KEXEC_HANDOVER=y
++CONFIG_ARCH_SUPPORTS_CRASH_DUMP=y
++# CONFIG_ARMV8_DEPRECATED is not set
++CONFIG_CC_HAS_BRANCH_PROT_PAC_RET=y
++CONFIG_AS_HAS_CFI_NEGATE_RA_STATE=y
++CONFIG_AS_HAS_ARMV8_5=y
++CONFIG_CC_HAS_BRANCH_PROT_PAC_RET_BTI=y
++CONFIG_ARM64_AS_HAS_MTE=y
++CONFIG_AS_HAS_MOPS=y
++CONFIG_STACKPROTECTOR_PER_TASK=y
++CONFIG_HAVE_LIVEPATCH=y
++CONFIG_ARCH_SUPPORTS_SCHED_SMT=y
++CONFIG_ARCH_SUPPORTS_SCHED_CLUSTER=y
++CONFIG_ARCH_SUPPORTS_SCHED_MC=y
++CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS=y
++CONFIG_HAVE_IOREMAP_PROT=y
++CONFIG_HAVE_KPROBES=y
++CONFIG_HAVE_KRETPROBES=y
++CONFIG_HAVE_FUNCTION_ERROR_INJECTION=y
++CONFIG_HAVE_NMI=y
++CONFIG_HAVE_ARCH_TRACEHOOK=y
++CONFIG_HAVE_DMA_CONTIGUOUS=y
++CONFIG_ARCH_HAS_FORTIFY_SOURCE=y
++CONFIG_ARCH_HAS_KEEPINITRD=y
++CONFIG_ARCH_HAS_SET_MEMORY=y
++CONFIG_ARCH_HAS_SET_DIRECT_MAP=y
++CONFIG_HAVE_ARCH_THREAD_STRUCT_WHITELIST=y
++CONFIG_HAVE_ASM_MODVERSIONS=y
++CONFIG_HAVE_REGS_AND_STACK_ACCESS_API=y
++CONFIG_HAVE_RSEQ=y
++CONFIG_HAVE_RUST=y
++CONFIG_HAVE_FUNCTION_ARG_ACCESS_API=y
++CONFIG_HAVE_PERF_REGS=y
++CONFIG_HAVE_PERF_USER_STACK_DUMP=y
++CONFIG_HAVE_ARCH_JUMP_LABEL=y
++CONFIG_HAVE_ARCH_JUMP_LABEL_RELATIVE=y
++CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG=y
++CONFIG_ARCH_HAS_NMI_SAFE_THIS_CPU_OPS=y
++CONFIG_HAVE_ALIGNED_STRUCT_PAGE=y
++CONFIG_HAVE_CMPXCHG_LOCAL=y
++CONFIG_HAVE_CMPXCHG_DOUBLE=y
++CONFIG_ARCH_WANT_COMPAT_IPC_PARSE_VERSION=y
++CONFIG_HAVE_ARCH_SECCOMP=y
++CONFIG_HAVE_ARCH_SECCOMP_FILTER=y
++CONFIG_HAVE_ARCH_KSTACK_ERASE=y
++CONFIG_HAVE_STACKPROTECTOR=y
++CONFIG_ARCH_SUPPORTS_SHADOW_CALL_STACK=y
++CONFIG_ARCH_SUPPORTS_LTO_CLANG=y
++CONFIG_ARCH_SUPPORTS_LTO_CLANG_THIN=y
++CONFIG_ARCH_SUPPORTS_CFI=y
++CONFIG_HAVE_CONTEXT_TRACKING_USER=y
++CONFIG_HAVE_VIRT_CPU_ACCOUNTING_GEN=y
++CONFIG_HAVE_IRQ_TIME_ACCOUNTING=y
++CONFIG_HAVE_MOVE_PUD=y
++CONFIG_HAVE_MOVE_PMD=y
++CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE=y
++CONFIG_HAVE_ARCH_HUGE_VMAP=y
++CONFIG_HAVE_ARCH_HUGE_VMALLOC=y
++CONFIG_ARCH_WANT_HUGE_PMD_SHARE=y
++CONFIG_HAVE_MOD_ARCH_SPECIFIC=y
++CONFIG_HAVE_SOFTIRQ_ON_OWN_STACK=y
++CONFIG_ARCH_HAS_ELF_RANDOMIZE=y
++CONFIG_HAVE_ARCH_MMAP_RND_BITS=y
++CONFIG_HAVE_ARCH_MMAP_RND_COMPAT_BITS=y
++CONFIG_ARCH_MMAP_RND_COMPAT_BITS=11
++CONFIG_HAVE_PAGE_SIZE_4KB=y
++CONFIG_ARCH_WANT_DEFAULT_TOPDOWN_MMAP_LAYOUT=y
++CONFIG_HAVE_RELIABLE_STACKTRACE=y
++CONFIG_OLD_SIGSUSPEND3=y
++CONFIG_COMPAT_OLD_SIGACTION=y
++CONFIG_ARCH_SUPPORTS_RT=y
++CONFIG_HAVE_ARCH_VMAP_STACK=y
++CONFIG_HAVE_ARCH_RANDOMIZE_KSTACK_OFFSET=y
++CONFIG_ARCH_HAS_STRICT_KERNEL_RWX=y
++CONFIG_ARCH_HAS_STRICT_MODULE_RWX=y
++CONFIG_HAVE_ARCH_COMPILER_H=y
++CONFIG_HAVE_ARCH_PREL32_RELOCATIONS=y
++CONFIG_ARCH_HAS_RELR=y
++CONFIG_ARCH_HAS_MEM_ENCRYPT=y
++CONFIG_ARCH_HAS_CC_PLATFORM=y
++CONFIG_HAVE_PREEMPT_DYNAMIC=y
++CONFIG_HAVE_PREEMPT_DYNAMIC_KEY=y
++CONFIG_ARCH_WANT_LD_ORPHAN_WARN=y
++CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=y
++CONFIG_ARCH_SUPPORTS_PAGE_TABLE_CHECK=y
++CONFIG_ARCH_HAVE_TRACE_MMIO_ACCESS=y
++CONFIG_ARCH_HAS_HW_PTE_YOUNG=y
++CONFIG_ARCH_HAS_KERNEL_FPU_SUPPORT=y
++CONFIG_ARCH_HAS_GCOV_PROFILE_ALL=y
++CONFIG_HAVE_GCC_PLUGINS=y
++CONFIG_CC_HAS_MIN_FUNCTION_ALIGNMENT=y
++CONFIG_CC_HAS_SANE_FUNCTION_ALIGNMENT=y
++CONFIG_BLK_CGROUP_RWSTAT=y
++CONFIG_ARCH_INLINE_SPIN_TRYLOCK=y
++CONFIG_ARCH_INLINE_SPIN_TRYLOCK_BH=y
++CONFIG_ARCH_INLINE_SPIN_LOCK=y
++CONFIG_ARCH_INLINE_SPIN_LOCK_BH=y
++CONFIG_ARCH_INLINE_SPIN_LOCK_IRQ=y
++CONFIG_ARCH_INLINE_SPIN_LOCK_IRQSAVE=y
++CONFIG_ARCH_INLINE_SPIN_UNLOCK=y
++CONFIG_ARCH_INLINE_SPIN_UNLOCK_BH=y
++CONFIG_ARCH_INLINE_SPIN_UNLOCK_IRQ=y
++CONFIG_ARCH_INLINE_SPIN_UNLOCK_IRQRESTORE=y
++CONFIG_ARCH_INLINE_READ_LOCK=y
++CONFIG_ARCH_INLINE_READ_LOCK_BH=y
++CONFIG_ARCH_INLINE_READ_LOCK_IRQ=y
++CONFIG_ARCH_INLINE_READ_LOCK_IRQSAVE=y
++CONFIG_ARCH_INLINE_READ_UNLOCK=y
++CONFIG_ARCH_INLINE_READ_UNLOCK_BH=y
++CONFIG_ARCH_INLINE_READ_UNLOCK_IRQ=y
++CONFIG_ARCH_INLINE_READ_UNLOCK_IRQRESTORE=y
++CONFIG_ARCH_INLINE_WRITE_LOCK=y
++CONFIG_ARCH_INLINE_WRITE_LOCK_BH=y
++CONFIG_ARCH_INLINE_WRITE_LOCK_IRQ=y
++CONFIG_ARCH_INLINE_WRITE_LOCK_IRQSAVE=y
++CONFIG_ARCH_INLINE_WRITE_UNLOCK=y
++CONFIG_ARCH_INLINE_WRITE_UNLOCK_BH=y
++CONFIG_ARCH_INLINE_WRITE_UNLOCK_IRQ=y
++CONFIG_ARCH_INLINE_WRITE_UNLOCK_IRQRESTORE=y
++CONFIG_INLINE_SPIN_TRYLOCK=y
++CONFIG_INLINE_SPIN_TRYLOCK_BH=y
++CONFIG_INLINE_SPIN_LOCK=y
++CONFIG_INLINE_SPIN_LOCK_BH=y
++CONFIG_INLINE_SPIN_LOCK_IRQ=y
++CONFIG_INLINE_SPIN_LOCK_IRQSAVE=y
++CONFIG_INLINE_SPIN_UNLOCK_BH=y
++CONFIG_INLINE_SPIN_UNLOCK_IRQ=y
++CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE=y
++CONFIG_INLINE_READ_LOCK=y
++CONFIG_INLINE_READ_LOCK_BH=y
++CONFIG_INLINE_READ_LOCK_IRQ=y
++CONFIG_INLINE_READ_LOCK_IRQSAVE=y
++CONFIG_INLINE_READ_UNLOCK=y
++CONFIG_INLINE_READ_UNLOCK_BH=y
++CONFIG_INLINE_READ_UNLOCK_IRQ=y
++CONFIG_INLINE_READ_UNLOCK_IRQRESTORE=y
++CONFIG_INLINE_WRITE_LOCK=y
++CONFIG_INLINE_WRITE_LOCK_BH=y
++CONFIG_INLINE_WRITE_LOCK_IRQ=y
++CONFIG_INLINE_WRITE_LOCK_IRQSAVE=y
++CONFIG_INLINE_WRITE_UNLOCK=y
++CONFIG_INLINE_WRITE_UNLOCK_BH=y
++CONFIG_INLINE_WRITE_UNLOCK_IRQ=y
++CONFIG_INLINE_WRITE_UNLOCK_IRQRESTORE=y
++CONFIG_ARCH_SUPPORTS_ATOMIC_RMW=y
++CONFIG_ARCH_USE_QUEUED_SPINLOCKS=y
++CONFIG_ARCH_USE_QUEUED_RWLOCKS=y
++CONFIG_ARCH_HAS_NON_OVERLAPPING_ADDRESS_SPACE=y
++CONFIG_ARCH_HAS_SYSCALL_WRAPPER=y
++CONFIG_ARCH_HAVE_ELF_PROT=y
++CONFIG_ARCH_USE_GNU_PROPERTY=y
++CONFIG_HAVE_GUP_FAST=y
++CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
++CONFIG_ARCH_ENABLE_MEMORY_HOTREMOVE=y
++CONFIG_ARCH_ENABLE_SPLIT_PMD_PTLOCK=y
++CONFIG_ARCH_SUPPORTS_MEMORY_FAILURE=y
++CONFIG_ARCH_HAS_CACHE_LINE_SIZE=y
++CONFIG_ARCH_HAS_CURRENT_STACK_POINTER=y
++CONFIG_ARCH_HAS_ZONE_DMA_SET=y
++CONFIG_VM_EVENT_COUNTERS=y
++CONFIG_ARCH_HAS_PTE_SPECIAL=y
++CONFIG_ARCH_SUPPORTS_PER_VMA_LOCK=y
++CONFIG_SKB_EXTENSIONS=y
++CONFIG_NET_CRC32C=y
++CONFIG_IP_ROUTE_CLASSID=y
++CONFIG_IPV6_SEG6_BPF=y
++CONFIG_INET_MPTCP_DIAG=m
++CONFIG_SOCK_DIAG=y
++CONFIG_NETFILTER_FAMILY_BRIDGE=y
++CONFIG_NETFILTER_FAMILY_ARP=y
++CONFIG_NETFILTER_BPF_LINK=y
++CONFIG_NF_NAT_REDIRECT=y
++CONFIG_NF_NAT_MASQUERADE=y
++CONFIG_NFT_REJECT_IPV4=m
++CONFIG_NFT_REJECT_IPV6=m
++CONFIG_NF_TABLES_BRIDGE=m
++CONFIG_LWTUNNEL=y
++CONFIG_DST_CACHE=y
++CONFIG_HAVE_PCI=y
++CONFIG_HAVE_ARM_SMCCC=y
++CONFIG_HAVE_ARM_SMCCC_DISCOVERY=y
++CONFIG_PPPOE_HASH_BITS=4
++CONFIG_HAVE_CLK=y
++CONFIG_HAVE_CLK_PREPARE=y
++CONFIG_PHY_COMMON_PROPS=y
++CONFIG_ARCH_SUPPORTS_HUGETLBFS=y
++CONFIG_ARCH_HAS_GIGANTIC_PAGE=y
++CONFIG_CC_HAS_AUTO_VAR_INIT_PATTERN=y
++CONFIG_CC_HAS_AUTO_VAR_INIT_ZERO_BARE=y
++CONFIG_CC_HAS_AUTO_VAR_INIT_ZERO=y
++CONFIG_CC_HAS_ZERO_CALL_USED_REGS=y
++CONFIG_CRYPTO_RNG=m
++CONFIG_CRYPTO_RNG_DEFAULT=m
++CONFIG_CRYPTO_JITTERENTROPY_MEMORY_BLOCKS=64
++CONFIG_CRYPTO_JITTERENTROPY_MEMORY_BLOCKSIZE=32
++CONFIG_CRYPTO_JITTERENTROPY_OSR=1
++CONFIG_HAVE_ARCH_BITREVERSE=y
++CONFIG_ARCH_USE_CMPXCHG_LOCKREF=y
++CONFIG_ARCH_HAS_FAST_MULTIPLIER=y
++CONFIG_ARCH_USE_SYM_ANNOTATIONS=y
++CONFIG_CRYPTO_LIB_SHA512=m
++CONFIG_CRYPTO_LIB_SHA512_ARCH=y
++CONFIG_ASSOCIATIVE_ARRAY=y
++CONFIG_ARCH_HAS_SETUP_DMA_OPS=y
++CONFIG_ARCH_HAS_SYNC_DMA_FOR_DEVICE=y
++CONFIG_ARCH_HAS_SYNC_DMA_FOR_CPU=y
++CONFIG_ARCH_HAS_DMA_PREP_COHERENT=y
++CONFIG_ARCH_HAS_FORCE_DMA_UNENCRYPTED=y
++CONFIG_HAVE_GENERIC_VDSO=y
++CONFIG_UNION_FIND=y
++CONFIG_AS_HAS_NON_CONST_ULEB128=y
++CONFIG_ARCH_WANT_FRAME_POINTERS=y
++CONFIG_HAVE_ARCH_KGDB=y
++CONFIG_ARCH_HAS_UBSAN=y
++CONFIG_HAVE_ARCH_KCSAN=y
++CONFIG_HAVE_KCSAN_COMPILER=y
++CONFIG_ARCH_HAS_DEBUG_WX=y
++CONFIG_ARCH_HAS_PTDUMP=y
++CONFIG_HAVE_DEBUG_KMEMLEAK=y
++CONFIG_ARCH_HAS_DEBUG_VM_PGTABLE=y
++CONFIG_ARCH_HAS_DEBUG_VIRTUAL=y
++CONFIG_HAVE_ARCH_KASAN=y
++CONFIG_HAVE_ARCH_KASAN_SW_TAGS=y
++CONFIG_HAVE_ARCH_KASAN_VMALLOC=y
++CONFIG_CC_HAS_KASAN_GENERIC=y
++CONFIG_CC_HAS_KASAN_SW_TAGS=y
++CONFIG_CC_HAS_WORKING_NOSANITIZE_ADDRESS=y
++CONFIG_HAVE_ARCH_KFENCE=y
++CONFIG_HAVE_HARDLOCKUP_DETECTOR_BUDDY=y
++CONFIG_HAVE_FUNCTION_TRACER=y
++CONFIG_HAVE_FUNCTION_GRAPH_TRACER=y
++CONFIG_HAVE_FUNCTION_GRAPH_FREGS=y
++CONFIG_HAVE_FTRACE_GRAPH_FUNC=y
++CONFIG_HAVE_DYNAMIC_FTRACE=y
++CONFIG_HAVE_EXTRA_IPI_TRACEPOINTS=y
++CONFIG_HAVE_DYNAMIC_FTRACE_WITH_ARGS=y
++CONFIG_HAVE_SYSCALL_TRACEPOINTS=y
++CONFIG_HAVE_C_RECORDMCOUNT=y
++CONFIG_HAVE_BUILDTIME_MCOUNT_SORT=y
++CONFIG_HAVE_SAMPLE_FTRACE_DIRECT=y
++CONFIG_HAVE_SAMPLE_FTRACE_DIRECT_MULTI=y
++CONFIG_ARCH_HAS_KCOV=y
++CONFIG_ARCH_USE_MEMTEST=y
++CONFIG_COMPAT=y
++CONFIG_COMPAT_BINFMT_ELF=y
++CONFIG_KUSER_HELPERS=y
++# CONFIG_COMPAT_ALIGNMENT_FIXUPS is not set
++CONFIG_COMPAT_32BIT_TIME=y
+diff --git a/target/linux/airoha/an7563a64/target.mk b/target/linux/airoha/an7563a64/target.mk
+new file mode 100644
+index 000000000..95f81f141
+--- /dev/null
++++ b/target/linux/airoha/an7563a64/target.mk
+@@ -0,0 +1,10 @@
++ARCH:=aarch64
++SUBTARGET:=an7563a64
++BOARDNAME:=AN7563 AArch64 RAM experiment
++CPU_TYPE:=cortex-a53
++KERNELNAME:=Image dtbs
++FEATURES+=source-only
++
++define Target/Description
++  Build RAM-only experimental AArch64 images for AN7563 Cortex-A53.
++endef
+diff --git a/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts b/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts
+new file mode 100644
+index 000000000..51b66512d
+--- /dev/null
++++ b/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts
+@@ -0,0 +1,277 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/dts-v1/;
++
++/memreserve/ 0x80000000 0x88000;
++
++#include "an7563.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Tenda BE6L Pro";
++	compatible = "tenda,be6l-pro", "airoha,an7563", "airoha,en7581";
++
++	aliases {
++		serial0 = &uart1;
++		led-boot = &led_status_green;
++		led-failsafe = &led_status_red;
++		led-running = &led_status_green;
++		led-upgrade = &led_status_red;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++		bootargs = "console=ttyS0,115200n8 earlycon";
++	};
++
++	memory@80000000 {
++		device_type = "memory";
++		reg = <0x80000000 0x20000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		/* Matching workspace for the source-built AN7552 firmware ABI. */
++		npu_firmware: npu-firmware@84000000 {
++			reg = <0x84000000 0x400000>;
++			no-map;
++		};
++
++		npu_pkt: npu-pkt@84400000 {
++			reg = <0x84400000 0x1600000>;
++			no-map;
++		};
++	};
++
++	keys {
++		compatible = "gpio-keys";
++
++		reset {
++			label = "reset";
++			linux,code = <KEY_RESTART>;
++			gpios = <&an7563_pinctrl 5 GPIO_ACTIVE_LOW>;
++			debounce-interval = <10>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_status_green: led-0 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_GREEN>;
++			gpios = <&an7563_pinctrl 8 GPIO_ACTIVE_HIGH>;
++		};
++
++		led_status_red: led-1 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_RED>;
++			gpios = <&an7563_pinctrl 9 GPIO_ACTIVE_LOW>;
++		};
++	};
++};
++
++&an7563_pinctrl {
++	wifi-reset-hog {
++		gpio-hog;
++		gpios = <6 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "wifi-reset";
++	};
++
++	mdio_pins: mdio-pins {
++		mux {
++			function = "mdio";
++			groups = "mdio";
++		};
++	};
++
++	pcie0_rst_pins: pcie0-rst-pins {
++		conf {
++			pins = "pcie_reset0";
++			drive-open-drain;
++		};
++	};
++};
++
++&npu {
++	memory-region = <&npu_firmware>, <&npu_pkt>;
++	memory-region-names = "firmware", "pkt";
++	status = "okay";
++};
++
++&eth {
++	status = "okay";
++};
++
++&gdm1 {
++	status = "okay";
++	nvmem-cells = <&macaddr_factory_4 (-16)>;
++	nvmem-cell-names = "mac-address";
++};
++
++&gdm2 {
++	phy-handle = <&phy15>;
++	status = "okay";
++	nvmem-cells = <&macaddr_factory_4 (-15)>;
++	nvmem-cell-names = "mac-address";
++};
++
++&hsgmii_pcs {
++	status = "okay";
++};
++
++&switch {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&mdio_pins>;
++};
++
++&gsw_port2 {
++	label = "lan2";
++	status = "okay";
++};
++
++&gsw_port3 {
++	label = "lan3";
++	status = "okay";
++};
++
++&gsw_port4 {
++	label = "lan4";
++	status = "okay";
++};
++
++&gsw_mdio {
++	phy15: ethernet-phy@f {
++		compatible = "ethernet-phy-id03a2.a411";
++		reg = <15>;
++		reset-gpios = <&an7563_pinctrl 13 GPIO_ACTIVE_LOW>;
++		reset-assert-us = <250000>;
++		reset-deassert-us = <20000>;
++	};
++};
++
++&pcie0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie0_rst_pins>;
++	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x4000000>;
++	status = "okay";
++
++	pcie@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		device_type = "pci";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		wifi@0,0 {
++			compatible = "pci14c3,7992";
++			reg = <0x0000 0 0 0 0>;
++			airoha,npu = <&npu>;
++			airoha,eth = <&eth>;
++			nvmem-cells = <&eeprom_factory_0>;
++			nvmem-cell-names = "eeprom";
++		};
++	};
++};
++
++&pcie1 {
++	ranges = <0x82000000 0 0x24000000 0x24000000 0 0x4000000>;
++	status = "okay";
++};
++
++&snfi {
++	status = "okay";
++};
++
++&spi_nand {
++	airoha,bmt;
++	/* Prevent BMT metadata creation and automatic repair during RAM tests. */
++	airoha,bmt-read-only;
++
++	partitions {
++		compatible = "fixed-partitions";
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		partition@0 {
++			label = "Bootloader";
++			reg = <0x0 0x80000>;
++			read-only;
++		};
++
++		partition@80000 {
++			label = "u-boot-env";
++			reg = <0x80000 0x80000>;
++			read-only;
++		};
++
++		partition@100000 {
++			label = "Factory";
++			reg = <0x100000 0x400000>;
++			read-only;
++
++			nvmem-layout {
++				compatible = "fixed-layout";
++				#address-cells = <1>;
++				#size-cells = <1>;
++
++				eeprom_factory_0: eeprom@0 {
++					reg = <0x0 0x1e00>;
++				};
++
++				macaddr_factory_4: macaddr@4 {
++					compatible = "mac-base";
++					reg = <0x4 0x6>;
++					#nvmem-cell-cells = <1>;
++				};
++			};
++		};
++
++		partition@500000 {
++			label = "KernelFS1";
++			reg = <0x500000 0x27c0000>;
++			read-only;
++		};
++
++		partition@2cc0000 {
++			label = "KernelFS2";
++			reg = <0x2cc0000 0x27c0000>;
++			read-only;
++		};
++
++		partition@5480000 {
++			label = "CFM";
++			reg = <0x5480000 0x800000>;
++			read-only;
++		};
++
++		partition@5c80000 {
++			label = "CFM_BACKUP";
++			reg = <0x5c80000 0x800000>;
++			read-only;
++		};
++
++		partition@6480000 {
++			label = "CFG";
++			reg = <0x6480000 0x400000>;
++			read-only;
++		};
++
++		partition@6880000 {
++			label = "MISC2";
++			reg = <0x6880000 0x400000>;
++			read-only;
++		};
++
++		partition@6c80000 {
++			label = "art";
++			reg = <0x6c80000 0x380000>;
++			read-only;
++		};
++	};
++};
+diff --git a/target/linux/airoha/image/an7563a64.mk b/target/linux/airoha/image/an7563a64.mk
+new file mode 100644
+index 000000000..84e1bbdc9
+--- /dev/null
++++ b/target/linux/airoha/image/an7563a64.mk
+@@ -0,0 +1,13 @@
++# Experimental AArch64 profile: deliberately no flash image or bootloader.
++define Device/tenda_be6l-pro
++  DEVICE_VENDOR := Tenda
++  DEVICE_MODEL := BE6L Pro (AArch64 RAM experiment)
++  DEVICE_DTS := an7563-tenda-be6l-pro
++  DEVICE_PACKAGES := an7552-npu-firmware airoha-en8811h-firmware \
++    kmod-phy-airoha-en8811h kmod-mt7996e kmod-mt7992-23-firmware \
++    wpad-mbedtls iw
++  KERNEL_LOADADDR := 0x80200000
++  IMAGES :=
++  ARTIFACTS :=
++endef
++TARGET_DEVICES += tenda_be6l-pro
+diff --git a/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch b/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch
+new file mode 100644
+index 000000000..aad848051
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/963-mtd-bmt-honor-read-only.patch
+@@ -0,0 +1,51 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] mtd: honor flash read-only before BMT initialization
++
++RAM-only testing must also prohibit internal BMT metadata creation and repair.
++Keep reads and address translation available for factory calibration data.
++Fail probe if existing metadata cannot be loaded without a physical write.
++Retain Airoha's transaction locking wrappers around every translated operation.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/drivers/mtd/nand/mtk_bmt.c
+++++ b/drivers/mtd/nand/mtk_bmt.c
++@@ -367,6 +367,22 @@
++ 	return ret;
++ }
++ 
+++static int mtk_bmt_readonly_write(struct mtd_info *mtd, loff_t to,
+++				  struct mtd_oob_ops *ops)
+++{
+++	return -EROFS;
+++}
+++
+++static int mtk_bmt_readonly_erase(struct mtd_info *mtd, struct erase_info *instr)
+++{
+++	return -EROFS;
+++}
+++
+++static int mtk_bmt_readonly_markbad(struct mtd_info *mtd, loff_t ofs)
+++{
+++	return -EROFS;
+++}
+++
++ static void
++ mtk_bmt_replace_ops(struct mtd_info *mtd)
++ {
++@@ -375,6 +391,15 @@
++ 	bmtd._erase = mtd->_erase;
++ 	bmtd._block_isbad = mtd->_block_isbad;
++ 	bmtd._block_markbad = mtd->_block_markbad;
+++
+++	if (bmtd.ops == &airoha_bmt_ops &&
+++	    of_property_read_bool(mtd_get_of_node(mtd), "airoha,bmt-read-only")) {
+++		bmtd._write_oob = mtk_bmt_readonly_write;
+++		bmtd._erase = mtk_bmt_readonly_erase;
+++		bmtd._block_markbad = mtk_bmt_readonly_markbad;
+++		mtd->flags &= ~MTD_WRITEABLE;
+++		pr_info("mtk-bmt: physical writes disabled for RAM-only bring-up\n");
+++	}
++ 
++ 	mtd->_read_oob = airoha_locked_read;
++ 	mtd->_write_oob = airoha_locked_write;
+diff --git a/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch b/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch
+new file mode 100755
+index 000000000..791892ea8
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/964-dt-bindings-arm-airoha-add-tenda-be6l-pro.patch
+@@ -0,0 +1,17 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] dt-bindings: arm: airoha: add Tenda BE6L Pro
++
++Describe the AN7563-based Tenda BE6L Pro board.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/Documentation/devicetree/bindings/arm/airoha.yaml
+++++ b/Documentation/devicetree/bindings/arm/airoha.yaml
++@@ -22,6 +22,7 @@ properties:
++       - items:
++           - enum:
++               - airoha,an7563-evb
+++              - tenda,be6l-pro
++               - xiaomi,be5000
++           - const: airoha,an7563
++           - const: airoha,en7581
+diff --git a/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch b/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch
+new file mode 100644
+index 000000000..dd6dc240c
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/965-dt-bindings-mtd-describe-airoha-bmt-read-only.patch
+@@ -0,0 +1,32 @@
++From: eviau512 <121651381+eviau512@users.noreply.github.com>
++Subject: [PATCH] dt-bindings: mtd: describe Airoha BMT read-only mode
++
++Describe the existing Airoha BMT selector and an opt-in mode that also
++prevents metadata writes and automatic repair below the MTD partition layer.
++
++Signed-off-by: eviau512 <121651381+eviau512@users.noreply.github.com>
++---
++--- a/Documentation/devicetree/bindings/mtd/spi-nand.yaml
+++++ b/Documentation/devicetree/bindings/mtd/spi-nand.yaml
++@@ -21,6 +21,21 @@ properties:
++     description: Encode the chip-select line on the SPI bus
++     maxItems: 1
++ 
+++  airoha,bmt:
+++    type: boolean
+++    description:
+++      Enable the Airoha bad-block mapping and factory-bad-block translation
+++      used by the bootloader.
+++
+++  airoha,bmt-read-only:
+++    type: boolean
+++    description:
+++      Require existing BBT/BMT metadata and reject physical write, erase and
+++      bad-block-marking operations, including automatic metadata repair.
+++
+++dependencies:
+++  airoha,bmt-read-only: [ airoha,bmt ]
+++
++ required:
++   - compatible
++   - reg
+diff --git a/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch b/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch
+new file mode 100644
+index 000000000..ad5cb5bbe
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/966-net-airoha-quiesce-inherited-idle-sdk-ppe-tx-ring.patch
+@@ -0,0 +1,78 @@
++From: BE6L Pro RAM bring-up
++Subject: [PATCH] net: airoha: quiesce an inherited idle SDK TX ring
++
++--- a/drivers/net/ethernet/airoha/an7552_npu.c
+++++ b/drivers/net/ethernet/airoha/an7552_npu.c
++@@ -516,17 +516,58 @@
++ 	}
++ }
++ 
+++/* A warm boot can retain the SDK's idle SRAM TX ring. Its NPU producer
+++ * has already been stopped by boot_firmware(). Never claim another ring,
+++ * pending descriptors, or a live DMA transaction. Timeout leaves TX stopped.
+++ */
+++static int native_ppe_quiesce_boot_tx(struct an7552_npu *ctx)
+++{
+++	u32 producer, consumer, global, value;
+++	int ret;
+++
+++	if (readl(ctx->fe + 0x800) != 0x1e800000 ||
+++	    readl(ctx->fe + 0x804) != 0x00050400)
+++		return -EBUSY;
+++	producer = readl(ctx->fe + 0x808);
+++	consumer = readl(ctx->fe + 0x80c);
+++	global = readl(ctx->fe + 0xa04);
+++	if (producer != consumer || consumer >= 64 || (global & BIT(1)) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff))
+++		return -EBUSY;
+++
+++	writel(global & ~BIT(0), ctx->fe + 0xa04);
+++	ret = readl_poll_timeout(ctx->fe + 0xa04, value, !(value & BIT(1)),
+++				 10, 100000);
+++	if (ret)
+++		return ret;
+++	if (readl(ctx->fe + 0x800) != 0x1e800000 ||
+++	    readl(ctx->fe + 0x804) != 0x00050400 ||
+++	    readl(ctx->fe + 0x808) != producer ||
+++	    readl(ctx->fe + 0x80c) != consumer ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff))
+++		return -EBUSY;
+++
+++	dev_info(ctx->dev, "quiesced inherited idle SDK PPE TX ring\n");
+++	return 0;
+++}
+++
++ static int native_ppe_start(struct an7552_npu *ctx)
++ {
++ 	void __iomem *q = ctx->regs + 0x36c0, *ring = ctx->ram + 0x2f0000;
++ 	unsigned int i;
++ 	u32 start;
+++	int ret;
++ 
++ 	if (ctx->ppe_enabled)
++ 		return 0;
++ 	if (!ctx->bridge_domains)
++ 		return -EOPNOTSUPP;
++-	if (readl(ctx->fe + 0x800) || (readl(ctx->fe + 0xa04) & 3) ||
+++	if (readl(ctx->fe + 0x800)) {
+++		ret = native_ppe_quiesce_boot_tx(ctx);
+++		if (ret)
+++			return ret;
+++	}
+++	if ((readl(ctx->fe + 0xa04) & 3) ||
++ 	    (readl(ctx->fe + 0xfe4) & 65535))
++ 		goto busy;
++ 	start = readl(ctx->fe + 0x80c);
++@@ -747,9 +788,10 @@
++ 	writel(BIT(18), ctx->regs + 0x30d030);
++ 	/* Publish receive rings before allowing the firmware to consume them. */
++ 	wmb();
++-	if (native_ppe_start(ctx))
+++	ret = native_ppe_start(ctx);
+++	if (ret)
++ 		dev_warn(ctx->dev,
++-			 " PPE setup failed, keeping CPU receive path\n");
+++			 "PPE setup failed (%d), keeping CPU receive path\n", ret);
++ 	writel(1, q + 16);
++ 	an7552_npu_rro_irq_enable(ctx);
++ 	dev_dbg(ctx->dev,
+diff --git a/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch b/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch
+new file mode 100644
+index 000000000..8ffeceb4b
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/967-net-airoha-fix-an7563-scattered-rx-alignment.patch
+@@ -0,0 +1,64 @@
++Subject: [PATCH] net: airoha: fix AN7563 scattered RX alignment
++
++AN7563 ignores the two-byte receive offset for scattered buffers.
++The first and continuation buffers start two bytes before the normal
++software data pointer, causing frames over the 1KiB scatter boundary
++to be decoded with an invalid Ethernet header.
++
++Synchronize the actual DMA-written prefix, restore the first fragment
++to keep the IP header aligned, and correct continuation page offsets.
++Keep existing length checks and other SoCs unchanged.
++
++---
++
++diff --git a/drivers/net/ethernet/airoha/airoha_eth.c b/drivers/net/ethernet/airoha/airoha_eth.c
++--- a/drivers/net/ethernet/airoha/airoha_eth.c
+++++ b/drivers/net/ethernet/airoha/airoha_eth.c
++@@ -907,7 +907,7 @@
++ 		u32 hash, reason, msg1, desc_ctrl;
++ 		struct airoha_gdm_dev *dev;
++ 		struct net_device *netdev;
++-		int data_len, len;
+++		int data_len, len, rx_offset;
++ 		struct page *page;
++ 
++ 		desc_ctrl = le32_to_cpu(READ_ONCE(desc->ctrl));
++@@ -919,8 +919,15 @@
++ 		q->tail = (q->tail + 1) % q->ndesc;
++ 		q->queued--;
++ 
++-		dma_sync_single_for_cpu(eth->dev, e->dma_addr, e->dma_len,
++-					dir);
+++		/* AN7563 ignores the two-byte RX offset for every buffer of a
+++		 * scattered frame. The posted DMA address is rounded down,
+++		 * including the final continuation descriptor without MORE.
+++		 */
+++		rx_offset = airoha_is_7563(eth) &&
+++			    (q->skb || (desc_ctrl & QDMA_DESC_MORE_MASK)) ?
+++			    NET_IP_ALIGN : 0;
+++		dma_sync_single_for_cpu(eth->dev, e->dma_addr - rx_offset,
+++					e->dma_len + rx_offset, dir);
++ 
++ 		page = virt_to_head_page(e->buf);
++ 		len = FIELD_GET(QDMA_DESC_LEN_MASK, desc_ctrl);
++@@ -936,6 +943,11 @@
++ 		netdev = netdev_from_priv(dev);
++ 
++ 		if (!q->skb) { /* first buffer */
+++			/* Keep the IP header aligned after restoring the first
+++			 * fragment to the normal skb data position.
+++			 */
+++			if (rx_offset)
+++				memmove(e->buf, e->buf - rx_offset, len);
++ 			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
++ 						q->buf_size);
++ 			if (!q->skb)
++@@ -964,7 +976,7 @@
++ 				goto free_frag;
++ 
++ 			skb_add_rx_frag(q->skb, nr_frags, page,
++-					e->buf - page_address(page), len,
+++					e->buf - page_address(page) - rx_offset, len,
++ 					q->buf_size);
++ 		}
++ 
+diff --git a/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch b/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch
+new file mode 100644
+index 000000000..32ee7b712
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/968-PCI-mediatek-restore-erased-be6l-mt7992-bars.patch
+@@ -0,0 +1,103 @@
++Subject: [PATCH] PCI: mediatek: restore erased MT7992 BARs on BE6L RAM handoff
++
++The stock-to-RAM handoff can erase the two MT7992 functions BARs
++after enumeration but before the wireless driver enables them.
++Use the PCI core allocation, not a rescan or hard-coded addresses.
++Restrict recovery to BE6L on AN7563 with recognized erased BARs
++and bus mastering disabled; reject unknown or active-DMA states.
++The reset trigger remains under investigation.
++
++---
++
++diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
++--- a/drivers/pci/controller/pcie-mediatek.c
+++++ b/drivers/pci/controller/pcie-mediatek.c
++@@ -1198,6 +1198,79 @@
++ 	return 0;
++ }
++ 
+++/*
+++ * BE6L stock-to-RAM handoff can reset both MT7992 functions after PCI
+++ * enumeration, erasing their BARs before mt76 probes. Keep the resources
+++ * allocated by the PCI core; restore only an erased, recognized BAR while
+++ * bus mastering is off. Unknown BAR contents or active DMA fail closed.
+++ */
+++static int an7563_pcie_enable_device(struct pci_host_bridge *host,
+++				     struct pci_dev *dev)
+++{
+++	struct pci_bus_region regions[2];
+++	u32 expected[2], values[2], upper;
+++	u16 command;
+++	unsigned int i;
+++	bool restore = false;
+++
+++	if (dev->vendor != PCI_VENDOR_ID_MEDIATEK ||
+++	    (dev->device != 0x7992 && dev->device != 0x799a))
+++		return 0;
+++
+++	if (pci_read_config_word(dev, PCI_COMMAND, &command))
+++		return -EIO;
+++	for (i = 0; i < 2; i++) {
+++		unsigned int index = i * 2;
+++		struct resource *res = pci_resource_n(dev, index);
+++
+++		if (!res->parent || !res->start ||
+++		    !(res->flags & IORESOURCE_MEM) ||
+++		    !(res->flags & IORESOURCE_MEM_64) ||
+++		    (res->flags & (IORESOURCE_UNSET | IORESOURCE_PREFETCH)) ||
+++		    resource_size(res) != (i ? 0x8000 : 0x200000))
+++			return -EINVAL;
+++		pcibios_resource_to_bus(dev->bus, &regions[i], res);
+++		if (upper_32_bits(regions[i].start))
+++			return -EINVAL;
+++		expected[i] = lower_32_bits(regions[i].start) |
+++			      PCI_BASE_ADDRESS_MEM_TYPE_64;
+++		if (pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4,
+++					  &values[i]) ||
+++		    pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (index + 1) * 4,
+++					  &upper) || upper)
+++			return -EIO;
+++		if (values[i] == expected[i])
+++			continue;
+++		if (values[i] != PCI_BASE_ADDRESS_MEM_TYPE_64)
+++			return -EIO;
+++		restore = true;
+++	}
+++	if (!restore)
+++		return 0;
+++	if (command & PCI_COMMAND_MASTER)
+++		return -EBUSY;
+++
+++	if (pci_write_config_word(dev, PCI_COMMAND,
+++				  command & ~PCI_COMMAND_MEMORY))
+++		return -EIO;
+++	for (i = 0; i < 2; i++) {
+++		unsigned int index = i * 2;
+++		u32 value;
+++
+++		if (values[i] == expected[i])
+++			continue;
+++		pci_update_resource(dev, index);
+++		if (pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4,
+++					  &value) || value != expected[i] ||
+++		    pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (index + 1) * 4,
+++					  &upper) || upper)
+++			return -EIO;
+++		pci_info(dev, "restored erased BAR%u to assigned resource %pR\n",
+++			 index, pci_resource_n(dev, index));
+++	}
+++	return pci_write_config_word(dev, PCI_COMMAND, command) ? -EIO : 0;
+++}
+++
++ static int mtk_pcie_probe(struct platform_device *pdev)
++ {
++ 	struct device *dev = &pdev->dev;
++@@ -1223,6 +1296,8 @@
++ 	host->ops = pcie->soc->ops;
++ 	host->sysdata = pcie;
++ 	host->msi_domain = pcie->soc->no_msi;
+++	if (pcie->soc->an7563 && of_machine_is_compatible("tenda,be6l-pro"))
+++		host->enable_device = an7563_pcie_enable_device;
++ 
++ 	err = pci_host_probe(host);
++ 	if (err)
+diff --git a/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch b/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch
+new file mode 100644
+index 000000000..291241c70
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/969-net-airoha-preserve-idle-ppe-ring-position.patch
+@@ -0,0 +1,121 @@
++Subject: [PATCH] net: airoha: preserve an idle PPE ring position on stop
++
++After native traffic the hardware TX consumer advances. Restoring
++the inherited producer from boot makes its idle SDK ring appear
++nonempty, so the next start correctly rejects it as busy.
++After stopping producers and draining, require the exact owned ring,
++equal stable indices, all DDONE bits, DMA stopped and empty PPE/FIFO.
++Only then restore an inherited idle ring at the proven idle position.
++Never write the hardware consumer or weaken takeover checks.
++
++---
++
++diff --git a/drivers/net/ethernet/airoha/an7552_npu.c b/drivers/net/ethernet/airoha/an7552_npu.c
++--- a/drivers/net/ethernet/airoha/an7552_npu.c
+++++ b/drivers/net/ethernet/airoha/an7552_npu.c
++@@ -602,11 +602,62 @@
++ 	return -EBUSY;
++ }
++ 
+++/* Call only after the native producers have stopped and PPE has drained.
+++ * The hardware consumer is not restored with the ring registers. Returning
+++ * the old producer would manufacture pending work in an inherited idle ring.
+++ * Prove every native descriptor returned before preserving this idle index.
+++ */
+++static int native_ppe_restore_idle(struct an7552_npu *ctx)
+++{
+++	void __iomem *ring = ctx->ram + 0x2f0000;
+++	u32 position = readl(ctx->fe + 0x80c);
+++	unsigned int i;
+++
+++	if (ctx->ppe_saved[0] &&
+++	    (ctx->ppe_saved[0] != 0x1e800000 ||
+++	     ctx->ppe_saved[1] != 0x00050400))
+++		return -EBUSY;
+++	if (position >= 64 || readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x800) != 0x042f0000 ||
+++	    readl(ctx->fe + 0x804) != 64 ||
+++	    (readl(ctx->fe + 0xa04) & 3) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff) ||
+++	    (readl(ctx->fe + 0xe00) & BIT(31)))
+++		return -EBUSY;
+++	for (i = 0; i < 64; i++) {
+++		if (!(readl(ring + i * 32 + 4) & BIT(31)))
+++			return -EBUSY;
+++	}
+++	/* Fail closed if ownership or any ring register changed while scanning. */
+++	if (readl(ctx->fe + 0x80c) != position ||
+++	    readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x800) != 0x042f0000 ||
+++	    readl(ctx->fe + 0x804) != 64 ||
+++	    (readl(ctx->fe + 0xa04) & 3) ||
+++	    (readl(ctx->fe + 0xfe4) & 0xffff) ||
+++	    (readl(ctx->fe + 0xe00) & BIT(31)))
+++		return -EBUSY;
+++
+++	writel(ctx->ppe_saved[0], ctx->fe + 0x800);
+++	writel(ctx->ppe_saved[1], ctx->fe + 0x804);
+++	/* The consumer stays untouched, with no descriptor queued behind it. */
+++	writel(position, ctx->fe + 0x808);
+++	writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
+++	writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
+++	writel(readl(ctx->fe + 0xa04) & ~BIT(0), ctx->fe + 0xa04);
+++	if (readl(ctx->fe + 0x800) != ctx->ppe_saved[0] ||
+++	    readl(ctx->fe + 0x804) != ctx->ppe_saved[1] ||
+++	    readl(ctx->fe + 0x808) != position ||
+++	    readl(ctx->fe + 0x80c) != position ||
+++	    (readl(ctx->fe + 0xa04) & 3))
+++		return -EIO;
+++	return 0;
+++}
+++
++ static void native_ppe_stop(struct an7552_npu *ctx)
++ {
++ 	void __iomem *q = ctx->regs + 0x36c0;
++ 	u32 value;
++-	unsigned int i;
++ 	bool failed = false;
++ 
++ 	if (!ctx->ppe_enabled)
++@@ -632,11 +683,11 @@
++ 		ctx->failed = true;
++ 		return;
++ 	}
++-	for (i = 0; i < 3; i++)
++-		writel(ctx->ppe_saved[i], ctx->fe + 0x800 + i * 4);
++-	writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
++-	writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
++-	writel(readl(ctx->fe + 0xa04) & ~BIT(0), ctx->fe + 0xa04);
+++	if (native_ppe_restore_idle(ctx)) {
+++		ctx->failed = true;
+++		dev_err(ctx->dev, "native PPE ring still owned; retaining ring\n");
+++		return;
+++	}
++ 	ctx->ppe_enabled = false;
++ }
++ 
++@@ -1333,6 +1384,11 @@
++ 	ret = fault_drain_ppe(ctx);
++ 	if (ret)
++ 		return ret;
+++	if (ctx->ppe_enabled) {
+++		ret = native_ppe_restore_idle(ctx);
+++		if (ret)
+++			return ret;
+++	}
++ 	for (band = 0; band < 2; band++) {
++ 		writel(0, ctx->regs + 0x30d034 + band * 4);
++ 		if (ctx->txfree_irqs[band]) {
++@@ -1350,12 +1406,6 @@
++ 		ctx->rro_irq = 0;
++ 	}
++ 	ctx->rro_notify = NULL;
++-	if (ctx->ppe_enabled) {
++-		for (i = 0; i < 3; i++)
++-			writel(ctx->ppe_saved[i], ctx->fe + 0x800 + i * 4);
++-		writel(ctx->ppe_saved[5], ctx->fe + 0xa28);
++-		writel(ctx->ppe_saved[6], ctx->fe + 0xa2c);
++-	}
++ 	ctx->ppe_enabled = false;
++ 	ctx->tdma_enabled = false;
++ 	ctx->fault_quiesced = true;
+diff --git a/target/linux/airoha/patches-6.18/970-pinctrl-airoha-allow-an7563-on-arm64.patch b/target/linux/airoha/patches-6.18/970-pinctrl-airoha-allow-an7563-on-arm64.patch
+new file mode 100644
+index 000000000..e8257febe
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/970-pinctrl-airoha-allow-an7563-on-arm64.patch
+@@ -0,0 +1,17 @@
++Subject: [PATCH] pinctrl: airoha: allow AN7563 on AArch64
++
++AN7563 contains Cortex-A53 CPUs which can run either execution state.
++The SoC pin data uses the shared, architecture-independent Airoha driver,
++which already supports AArch64 on other Airoha SoCs.
++
++--- a/drivers/pinctrl/airoha/Kconfig
+++++ b/drivers/pinctrl/airoha/Kconfig
++@@ -46,7 +46,7 @@
++ 
++ config PINCTRL_AIROHA_AN7563
++ 	tristate "AN7563 pinctrl"
++-	depends on ARM || COMPILE_TEST
+++	depends on ARM || ARM64 || COMPILE_TEST
++ 	depends on PINCTRL_AIROHA
++ 	help
++ 	  Pin controller and GPIO support for AN7563/AN7552.
+diff --git a/target/linux/airoha/patches-6.18/971-net-airoha-use-fixed-an7563-rx-offset.patch b/target/linux/airoha/patches-6.18/971-net-airoha-use-fixed-an7563-rx-offset.patch
+new file mode 100644
+index 000000000..b3e65a012
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/971-net-airoha-use-fixed-an7563-rx-offset.patch
+@@ -0,0 +1,85 @@
++Subject: [PATCH] net: airoha: use AN7563 hardware RX offset on arm64
++
++AN7563's QDMA initialization always enables a two-byte receive offset,
++but arm64 defines NET_IP_ALIGN as zero. Deriving the posted buffer and
++skb positions from NET_IP_ALIGN therefore leaves every ordinary frame
++two bytes out of position and prevents DHCP on both wired interfaces.
++
++Use the hardware offset for AN7563 buffer sizing, posting, skb headroom
++and scattered receive restoration. ARM32 and other SoCs retain their
++existing layout. DMA ownership and bounds checks remain unchanged.
++
++---
++--- a/drivers/net/ethernet/airoha/airoha_eth.c
+++++ b/drivers/net/ethernet/airoha/airoha_eth.c
++@@ -548,6 +548,17 @@
++ 			     LRO_RXQ_EN_MASK);
++ }
++ 
+++/* AN7563 always enables the hardware two-byte RX offset. This is a DMA
+++ * layout requirement, independent of the host's NET_IP_ALIGN (zero on arm64).
+++ */
+++#define AN7563_RX_DMA_OFFSET 2
+++static __always_inline u32 airoha_qdma_rx_headroom(const struct airoha_queue *q)
+++{
+++	u32 offset = airoha_is_7563(q->qdma->eth) ? AN7563_RX_DMA_OFFSET : NET_IP_ALIGN;
+++
+++	return NET_SKB_PAD + offset;
+++}
+++
++ static void airoha_dev_lro_enable(struct airoha_gdm_dev *dev)
++ {
++ 	struct airoha_qdma *qdma = airoha_qdma_deref(dev);
++@@ -568,7 +579,7 @@
++ 		if (!airoha_qdma_is_lro_queue(q))
++ 			continue;
++ 
++-		size = SKB_WITH_OVERHEAD(AIROHA_RX_LEN(q->buf_size));
+++		size = SKB_WITH_OVERHEAD((q->buf_size - airoha_qdma_rx_headroom(q)));
++ 		size = min_t(u32, size, AIROHA_MAX_RX_SIZE);
++ 		airoha_fe_lro_rxq_enable(eth, qdma_id, lro_queue_index, i,
++ 					 size);
++@@ -713,10 +724,10 @@
++ 		q->queued++;
++ 		nframes++;
++ 
++-		offset += AIROHA_RX_HEADROOM;
+++		offset += airoha_qdma_rx_headroom(q);
++ 		e->buf = page_address(page) + offset;
++ 		e->dma_addr = page_pool_get_dma_addr(page) + offset;
++-		e->dma_len = SKB_WITH_OVERHEAD(AIROHA_RX_LEN(q->buf_size));
+++		e->dma_len = SKB_WITH_OVERHEAD((q->buf_size - airoha_qdma_rx_headroom(q)));
++ 
++ 		WRITE_ONCE(desc->tcp_ts_reply, 0);
++ 		val = FIELD_PREP(QDMA_DESC_LEN_MASK, e->dma_len);
++@@ -925,13 +936,13 @@
++ 		 */
++ 		rx_offset = airoha_is_7563(eth) &&
++ 			    (q->skb || (desc_ctrl & QDMA_DESC_MORE_MASK)) ?
++-			    NET_IP_ALIGN : 0;
+++			    AN7563_RX_DMA_OFFSET : 0;
++ 		dma_sync_single_for_cpu(eth->dev, e->dma_addr - rx_offset,
++ 					e->dma_len + rx_offset, dir);
++ 
++ 		page = virt_to_head_page(e->buf);
++ 		len = FIELD_GET(QDMA_DESC_LEN_MASK, desc_ctrl);
++-		data_len = q->skb ? AIROHA_RX_LEN(q->buf_size) : e->dma_len;
+++		data_len = q->skb ? (q->buf_size - airoha_qdma_rx_headroom(q)) : e->dma_len;
++ 		if (!len || data_len < len)
++ 			goto free_frag;
++ 
++@@ -948,12 +959,12 @@
++ 			 */
++ 			if (rx_offset)
++ 				memmove(e->buf, e->buf - rx_offset, len);
++-			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
+++			q->skb = napi_build_skb(e->buf - airoha_qdma_rx_headroom(q),
++ 						q->buf_size);
++ 			if (!q->skb)
++ 				goto free_frag;
++ 
++-			skb_reserve(q->skb, AIROHA_RX_HEADROOM);
+++			skb_reserve(q->skb, airoha_qdma_rx_headroom(q));
++ 			__skb_put(q->skb, len);
++ 			skb_mark_for_recycle(q->skb);
++ 			q->skb->dev = netdev;

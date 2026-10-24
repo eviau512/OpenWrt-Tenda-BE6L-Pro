@@ -1,0 +1,12 @@
+diff --git a/utils/coreutils/Makefile b/utils/coreutils/Makefile
+index 3eb759f..73eaaa2 100644
+--- a/utils/coreutils/Makefile
++++ b/utils/coreutils/Makefile
+@@ -21,6 +21,7 @@ PKG_LICENSE_FILES:=COPYING
+ PKG_CPE_ID:=cpe:/a:gnu:coreutils
+ 
+ PKG_INSTALL:=1
++PKG_BUILD_DEPENDS:=acl libcap
+ PKG_BUILD_PARALLEL:=1
+ 
+ include $(INCLUDE_DIR)/package.mk
