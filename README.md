@@ -1,3 +1,6 @@
+> [!NOTE]
+> This is another AI Slop project, 0% SLA, no working guarantee, hardware might burst in fire, you've been warned already
+
 # OpenWrt for Tenda BE6L Pro
 
 Experimental, RAM-only OpenWrt bring-up for the Tenda BE6L Pro (AN7563).
