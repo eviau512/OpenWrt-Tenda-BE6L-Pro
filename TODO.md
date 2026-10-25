@@ -1,7 +1,8 @@
 # Project TODO
 
 Priorities: NPU, Ethernet/networking and Wi-Fi first. After those are complete,
-prioritize native AArch64 work. Every hardware test remains initramfs/RAM-only.
+prioritize native AArch64 work; native work can also proceed while routed NPU
+integration is blocked. Every hardware test remains initramfs/RAM-only.
 
 - [ ] Implement the complete host/NPU identity, action and revocation ABI.
 - [ ] Integrate safe live IPv4 NAT and IPv6 routing, including firewall/CT
@@ -21,6 +22,17 @@ prioritize native AArch64 work. Every hardware test remains initramfs/RAM-only.
 - [ ] Complete LED, button, temperature/clock and actual watchdog-reset tests.
 - [ ] Investigate native AArch64 userspace without assuming FP/AdvSIMD works,
   falsifying hardware capabilities or writing unknown feature switches.
+- [x] Trace the ordinary native loader's actual SIMD fault and prove integer EL0.
+- [x] Build/reproduce the isolated soft-float C runtime and core components;
+  verify native BusyBox, UCI, ucode, private ubus and non-PID1 procd supervision.
+- [ ] Complete Go backend/runtime and C++ soft-float support, a distinct package
+  ABI, full dependency closure and sustained/lifecycle acceptance of the native PID1 image.
+
+See [native soft-float status](docs/NATIVE-SOFTFLOAT.md) for exact acceptance and
+the current blockers. Native soft-float AArch64 init/procd has now RAM-booted
+with management, HTTPS and both-band short L2 acceptance. Applications remain
+ARM32, and native override package metadata still needs work. The user has paused
+further testing; no automatic continuation is scheduled.
 
 Test APs must be created after RAM boot only, with WPA2-PSK + CCMP and fresh
 strong random secrets. Never embed a real network credential or device identity

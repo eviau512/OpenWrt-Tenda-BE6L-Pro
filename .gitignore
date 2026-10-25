@@ -16,3 +16,4 @@ __pycache__/
 id_*
 backup*/
 private*/
+upstream/llvm21-soft-builtins/

@@ -49,3 +49,19 @@ test outcomes without copying those private artifacts.
 Source revisions, selected sparse paths and feed links are recorded in
 `sources.json`. Source-built third-party programs are not claimed as original
 work of this project.
+
+## Native soft-float experiments
+
+The new diagnostics/build helpers with an MIT SPDX label are independent
+experiment sources. musl retains its MIT license and upstream notices.
+Optional compiler-rt files are pinned to LLVM commit
+`2078da43e25a4623cab2d0d60decddf709aaea28` and retain
+`Apache-2.0 WITH LLVM-exception`. Their original `LICENSE.TXT` is fetched and
+verified with the source files. Downloaded sources are excluded from this Git
+repository.
+
+The independent Go overlay changes one condition in Go 1.27.3's
+`src/cmd/compile/internal/ssagen/ssa.go`. Go sources and patch contexts retain
+the Go authors' BSD-style license: https://go.dev/LICENSE. The original source
+hash is checked before applying the overlay. No supported native Go runtime is
+claimed.

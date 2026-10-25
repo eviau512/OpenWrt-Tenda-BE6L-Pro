@@ -49,3 +49,9 @@ backups are intentionally distributed here. Do not add them to this repository.
 The FIT/payload preparation workflow interoperates with that project's RAM-boot
 inputs. See [NOTICE.md](NOTICE.md) for the exact scope and license boundaries.
 No binary payload from that project is bundled here.
+
+## Native soft-float core experiment
+
+Native AArch64 init/procd has RAM-booted with the existing ARM32 applications.
+See [acceptance, reproduction and remaining ABI work](docs/NATIVE-SOFTFLOAT.md).
+The complete native userspace and routed NPU offload remain under development.
