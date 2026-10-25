@@ -12,7 +12,8 @@ integration is blocked. Every hardware test remains initramfs/RAM-only.
 - [x] Qualify full wpad-mbedtls with both-band 300-second L2 forwarding and secure Mesh interface initialization.
 - [ ] Test actual Mesh peer interoperability.
 - [x] Complete sustained-load and active-binding lifecycle acceptance for the
-  current full-wpad mixed image. Every future image still needs its own acceptance.
+  previously qualified full-wpad mixed baseline. The later native PID1 image
+  still needs its own300-second and complete active-binding lifecycle acceptance.
 - [ ] Explain early PCIe endpoint reset/BAR loss and initial Gen1 negotiation.
 - [ ] Reproduce the exported build from a clean fixed sparse checkout and make
   the mixed architecture a single maintainable target/toolchain flow.
@@ -31,9 +32,21 @@ integration is blocked. Every hardware test remains initramfs/RAM-only.
 See [native soft-float status](docs/NATIVE-SOFTFLOAT.md) for exact acceptance and
 the current blockers. Native soft-float AArch64 init/procd has now RAM-booted
 with management, HTTPS and both-band short L2 acceptance. Applications remain
-ARM32, and native override package metadata still needs work. The user has paused
-further testing; no automatic continuation is scheduled.
+ARM32, and native override package metadata still needs work. Development has
+resumed; DUT hardware tests await an authenticated root console and verified
+direct management path. No automatic continuation is scheduled.
 
 Test APs must be created after RAM boot only, with WPA2-PSK + CCMP and fresh
 strong random secrets. Never embed a real network credential or device identity
 in source/configuration. Remove temporary tests, keys and routes on completion.
+
+
+- [x] Build/reproduce a native no-FP TLS/curl closure and validate HTTP/TLS1.3,
+  payload integrity and certificate rejection on the authorized Android peer.
+- [ ] Validate that closure on the BE6L under a private RAM-only test directory;
+  complete real-CA Bing HTTPS, DNS/IPv6 and correct soft-ABI packaging.
+
+Excluded: parental controls/access-time windows, cloud remote control, telemetry,
+NetEase UU/GearUP and unrelated stock business features. Focus on OpenWrt
+hardware support. New reverse-engineering claims must be checked against real
+producer/consumer code and observations before becoming register operations.

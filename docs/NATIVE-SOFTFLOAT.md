@@ -18,9 +18,10 @@ is incompatible with the ordinary AArch64 calling convention. Standard
 An isolated musl 1.2.6 copy uses generic string, math, floating environment and
 floating barriers. Its setjmp/longjmp assembly omits the nonexistent FP
 registers. Generic fenv exposes round-to-nearest and `FE_ALL_EXCEPT=0`; other
-rounding modes and exception flags are unavailable. The runtime has 44 necessary
-software helper objects from locked LLVM 21.1.8 sources. Only 68 source/header
-files and their license are fetched, with SHA256 and source Git blob checks.
+rounding modes and exception flags are unavailable. The initial C core used44 software helper objects from locked LLVM21.1.8
+sources. The current source lock also includes two128-bit integer division
+helpers needed by TLS:70 source/header files plus their license, with SHA256
+and source Git blob checks. No full LLVM tree is fetched.
 
 Real-device acceptance includes:
 
@@ -100,3 +101,15 @@ Tailscale and sing-box retain their working ARM32 soft-float packages. Native Go
 C++/btop, the networking/LuCI dependency closure, a distinct package architecture,
 a unified SDK and sustained/lifecycle acceptance of the new image remain TODO.
 Native PID1 RAM boot itself has passed.
+
+
+## Native TLS/curl slice
+
+An isolated mbedTLS3.6.7/curl8.23.0 closure now builds with the same soft ABI.
+Its14 ELF paths (6 distinct images including SONAME aliases) pass no-FP/SIMD,
+RPATH and strong-symbol dependency checks, and reproduce exactly across two
+fresh roots with different path lengths. On the authorized Android peer,
+HTTP/TLS1.3 each transferred2MiB with correct SHA256; wrong hostname and
+untrusted CA were correctly rejected. Temporary fixtures and USB forwarding
+were cleaned. This is peer testing, not BE6L runtime acceptance. No installed
+program or firmware was replaced. See [SOFT-NETWORK.md](SOFT-NETWORK.md).
