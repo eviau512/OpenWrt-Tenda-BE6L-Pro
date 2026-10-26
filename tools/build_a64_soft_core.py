@@ -14,13 +14,14 @@ gcc,=sdk.glob('staging_dir/toolchain-aarch64_*/bin/aarch64-openwrt-linux-musl-gc
 prefix=str(gcc)[:-3]
 sysroot=root/'sysroot'
 parser=argparse.ArgumentParser()
-parser.add_argument('component',choices=('jsonc','libubox','ubus','uci','ucode','udebug','procd'))
+parser.add_argument('component',choices=('jsonc','libubox','ubus','uci','ucode','udebug','procd','libnl-tiny','netifd'))
 parser.add_argument('--lua',action='store_true',help='Build Lua bindings against this isolated root only')
 args=parser.parse_args()
 patterns={'jsonc':'json-c-0.19','libubox':'libubox-2026.07.21~e7608b69',
  'ubus':'ubus-2026.09.25~414c60a2','uci':'uci-2025.12.02~66127cd7',
  'ucode':'ucode-2026.10.18~d2e8b8d2','udebug':'udebug-2026.09.25~6726e98a',
- 'procd':'procd-default/procd-2026.10.18~5aef7c33'}
+ 'procd':'procd-default/procd-2026.10.18~5aef7c33',
+ 'libnl-tiny':'libnl-tiny-2025.12.02~40493a65', 'netifd':'netifd-2026.09.11~06d06c86'}
 wrapper=root/'softcc'
 wrapper.write_text('''#!/usr/bin/python3
 import os,sys
@@ -67,10 +68,26 @@ if args.lua:
     options+=['-DBUILD_LUA=ON','-DLUA_CFLAGS=-I'+str(sysroot/'usr/include'),
               '-DLUAPATH=/usr/lib/lua']
 if args.component=='jsonc':options+=['-DBUILD_APPS=OFF','-DENABLE_THREADING=ON']
-if args.component in ('ubus','ucode'):options+=['-DCMAKE_C_FLAGS=-O2 -Wno-error=sign-compare']
+if args.component in ('ubus','ucode','libnl-tiny','netifd'):options+=['-DCMAKE_C_FLAGS=-O2 -Wno-error=sign-compare']
+if args.component=='netifd':
+    # Linux UAPI ethtool requests intentionally embed a flexible-array header
+    # followed by its storage. Clang accepts this existing GNU layout with a warning.
+    options+=['-DCMAKE_C_FLAGS=-O2 -Wno-error=sign-compare -Wno-error=gnu-variable-sized-type-not-at-end']
 if args.component=='procd':options+=['-DJAIL_SUPPORT=ON','-DSECCOMP_SUPPORT=OFF','-DEARLY_PATH=/sbin:/bin:/usr/sbin:/usr/bin']
 project_source=tree/patterns[args.component]
 build=root/('core-'+args.component)
+if args.component in ('libnl-tiny','netifd'):
+    copy=root/('source-'+args.component)
+    if not copy.exists():
+        shutil.copytree(project_source,copy,ignore=shutil.ignore_patterns(
+            'CMakeFiles','CMakeCache.txt','*.o','*.a','*.so','*.so.*','ipkg-*','apk-*','.pkgdir'))
+    project_source=copy
+    build.mkdir(exist_ok=True)
+    if args.component=='netifd':
+        # Upstream's custom command runs this relative to the binary directory.
+        shutil.copyfile(project_source/'make_ethtool_modes_h.sh',build/'make_ethtool_modes_h.sh')
+        (build/'make_ethtool_modes_h.sh').chmod(0o755)
+        options+=['-DDUMMY_MODE=OFF']
 if args.component=='procd':
     copy=root/'procd-source'
     if not copy.exists():

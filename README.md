@@ -9,8 +9,9 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 ## Current status
 
-- A dual-core AArch64 Linux kernel runs with ARM32 soft-float userspace through
-  COMPAT. Native AArch64 userspace has not passed hardware validation.
+- A dual-core AArch64 Linux kernel runs native AAPCS64-soft init/procd and
+  selected C components alongside ARM32 applications through COMPAT. A complete
+  native userspace and maintainable native SDK remain unfinished.
 - Ethernet at the normal 1500-byte MTU, LuCI, wired WAN and verified HTTPS work.
 - Both 2.4 GHz and 5 GHz work. Actual wireless-to-Ethernet L2 NPU/PPE forwarding
   has passed data-integrity, sustained-load and recovery tests.
@@ -35,7 +36,9 @@ Only initramfs and RAM boot are supported. Do not flash, erase, run sysupgrade,
 save bootloader environment variables, or disable the flash protections.
 Rebooting loses the RAM system. The mixed build remains a two-SDK experiment,
 not an upstream-accepted device port or a general online kernel-upgrade system.
-ARM32 userspace packages are required even when `uname -m` reports `aarch64`.
+Existing applications use ARM32 packages even when `uname -m` reports `aarch64`.
+Only explicitly reviewed soft-ABI packages use the private native namespace;
+ordinary Cortex-A53 AArch64 packages remain incompatible with this platform.
 
 Test APs must be configured only after initramfs has booted, using WPA2-PSK with
 CCMP and a fresh cryptographically strong random passphrase. Do not embed or
@@ -57,4 +60,6 @@ No binary payload from that project is bundled here.
 
 Native AArch64 init/procd has RAM-booted with the existing ARM32 applications.
 See [acceptance, reproduction and remaining ABI work](docs/NATIVE-SOFTFLOAT.md).
+The corrected runtime now has a [package-managed RAM image](docs/SOFT-APK-BUNDLE.md).
+[Native netifd](docs/SOFT-NETIFD.md) passed a private-namespace static-IP lifecycle.
 The complete native userspace and routed NPU offload remain under development.

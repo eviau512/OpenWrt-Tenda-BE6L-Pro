@@ -1,5 +1,9 @@
 # Native soft-ABI package namespace: prototype and integration gates
 
+Follow-up: the signed native bundle now has ordinary procd file ownership and
+an actual protected RAM startup. See [SOFT-APK-BUNDLE.md](SOFT-APK-BUNDLE.md).
+The original host-only prototype below remains historical evidence.
+
 2026-10-26. The isolated native C closures are reproducible and DUT-tested, but
 the running b05 image still has ARM32 package records around native init/procd
 overrides. General upgrades remain unqualified. This document records an actual

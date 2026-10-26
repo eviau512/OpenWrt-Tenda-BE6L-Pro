@@ -1,6 +1,30 @@
 # Hardware qualification status
 
-## Current native-init image acceptance, 2026-10-26
+## Package-managed native C image, 2026-10-26 follow-up
+
+A new RAM image boots native soft-ABI init/procd with corrected libc and58 native
+ELF paths. Four signed packages were installed through ordinary APK transactions;
+init/procd ownership matches the files. Original ARM32 libc and81 matching kernel
+modules remain intact. The actual212-package manifest, embedded CPIO, loaders,
+module layout, MTD guards/digests, native Bing HTTPS/Lua bindings and Chinese
+Argon login page passed. The fresh clock needed volatile UTC calibration;
+autonomous NTP remains unqualified. See [SOFT-APK-BUNDLE.md](SOFT-APK-BUNDLE.md).
+
+This image passed both-band short L2 tests with the previous Wi-Fi6 endpoint.
+Its long campaign completed three directions before endpoint replacement, which
+is not a full both-band pass. The replacement Wi-Fi7 endpoint passed5GHz HE CPU
+controls, while2.4GHz shows low-rate/retry/loss symptoms without PPE bindings.
+Default-EHT5GHz L2 hardware forwarding subsequently passed300 seconds per
+direction at269/169 Mbit/s, with6.8/5.9% CPU busy, positive PPE direct-forward
+increments and zero faults. The2MiB integrity check and re-authentication
+passed. New-image2.4GHz and active lifecycle qualification remain incomplete. Different endpoint/PHY conditions
+must not be merged into a peak benchmark.
+
+Native netifd/libnl-tiny have reproducible10-ELF real-Linux-backend closures.
+Private mount/net/PID namespace loopback up/down/up passed with the host network
+and daemon unchanged. System netifd remains ARM32. See [SOFT-NETIFD.md](SOFT-NETIFD.md).
+
+## Earlier frozen native-init baseline, 2026-10-26
 
 The frozen b05 native soft64 init/procd image has now completed its own
 both-band300-second L2 forwarding in each direction, data integrity/reconnection,

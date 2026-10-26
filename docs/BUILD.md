@@ -91,3 +91,22 @@ python3 tools/test_flow_lease.py
 
 These are packet-action and serialized lifecycle prototypes. They are not
 enabled routed offload or production Linux per-flow statistics.
+
+## Native soft-ABI research extension
+
+See [SOFT-APK-BUNDLE.md](SOFT-APK-BUNDLE.md) and [SOFT-NETIFD.md](SOFT-NETIFD.md).
+`prepare_soft_package_profile.py` creates a review lock from pinned cached C,
+Lua and TLS closures. Review compiler/source/license and actual ELF evidence
+before supplying its independently obtained digest to `build_soft_apk_bundle.py`.
+The latter signs, extract/admit-checks and normally transacts four packages in
+a fresh offline root, including a same-label FP-provider rejection experiment.
+
+`build_soft_apk_image.py` consumes that root, runs the standard kernel image
+target and restores the baseline CPIO in finally. `verify_soft_apk_manifest.py`
+exports actual mixed-root package records; native SDK staging is not that root.
+Never hot-replace PID1 libc.
+
+These are research extensions with documented pinned cached inputs and recovery
+receipts, not a standalone official native SDK. Artifact-specific paths still
+need complete versioned recipes and dual-toolchain ownership. Generic upgrades,
+binary redistribution licensing and new-image acceptance remain separate gates.

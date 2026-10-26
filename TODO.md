@@ -32,11 +32,13 @@ integration is blocked. Every hardware test remains initramfs/RAM-only.
 
 See [native soft-float status](docs/NATIVE-SOFTFLOAT.md) for exact acceptance and
 the current blockers. Native soft-float AArch64 init/procd has now RAM-booted
-with management, HTTPS and both-band short L2 acceptance. Applications remain
-ARM32, and native override package metadata still needs work. DUT access and
-the tested native PID1 RAM baseline are restored. New isolated native libraries
-include a corrected libc; they are not yet integrated into that frozen image.
-No automatic continuation is scheduled.
+with management, HTTPS and both-band short L2 acceptance. Most default apps
+remain ARM32. A subsequent signed package-managed image contains the corrected
+native runtime and owns actual init/procd through ordinary package records.
+Its full wireless acceptance is separate from the frozen baseline.
+See [SOFT-APK-BUNDLE.md](docs/SOFT-APK-BUNDLE.md).
+New testing/builds stopped when the five-hour quota reached10% remaining.
+Final safety checks and temporary-test cleanup passed. No automatic continuation is scheduled.
 
 Test APs must be created after RAM boot only, with WPA2-PSK + CCMP and fresh
 strong random secrets. Never embed a real network credential or device identity
@@ -54,9 +56,22 @@ in source/configuration. Remove temporary tests, keys and routes on completion.
   dependencies and explicit untrusted-signature/foreign-architecture negatives.
   This is not a booted package-composed image or same-label ABI admission proof.
   See [NATIVE-APK.md](docs/NATIVE-APK.md).
-- [ ] Integrate the corrected runtime and native C slices with correct soft-ABI
-  package metadata; qualify a new image separately. Public IPv6, complete LuCI,
+- [x] Integrate the corrected runtime and native C slices with reviewed soft-ABI
+  package metadata and basic RAM startup. Full image qualification, public IPv6, complete LuCI,
   Go and C++ remain additional work. See [SOFT-LUA.md](docs/SOFT-LUA.md).
+
+- [x] Review a soft-ABI profile with58 ELF paths/14 source components and reject
+  a validly signed same-label ordinary FP provider before repository admission.
+- [x] Compose and RAM-boot native-package-owned init/procd with corrected libc,
+  matching modules and basic management/networking acceptance.
+- [x] Complete the replacement endpoint's5GHz default-EHT L2 tests,300 seconds
+  per direction with file integrity, re-authentication and zero NPU faults.
+- [ ] Complete the new image's both-band/active-lifecycle qualification, investigate the
+  replacement Wi-Fi7 endpoint's2.4GHz issue and autonomous NTP startup.
+- [x] Reproduce native libnl-tiny/netifd and qualify real loopback netlink
+  up/down/up through private ubus in private mount/net/PID namespaces.
+- [ ] Integrate remaining native services and complete maintainable SDK,
+  corresponding-source/licensing review and normal upgrade qualification.
 
 Excluded: parental controls/access-time windows, cloud remote control, telemetry,
 NetEase UU/GearUP and unrelated stock business features. Focus on OpenWrt
