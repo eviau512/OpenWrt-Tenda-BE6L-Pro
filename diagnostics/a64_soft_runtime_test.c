@@ -53,6 +53,17 @@ int main(int argc,char **argv)
 	CHECK(strtold("3.75",&end)==3.75L && !*end);
 	CHECK(sqrt(4.0+a-a)==2.0);CHECK(fabs(log(exp(a))-a)<1e-12);
 	CHECK(fabs(sin(a)*sin(a)+cos(a)*cos(a)-1)<1e-12);
+	/* Indirect volatile calls must exercise libc, not compiler constant folding.
+	 * Contracting fma's own x*y+z fallback into fma caused unbounded recursion.
+	 */
+	double (*volatile fused)(double,double,double)=fma;
+	double (*volatile power)(double,double)=pow;
+	CHECK(fused(a,b,zero)==3.375);
+	CHECK(fused(a,b,-3.375)==0);
+	CHECK(isnan(fused(NAN,a,b)));CHECK(isinf(fused(INFINITY,a,b)));
+	CHECK(fused(1+0x1p-27,1-0x1p-27,-1)==-0x1p-54);
+	CHECK(fused(0x1p-1022,0x1p-52,zero)==0x1p-1074);
+	CHECK(fabs(power(sqrt(2+zero),2)-2)<1e-12);
 	unsigned char *src=malloc(8192),*dst=malloc(8192);
 	CHECK(src && dst);
 	for (unsigned n=0;n<8192;n++) src[n]=(n*13+7)&255;

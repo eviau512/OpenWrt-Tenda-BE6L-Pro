@@ -53,9 +53,11 @@ Management, verified normal-MTU Bing HTTPS, required applications and both-band
 all ten MTDs remained read-only and baseline partition digests were unchanged.
 Test APs, credentials and rules were cleaned.
 
-This image predates the final RPATH-padding correction. Its frozen runtime
-artifacts are separate from subsequent rebuilt files; future images require
-separate RAM acceptance. Its own 300-second and full lifecycle checks remain TODO.
+This image predates the final RPATH-padding and fma-contraction corrections.
+Its frozen artifacts are separate from later rebuilds. Its own both-band300s,
+CPU controls and complete active-binding/driver lifecycle have now passed.
+That qualifies the exercised networking paths, not untested generic libc math.
+Corrected libraries still need a separate integrated image and RAM acceptance.
 The base APK records do not describe the replaced init/procd ELFs; upgrades are
 unqualified. Remaining applications, including Go tools and btop, are ARM32.
 This is an experimental native64 core with compatible ARM32 applications.
@@ -98,8 +100,8 @@ Fixing the first failing instruction or changing capability bits cannot qualify
 native Go.
 
 Tailscale and sing-box retain their working ARM32 soft-float packages. Native Go,
-C++/btop, the networking/LuCI dependency closure, a distinct package architecture,
-a unified SDK and sustained/lifecycle acceptance of the new image remain TODO.
+C++/btop, the complete networking/LuCI dependency closure, a distinct package ABI
+and a unified SDK remain TODO. Each later integrated image needs its own tests.
 Native PID1 RAM boot itself has passed.
 
 
@@ -111,5 +113,17 @@ RPATH and strong-symbol dependency checks, and reproduce exactly across two
 fresh roots with different path lengths. On the authorized Android peer,
 HTTP/TLS1.3 each transferred2MiB with correct SHA256; wrong hostname and
 untrusted CA were correctly rejected. Temporary fixtures and USB forwarding
-were cleaned. This is peer testing, not BE6L runtime acceptance. No installed
-program or firmware was replaced. See [SOFT-NETWORK.md](SOFT-NETWORK.md).
+were cleaned. The corrected closure has now separately passed actual no-FP DUT
+HTTP/TLS1.3 integrity, certificate rejection, DNS/Bing HTTPS and IPv6-loopback
+tests. No installed program or firmware was replaced.
+See [SOFT-NETWORK.md](SOFT-NETWORK.md).
+
+## Native Lua and IPC slice
+
+Lua/Nixio and native UCI/ubus/uloop C bindings now have audited, reproducible
+closures and actual DUT private-configuration/socket tests. A compiler-induced
+generic fma recursion was reproduced with old static/dynamic C tests, corrected
+by disabling contraction, and covered by new numerical regressions. The fixed
+C suite passes72 static and76 dynamic/plugin assertions. These components are
+isolated, not yet installed as ordinary packages or part of the running image.
+See [SOFT-LUA.md](SOFT-LUA.md) for exact scope and the Lua ubus numeric limitation.

@@ -1,5 +1,24 @@
 # Hardware qualification status
 
+## Current native-init image acceptance, 2026-10-26
+
+The frozen b05 native soft64 init/procd image has now completed its own
+both-band300-second L2 forwarding in each direction, data integrity/reconnection,
+CPU controls and both-band active-binding disconnect/driver exit/recovery.
+Observed hardware rates were162/88 Mbit/s on2.4GHz and271/144 Mbit/s on5GHz;
+total CPU busy was about3.5/4.1% and6.0/4.8%, with zero NPU faults.
+The20-second CPU controls had zero PPE direct-forward increments and about
+35/37% and60/47% busy CPU. Sequential samples with different durations are not
+a matched RF peak benchmark; hardware acceleration is not claimed faster from
+these rates alone. Bindings, direct-forward increments and CPU controls establish
+the exercised L2 path. NAT/IPv6 routing and Linux per-flow statistics remain open.
+
+Native no-FP TLS/curl and Lua/Nixio/UCI/ubus/uloop closures separately pass actual
+DUT tests and fresh-path reproducibility. They are not part of b05. A generic
+libc fma contraction bug was found and corrected in these new builds; b05 keeps
+its frozen older runtime. See [SOFT-LUA.md](SOFT-LUA.md) and
+[SOFT-NETWORK.md](SOFT-NETWORK.md). A new integrated image needs new acceptance.
+
 ## Established
 
 - Dual-core AArch64 Linux with ARM32 soft-float userspace, matching AArch64

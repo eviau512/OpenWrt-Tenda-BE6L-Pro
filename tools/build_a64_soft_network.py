@@ -24,6 +24,7 @@ parser.add_argument('--resume', action='store_true')
 args = parser.parse_args()
 root, prior = args.root, args.base_soft_root
 assert root.is_absolute() and prior.is_absolute() and root != prior
+assert '-ffp-contract=off' in (prior / 'cc').read_text(), 'Rebuild the base C suite with contraction disabled first'
 assert not any(c.isspace() for c in str(root))
 marker = root / '.be6l-soft-network.json'
 ownership = {'purpose': 'isolated AAPCS64-soft TLS/curl', 'base': str(prior)}

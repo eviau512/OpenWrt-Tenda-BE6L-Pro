@@ -15,6 +15,7 @@ prefix=str(gcc)[:-3]
 sysroot=root/'sysroot'
 parser=argparse.ArgumentParser()
 parser.add_argument('component',choices=('jsonc','libubox','ubus','uci','ucode','udebug','procd'))
+parser.add_argument('--lua',action='store_true',help='Build Lua bindings against this isolated root only')
 args=parser.parse_args()
 patterns={'jsonc':'json-c-0.19','libubox':'libubox-2026.07.21~e7608b69',
  'ubus':'ubus-2026.09.25~414c60a2','uci':'uci-2025.12.02~66127cd7',
@@ -60,6 +61,11 @@ options=['-DBUILD_LUA=OFF','-DBUILD_EXAMPLES=OFF','-DBUILD_TESTING=OFF',
  '-DCMAKE_POLICY_VERSION_MINIMUM=3.5','-DCMAKE_INSTALL_PREFIX=/usr',
  '-DCMAKE_SKIP_RPATH=ON',
  '-DCMAKE_INSTALL_LIBDIR=lib','-DCMAKE_BUILD_TYPE=Release']
+if args.lua:
+    assert args.component in ('libubox','ubus','uci')
+    assert (sysroot/'usr/include/lua.h').is_file() and (sysroot/'usr/lib/liblua.so').is_file()
+    options+=['-DBUILD_LUA=ON','-DLUA_CFLAGS=-I'+str(sysroot/'usr/include'),
+              '-DLUAPATH=/usr/lib/lua']
 if args.component=='jsonc':options+=['-DBUILD_APPS=OFF','-DENABLE_THREADING=ON']
 if args.component in ('ubus','ucode'):options+=['-DCMAKE_C_FLAGS=-O2 -Wno-error=sign-compare']
 if args.component=='procd':options+=['-DJAIL_SUPPORT=ON','-DSECCOMP_SUPPORT=OFF','-DEARLY_PATH=/sbin:/bin:/usr/sbin:/usr/bin']

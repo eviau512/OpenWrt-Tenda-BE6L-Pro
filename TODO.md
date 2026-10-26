@@ -12,8 +12,9 @@ integration is blocked. Every hardware test remains initramfs/RAM-only.
 - [x] Qualify full wpad-mbedtls with both-band 300-second L2 forwarding and secure Mesh interface initialization.
 - [ ] Test actual Mesh peer interoperability.
 - [x] Complete sustained-load and active-binding lifecycle acceptance for the
-  previously qualified full-wpad mixed baseline. The later native PID1 image
-  still needs its own300-second and complete active-binding lifecycle acceptance.
+  previous full-wpad baseline and the frozen b05 native PID1 image, including
+  both-band300s, CPU controls and driver exit/recovery. New image hashes require
+  their own independent acceptance.
 - [ ] Explain early PCIe endpoint reset/BAR loss and initial Gen1 negotiation.
 - [ ] Reproduce the exported build from a clean fixed sparse checkout and make
   the mixed architecture a single maintainable target/toolchain flow.
@@ -27,14 +28,15 @@ integration is blocked. Every hardware test remains initramfs/RAM-only.
 - [x] Build/reproduce the isolated soft-float C runtime and core components;
   verify native BusyBox, UCI, ucode, private ubus and non-PID1 procd supervision.
 - [ ] Complete Go backend/runtime and C++ soft-float support, a distinct package
-  ABI, full dependency closure and sustained/lifecycle acceptance of the native PID1 image.
+  ABI, full dependency closure and corrected-runtime image integration.
 
 See [native soft-float status](docs/NATIVE-SOFTFLOAT.md) for exact acceptance and
 the current blockers. Native soft-float AArch64 init/procd has now RAM-booted
 with management, HTTPS and both-band short L2 acceptance. Applications remain
-ARM32, and native override package metadata still needs work. Development has
-resumed; DUT hardware tests await an authenticated root console and verified
-direct management path. No automatic continuation is scheduled.
+ARM32, and native override package metadata still needs work. DUT access and
+the tested native PID1 RAM baseline are restored. New isolated native libraries
+include a corrected libc; they are not yet integrated into that frozen image.
+No automatic continuation is scheduled.
 
 Test APs must be created after RAM boot only, with WPA2-PSK + CCMP and fresh
 strong random secrets. Never embed a real network credential or device identity
@@ -43,8 +45,18 @@ in source/configuration. Remove temporary tests, keys and routes on completion.
 
 - [x] Build/reproduce a native no-FP TLS/curl closure and validate HTTP/TLS1.3,
   payload integrity and certificate rejection on the authorized Android peer.
-- [ ] Validate that closure on the BE6L under a private RAM-only test directory;
-  complete real-CA Bing HTTPS, DNS/IPv6 and correct soft-ABI packaging.
+- [x] Validate corrected TLS/curl on the actual no-FP BE6L: HTTP/TLS1.3 integrity,
+  certificate rejection, real-CA Bing HTTPS/DNS and IPv6 loopback.
+- [x] Correct generic fma contraction recursion; reproduce the failure on the
+  old C runtime and pass new static/dynamic numerical regressions after repair.
+- [x] Build/reproduce and DUT-test native Lua/Nixio and UCI/ubus/uloop bindings.
+- [x] Prototype signed soft-ABI packages in a new host-only root, with exact
+  dependencies and explicit untrusted-signature/foreign-architecture negatives.
+  This is not a booted package-composed image or same-label ABI admission proof.
+  See [NATIVE-APK.md](docs/NATIVE-APK.md).
+- [ ] Integrate the corrected runtime and native C slices with correct soft-ABI
+  package metadata; qualify a new image separately. Public IPv6, complete LuCI,
+  Go and C++ remain additional work. See [SOFT-LUA.md](docs/SOFT-LUA.md).
 
 Excluded: parental controls/access-time windows, cloud remote control, telemetry,
 NetEase UU/GearUP and unrelated stock business features. Focus on OpenWrt

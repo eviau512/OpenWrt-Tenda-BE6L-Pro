@@ -35,6 +35,11 @@ for name in ('runtime-static','runtime-dynamic','plugin.so','libc.so'):
          if not re.match(r'^(?:b(?:\.[a-z]+)?|bl|cbn?z|tbn?z)\s',line)
          and re.search(r'(?:^|[,\s\[])[vqdsbh](?:[0-9]|[12][0-9]|3[01])(?:[.,\s\]]|$)|\bfpcr\b|\bfpsr\b',line)]
     assert not bad,(name,bad[:12])
+    if name=='libc.so':
+        # Generic fma has no source-level recursion. A compiler-contracted
+        # fallback calling fma itself exhausted the real DUT's stack.
+        fused=subprocess.check_output([prefix+'objdump','-d','--disassemble=fma',str(path)],text=True)
+        assert not re.search(r'\bbl\s+[0-9a-f]+\s+<fma(?:@plt)?>',fused), 'Recursive fma contraction'
     subprocess.run([prefix+'strip','--strip-debug',str(path)],check=True)
     data=path.read_bytes()
     manifest[name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}

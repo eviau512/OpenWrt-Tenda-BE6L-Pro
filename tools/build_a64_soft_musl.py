@@ -62,7 +62,7 @@ if args.stage=='prepare':
     (experiment/'source-changes.json').write_text(json.dumps(changes,indent=2)+'\n')
     wrapper=experiment/'cc'
     wrapper.write_text('#!/bin/sh\nexec /usr/bin/clang --target=aarch64-linux-musl '
-        '-march=armv8-a+nofp+nosimd -mabi=aapcs-soft -mno-outline-atomics '
+        '-march=armv8-a+nofp+nosimd -mabi=aapcs-soft -mno-outline-atomics -ffp-contract=off '
         '--sysroot='+str(gcc.parent.parent)+' --ld-path='+prefix+'ld '
         '-ffile-prefix-map='+str(experiment)+'=/build/a64-soft '
         '-ffile-prefix-map='+str(sdk)+'=/build/openwrt-sdk '
