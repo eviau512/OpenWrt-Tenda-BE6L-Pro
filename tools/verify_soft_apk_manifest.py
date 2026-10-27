@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: MIT
 """Export package records from the actual mixed root, not SDK native staging."""
 from pathlib import Path
+import argparse
 import json
 import subprocess
 from a64_soft_context import BASE, SDK
 from soft_abi_admission import digest
 
-out=BASE/'artifacts/arm64-soft-apk'
+parser=argparse.ArgumentParser()
+parser.add_argument('--artifact-name',choices=('arm64-soft-apk','arm64-rxhash'),default='arm64-soft-apk')
+args=parser.parse_args()
+out=BASE/'artifacts'/args.artifact_name
 path=out/'build-validation.json'
 report=json.loads(path.read_text())
 root=Path(report['root'])

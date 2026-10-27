@@ -7,6 +7,7 @@ set luci.main.mediaurlbase='/luci-static/argon'
 set network.wan='interface'
 set network.wan.device='eth1'
 set network.wan.proto='dhcp'
+set network.globals.packet_steering='2'
 EOF
 for radio in radio0 radio1; do
     uci -q get "wireless.$radio" >/dev/null && uci set "wireless.$radio.country=US"

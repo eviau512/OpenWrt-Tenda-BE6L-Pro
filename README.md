@@ -17,6 +17,8 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
   has passed data-integrity, sustained-load and recovery tests.
 - Routed IPv4 NAT, IPv6 offload and Linux per-flow hardware statistics are
   unfinished. Synthetic packet tests are not live NAT qualification.
+  A hardware checkbox still falls back to software; see
+  [the wired forwarding investigation](docs/WIRED-FORWARDING.md).
 - The full `wpad-mbedtls` variant is selected, including compiled Mesh support.
   Mesh peer interoperability is a separate test, not established by selection.
 - All ten MTD partitions and physical BMT write/erase/markbad paths are protected.

@@ -1,6 +1,31 @@
 # Hardware qualification status
 
-## Current protected native C image,2026-10-27 follow-up
+## RX-hash follow-up, 2026-10-27
+
+The protected `d5a2bc21` RAM image now runs the AN7563 receive-hash correction.
+Its CPIO, package-owned userspace, 81 modules and final configuration are exactly
+the previous `5b3df962` image's content. Basic startup, module layout, protections,
+NTP and strict Bing TLS passed. A tested runtime steering overlay defers LAN RPS
+until after DSA metadata decoding; it is not embedded in this image's CPIO.
+
+Real wired forwarding still falls back to software: paired four-stream tests
+over 300 seconds reached 366/793 Mbit/s, both CPUs busy, PPE direct delta zero
+and no NPU faults. A separate 5GHz L2 short test reached 668/343 Mbit/s at about
+4.2/4.6% total CPU with positive PPE forwarding and file/reassociation checks.
+Its own 5GHz L2 runs completed 300 seconds per direction at 718/341 Mbit/s and
+3.5/3.0% total CPU. Separate 20-second CPU controls reached 563/121 Mbit/s at
+64.6/49.1% CPU with no PPE forwarding. This does not inherit previous-image
+qualification or establish a matched-duration peak benchmark. Active binding
+disconnect, driver exit/recovery, CPU fallback and hardware re-admission also
+passed with payload hashes and no faults. Final cleanup/protection/TLS checks
+passed. See [WIRED-FORWARDING.md](WIRED-FORWARDING.md).
+
+A previous-image warm reboot stopped during bootloader NAND initialization;
+cold power-on recovered it. Root cause and controlled reset acceptance remain
+open. All flash protections remain intact. No new routed ABI or unknown
+hardware command was enabled.
+
+## Previous package-managed baseline, 2026-10-27
 
 The5b3df962 RAM image remains the protected baseline: native soft-ABI init/procd,
 corrected libc,58 native ELF paths,212 normally installed package records and81

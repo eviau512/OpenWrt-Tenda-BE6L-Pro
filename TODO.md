@@ -21,6 +21,12 @@ Completed:
 
 Next, in priority order:
 
+0. [ ] Integrate the tested runtime DSA steering policy through normal package/
+   build ownership. The corrected image's 5GHz L2 long, CPU controls and active
+   lifecycle tests passed; wired software forwarding and actual L4 hashes passed.
+   Routed hardware offload is still unavailable. Investigate the older image's
+   bootloader warm-reset stall without guessing hardware reset writes.
+
 1. [ ] Routed NAT/IPv6 offload and genuine Linux per-flow statistics require real
    ingress-domain/CT-zone/WCID/epoch producers, token ownership, both-worker DMA
    completion/quiescence and counter read/consume contracts. Keep CPU routing

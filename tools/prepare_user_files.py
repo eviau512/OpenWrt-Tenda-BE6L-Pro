@@ -10,7 +10,10 @@ for path in (base / 'overlay-files').rglob('*'):
         target = files / path.relative_to(base / 'overlay-files')
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, target)
-        target.chmod(0o755 if 'uci-defaults' in path.parts else 0o600)
+        executable = ('uci-defaults' in path.parts or
+                      path.relative_to(base / 'overlay-files').as_posix() ==
+                      'usr/libexec/platform/packet-steering.sh')
+        target.chmod(0o755 if executable else 0o600)
 
 # Remove only the two earlier managed build-input paths; never open their content.
 for name in ('portal_autologin_BE6L.sh', 'portal_autologin.sh'):

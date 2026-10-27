@@ -21,6 +21,7 @@ from soft_abi_admission import digest, file_records
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--bundle-root',type=Path,required=True)
 parser.add_argument('--work',type=Path,required=True)
+parser.add_argument('--artifact-name',choices=('arm64-soft-apk','arm64-rxhash'),default='arm64-soft-apk')
 args=parser.parse_args()
 bundle=args.bundle_root
 receipt_path=BASE/'logs'/('soft-bundle-'+bundle.name)/'result.json'
@@ -104,7 +105,7 @@ try:
                     '--arch','arm64','--cross-compile',str(compiler)[:-3],'--output',str(layout)],check=True)
     for name,sha in baseline['elf64_modules_verified'].items():assert digest((root/name).read_bytes())==sha
     assert digest((kernel/'.config').read_bytes())==baseline['kernel_config_sha256']
-    out=BASE/'artifacts/arm64-soft-apk'
+    out=BASE/'artifacts'/args.artifact_name
     out.mkdir(exist_ok=True)
     shutil.copyfile(fit,out/fit.name)
     report={**metadata,**embedded,'image':fit.name,'image_sha256':digest(fit.read_bytes()),
