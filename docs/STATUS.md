@@ -1,5 +1,15 @@
 # Hardware qualification status
 
+## IPv4 learning follow-up, 2026-10-28
+
+The actual single-bank preflight now passes44checks. Three5-second learning-only
+windows restored exactly, with no BIND or faults. Real PC-through-DUT CPU NAT
+tuples correlate with both learned IPv4 keys. Patch974's prospective wired
+ownership/packet/lifetime helpers passed53cases and ARM64 object compilation;
+routed rejection remains. The steering scripts now have a signed normal APK
+and verified ownership in a fresh offline root. No new image or NAT hardware
+qualification is claimed. See [PPE-LEARNING.md](PPE-LEARNING.md).
+
 ## PPE development follow-up, 2026-10-27 evening
 
 The running image remains `d5a2bc21`; no new firmware was installed. Single-flow

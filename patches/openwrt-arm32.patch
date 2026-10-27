@@ -1,3 +1,10 @@
+diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Makefile
+index 9154c0373..1bf24d09e 100644
+--- a/package/kernel/bpf-headers/Makefile
++++ b/package/kernel/bpf-headers/Makefile
+@@ -86 +86 @@ define Build/Configure
+-	yes '' | $(KERNEL_MAKE) oldconfig
++	$(KERNEL_MAKE) olddefconfig
 diff --git a/package/libs/ncurses/Makefile b/package/libs/ncurses/Makefile
 index bd9c55369..646ff9b93 100644
 --- a/package/libs/ncurses/Makefile
@@ -128,6 +135,145 @@ index 000000000..5f226c4f2
 + 		if (msta_link != &msta->deflink)
 + 			kfree_rcu(msta_link, rcu_head);
 + 	}
+diff --git a/package/network/config/be6l-network-defaults/LICENSE b/package/network/config/be6l-network-defaults/LICENSE
+new file mode 100644
+index 000000000..459faefeb
+--- /dev/null
++++ b/package/network/config/be6l-network-defaults/LICENSE
+@@ -0,0 +1,24 @@
++MIT License
++
++Copyright (c) 2026 BE6L Pro bring-up contributors
++
++This license covers the project-authored 99-be6l-ram-ui and
++packet-steering.sh scripts included in this package, and this package recipe.
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
+diff --git a/package/network/config/be6l-network-defaults/Makefile b/package/network/config/be6l-network-defaults/Makefile
+new file mode 100644
+index 000000000..0a45018a5
+--- /dev/null
++++ b/package/network/config/be6l-network-defaults/Makefile
+@@ -0,0 +1,42 @@
++# SPDX-License-Identifier: MIT
++include $(TOPDIR)/rules.mk
++
++PKG_NAME:=be6l-network-defaults
++PKG_VERSION:=1.0.0
++PKG_RELEASE:=1
++PKG_LICENSE:=MIT
++PKG_LICENSE_FILES:=LICENSE
++PKG_FILE_DEPENDS:=$(CURDIR)/files $(CURDIR)/LICENSE
++
++include $(INCLUDE_DIR)/package.mk
++
++define Package/be6l-network-defaults
++  SECTION:=base
++  CATEGORY:=Base system
++  TITLE:=BE6L Pro RAM network and UI defaults
++  DEPENDS:=+netifd +uci
++  PKGARCH:=all
++endef
++
++define Package/be6l-network-defaults/description
++  Board-guarded RAM UI defaults and the validated BE6L Pro packet steering
++  helper. This package does not enable routed PPE or configure an access point.
++endef
++
++define Build/Prepare
++	$(INSTALL_DIR) $(PKG_BUILD_DIR)
++	$(CP) ./LICENSE $(PKG_BUILD_DIR)/LICENSE
++endef
++
++define Build/Compile
++endef
++
++define Package/be6l-network-defaults/install
++	$(INSTALL_DIR) $(1)/etc/uci-defaults $(1)/usr/libexec/platform
++	$(INSTALL_BIN) ./files/99-be6l-ram-ui $(1)/etc/uci-defaults/99-be6l-ram-ui
++	$(INSTALL_BIN) ./files/packet-steering.sh $(1)/usr/libexec/platform/packet-steering.sh
++	$(INSTALL_DIR) $(1)/usr/share/licenses/be6l-network-defaults
++	$(INSTALL_DATA) ./LICENSE $(1)/usr/share/licenses/be6l-network-defaults/LICENSE
++endef
++
++$(eval $(call BuildPackage,be6l-network-defaults))
+diff --git a/package/network/config/be6l-network-defaults/files/99-be6l-ram-ui b/package/network/config/be6l-network-defaults/files/99-be6l-ram-ui
+new file mode 100755
+index 000000000..a30c6aa99
+--- /dev/null
++++ b/package/network/config/be6l-network-defaults/files/99-be6l-ram-ui
+@@ -0,0 +1,18 @@
++#!/bin/sh
++[ "$(cat /tmp/sysinfo/board_name)" = tenda,be6l-pro ] || exit 0
++
++uci -q batch <<'EOF'
++set luci.main.lang='zh_cn'
++set luci.main.mediaurlbase='/luci-static/argon'
++set network.wan='interface'
++set network.wan.device='eth1'
++set network.wan.proto='dhcp'
++set network.globals.packet_steering='2'
++EOF
++for radio in radio0 radio1; do
++    uci -q get "wireless.$radio" >/dev/null && uci set "wireless.$radio.country=US"
++done
++uci commit luci
++uci commit network
++uci commit wireless
++exit 0
+diff --git a/package/network/config/be6l-network-defaults/files/packet-steering.sh b/package/network/config/be6l-network-defaults/files/packet-steering.sh
+new file mode 100755
+index 000000000..09c5c25bd
+--- /dev/null
++++ b/package/network/config/be6l-network-defaults/files/packet-steering.sh
+@@ -0,0 +1,31 @@
++#!/bin/sh
++# SPDX-License-Identifier: MIT
++# Standard netifd policy plus BE6L DSA receive-hash placement.
++# This is CPU steering, not routed PPE support.
++set -eu
++policy="${1:-1}"
++case "$policy" in 0|1|2) ;; *) exit 2 ;; esac
++flows="$(uci -q get network.@globals[0].steering_flows || true)"
++case "$flows" in ''|*[!0-9]*) flows=0 ;; esac
++if [ "$flows" -gt 0 ]; then
++	/usr/libexec/network/packet-steering.uc -l "$flows" "$policy"
++else
++	/usr/libexec/network/packet-steering.uc "$policy"
++fi
++[ "$(cat /tmp/sysinfo/board_name)" = tenda,be6l-pro ] || exit 0
++[ "$policy" = 2 ] || exit 0
++[ "$(cat /sys/devices/system/cpu/online)" = 0-1 ] || exit 0
++parent="$(cat /sys/class/net/eth0/ifindex)"
++for dev in lan2 lan3 lan4; do
++	[ "$(cat /sys/class/net/$dev/iflink)" = "$parent" ] || exit 0
++done
++# DSA has not decoded the switch protocol at the conduit RPS boundary.
++# Its L2 hash would otherwise be retained by every LAN user port.
++for path in /sys/class/net/eth0/queues/rx-*/rps_cpus; do
++	[ ! -w "$path" ] || printf '%s' 0 > "$path"
++done
++for dev in eth1 lan2 lan3 lan4; do
++	for path in /sys/class/net/$dev/queues/rx-*/rps_cpus; do
++		[ ! -w "$path" ] || printf '%s' 3 > "$path"
++	done
++done
 diff --git a/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts b/target/linux/airoha/dts/an7563-tenda-be6l-pro.dts
 new file mode 100644
 index 000000000..51b66512d
@@ -921,6 +1067,7 @@ index 000000000..291241c70
 + 	ctx->fault_quiesced = true;
 diff --git a/target/linux/airoha/patches-6.18/972-net-airoha-do-not-use-an7563-foe-slot-as-rx-hash.patch b/target/linux/airoha/patches-6.18/972-net-airoha-do-not-use-an7563-foe-slot-as-rx-hash.patch
 new file mode 100644
+index 000000000..f236cba12
 --- /dev/null
 +++ b/target/linux/airoha/patches-6.18/972-net-airoha-do-not-use-an7563-foe-slot-as-rx-hash.patch
 @@ -0,0 +1,22 @@
@@ -948,6 +1095,7 @@ new file mode 100644
 + 				     PKT_HASH_TYPE_L4);
 diff --git a/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch b/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch
 new file mode 100644
+index 000000000..5376cec93
 --- /dev/null
 +++ b/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch
 @@ -0,0 +1,110 @@
@@ -1061,9 +1209,247 @@ new file mode 100644
 ++				   airoha_ppe_routed_context_error(&rule->ct_context));
 +@@ -1938,0 +1961 @@
 ++	}
-diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Makefile
---- a/package/kernel/bpf-headers/Makefile
-+++ b/package/kernel/bpf-headers/Makefile
-@@ -86 +86 @@
--	yes '' | $(KERNEL_MAKE) oldconfig
-+	$(KERNEL_MAKE) olddefconfig
+diff --git a/target/linux/airoha/patches-6.18/974-net-airoha-prepare-wired-l4-ownership-without-admission.patch b/target/linux/airoha/patches-6.18/974-net-airoha-prepare-wired-l4-ownership-without-admission.patch
+new file mode 100644
+index 000000000..0e221f539
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/974-net-airoha-prepare-wired-l4-ownership-without-admission.patch
+@@ -0,0 +1,238 @@
++Subject: [PATCH] net: airoha: prepare wired L4 ownership without admission
++
++Prepare retained real ingress/Ethernet egress references, actual-packet checks
++before a future AN7563 L4 bind, and L4 lifetime invalidation. Every AN7563
++routed admission and bridge-subflow refusal remains in place; classification
++stays L2-only. This patch does not enable NAT or add cache/register writes.
++The new ownership path is prospective and unreachable under the current guard.
++
++--- a/drivers/net/ethernet/airoha/airoha_ppe.c
+++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
++@@ -7,0 +8 @@
+++#include <linux/tcp.h>
++@@ -379,0 +381,91 @@
+++}
+++
+++/* Prospective wired L4 ownership only; routed admission remains refused. */
+++static bool
+++airoha_ppe_wired_context_valid(const struct flow_rule_ct_context *context)
+++{
+++	return context->valid == 1 &&
+++	       context->version == FLOW_RULE_CT_CONTEXT_VERSION &&
+++	       context->producer == FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE &&
+++	       context->direction <= 1 && context->initial_netns == 1 &&
+++	       !context->zone_id && !context->zone_raw_id &&
+++	       !context->zone_flags && context->zone_dir == 3 &&
+++	       !context->reserved;
+++}
+++
+++/* A DSA user port on GDM1 or the real GDM2 WAN, never an opaque upper. */
+++static int airoha_ppe_wired_role(struct airoha_ppe *ppe,
+++				struct net_device *netdev)
+++{
+++	struct airoha_gdm_dev *gdm;
+++	struct net_device *conduit = netdev;
+++	int dsa_port;
+++
+++	if (!netdev || !net_eq(dev_net(netdev), &init_net) ||
+++	    READ_ONCE(netdev->reg_state) != NETREG_REGISTERED ||
+++	    is_vlan_dev(netdev))
+++		return 0;
+++	dsa_port = airoha_get_dsa_port(&conduit);
+++	gdm = netdev_priv(conduit);
+++	if (!airoha_is_valid_gdm_dev(ppe->eth, gdm))
+++		return 0;
+++	if (dsa_port >= 0 && dsa_port < 5 &&
+++	    gdm->port->id == AIROHA_GDM1_IDX)
+++		return 1;
+++	if (dsa_port < 0 && conduit == netdev &&
+++	    gdm->port->id == AIROHA_GDM2_IDX && !airoha_is_lan_gdm_dev(gdm))
+++		return 2;
+++	return 0;
+++}
+++
+++static int
+++airoha_ppe_wired_l4_get_devs(struct airoha_ppe *ppe,
+++			    struct airoha_flow_table_entry *e,
+++			    struct flow_rule *rule, struct net_device *odev,
+++			    int type, u8 l4proto)
+++{
+++	struct net_device *ingress;
+++	struct flow_match_meta meta;
+++	int input, output;
+++
+++	if (!airoha_is_7563(ppe->eth))
+++		return 0;
+++	if (type != PPE_PKT_TYPE_IPV4_HNAPT || l4proto != IPPROTO_TCP ||
+++	    ppe->eth->soc->num_ppe != 1 ||
+++	    !airoha_ppe_wired_context_valid(&rule->ct_context) ||
+++	    !flow_rule_match_key(rule, FLOW_DISSECTOR_KEY_META))
+++		return -EOPNOTSUPP;
+++	if (e->ingress_dev || e->wired_egress_dev)
+++		return -EEXIST;
+++	flow_rule_match_meta(rule, &meta);
+++	if (meta.mask->ingress_ifindex != -1 || meta.mask->ingress_iftype ||
+++	    meta.mask->l2_miss)
+++		return -EOPNOTSUPP;
+++	output = airoha_ppe_wired_role(ppe, odev);
+++	if (!output)
+++		return -EOPNOTSUPP;
+++	ingress = dev_get_by_index(&init_net, meta.key->ingress_ifindex);
+++	if (!ingress)
+++		return -ENODEV;
+++	input = airoha_ppe_wired_role(ppe, ingress);
+++	if (!input || input == output) {
+++		dev_put(ingress);
+++		return -EOPNOTSUPP;
+++	}
+++	dev_hold(odev);
+++	e->ingress_dev = ingress;
+++	e->wired_egress_dev = odev;
+++	e->wired_l4 = true;
+++	e->wired_dead = false;
+++	return 0;
+++}
+++
+++static void
+++airoha_ppe_flow_entry_put_devs(struct airoha_flow_table_entry *e)
+++{
+++	dev_put(e->ingress_dev);
+++	dev_put(e->wired_egress_dev);
+++	dev_put(e->wdma_dev);
+++	e->ingress_dev = NULL;
+++	e->wired_egress_dev = NULL;
+++	e->wdma_dev = NULL;
++@@ -1355,0 +1448,42 @@
+++/* Bind-time proof only. This does not implement ASIC exception handling. */
+++static bool
+++airoha_ppe_wired_l4_packet_match(struct airoha_ppe *ppe,
+++				struct airoha_flow_table_entry *e,
+++				struct airoha_foe_entry *hwe,
+++				struct sk_buff *skb)
+++{
+++	struct iphdr ipbuf, *ip;
+++	struct tcphdr tcpbuf, *tcp;
+++	unsigned int length;
+++	int input, output, offset;
+++
+++	if (!e->wired_l4 || e->wired_dead || !e->ingress_dev ||
+++	    !e->wired_egress_dev || skb_vlan_tag_present(skb) ||
+++	    eth_hdr(skb)->h_proto != htons(ETH_P_IP))
+++		return false;
+++	input = airoha_ppe_wired_role(ppe, e->ingress_dev);
+++	output = airoha_ppe_wired_role(ppe, e->wired_egress_dev);
+++	if (!input || !output || input == output ||
+++	    !airoha_ppe_bridge_ingress_match(e, skb) ||
+++	    !airoha_ppe_foe_packet_match(ppe, hwe, skb))
+++		return false;
+++	offset = skb_mac_offset(skb) + ETH_HLEN;
+++	if (offset < 0 || (unsigned int)offset > skb->len)
+++		return false;
+++	ip = skb_header_pointer(skb, offset, sizeof(ipbuf), &ipbuf);
+++	if (!ip || ip->version != 4 || ip->ihl != 5 ||
+++	    ip->protocol != IPPROTO_TCP || ip->ttl <= 1 ||
+++	    (ntohs(ip->frag_off) & 0x3fff))
+++		return false;
+++	length = ntohs(ip->tot_len);
+++	if (length < sizeof(*ip) + sizeof(tcpbuf) ||
+++	    length > skb->len - offset || length > e->ingress_dev->mtu)
+++		return false;
+++	tcp = skb_header_pointer(skb, offset + sizeof(*ip), sizeof(tcpbuf),
+++				 &tcpbuf);
+++	if (!tcp || tcp->doff < 5 || tcp->doff * 4 > length - sizeof(*ip) ||
+++	    tcp->syn || tcp->fin || tcp->rst)
+++		return false;
+++	return true;
+++}
+++
++@@ -1490,0 +1625,4 @@
+++		/* Future routed parents must prove this packet and live input. */
+++		if (airoha_is_7563(ppe->eth) &&
+++		    !airoha_ppe_wired_l4_packet_match(ppe, e, hwe, skb))
+++			continue;
++@@ -1549 +1687,4 @@
++-	if ((e->wdma_dev &&
+++	if (e->wired_dead ||
+++	    (e->wired_egress_dev &&
+++	     READ_ONCE(e->wired_egress_dev->reg_state) != NETREG_REGISTERED) ||
+++	    (e->wdma_dev &&
++@@ -1686,0 +1828,36 @@
+++static bool airoha_ppe_wired_depends_on(struct net_device *dev,
+++				       struct net_device *changed)
+++{
+++	struct net_device *conduit = dev;
+++
+++	if (!dev)
+++		return false;
+++	if (dev == changed)
+++		return true;
+++	return airoha_get_dsa_port(&conduit) >= 0 && conduit == changed;
+++}
+++
+++/* Called under ppe_lock. Other SoCs and existing L2 owners are untouched. */
+++static void
+++airoha_ppe_wired_l4_event(struct airoha_ppe *ppe,
+++			struct airoha_flow_table_entry *e,
+++			struct net_device *netdev, bool unregister)
+++{
+++	if (!e->wired_l4 ||
+++	    (!airoha_ppe_wired_depends_on(e->ingress_dev, netdev) &&
+++	     !airoha_ppe_wired_depends_on(e->wired_egress_dev, netdev)))
+++		return;
+++	e->wired_dead = true;
+++	airoha_ppe_foe_unbind_flow(ppe, e);
+++	if (!unregister)
+++		return;
+++	if (e->ingress_dev == netdev) {
+++		dev_put(e->ingress_dev);
+++		e->ingress_dev = NULL;
+++	}
+++	if (e->wired_egress_dev == netdev) {
+++		dev_put(e->wired_egress_dev);
+++		e->wired_egress_dev = NULL;
+++	}
+++}
+++
++@@ -1695,0 +1873,10 @@
+++	if (event != NETDEV_UNREGISTER && event != NETDEV_GOING_DOWN &&
+++	    event != NETDEV_PRECHANGEUPPER && event != NETDEV_CHANGEUPPER &&
+++	    event != NETDEV_CHANGEADDR && event != NETDEV_CHANGEMTU &&
+++	    event != NETDEV_CHANGE)
+++		return NOTIFY_DONE;
+++
+++	spin_lock_bh(&ppe_lock);
+++	hlist_for_each_entry(e, &ppe->ingress_flows, ingress_node)
+++		airoha_ppe_wired_l4_event(ppe, e, netdev,
+++					  event == NETDEV_UNREGISTER);
++@@ -1697,3 +1884 @@
++-		return NOTIFY_DONE;
++-
++-	spin_lock_bh(&ppe_lock);
+++		goto unlock;
++@@ -1723,0 +1909 @@
+++unlock:
++@@ -2143,0 +2330,6 @@
+++	if (airoha_is_7563(eth) && offload_type != PPE_PKT_TYPE_BRIDGE) {
+++		err = airoha_ppe_wired_l4_get_devs(eth->ppe, e, rule, odev,
+++						    offload_type, l4proto);
+++		if (err)
+++			goto free_entry;
+++	}
++@@ -2171,2 +2363 @@
++-	dev_put(e->ingress_dev);
++-	dev_put(e->wdma_dev);
+++	airoha_ppe_flow_entry_put_devs(e);
++@@ -2191,2 +2382 @@
++-	dev_put(e->ingress_dev);
++-	dev_put(e->wdma_dev);
+++	airoha_ppe_flow_entry_put_devs(e);
++@@ -2635,2 +2825 @@
++-	dev_put(e->ingress_dev);
++-	dev_put(e->wdma_dev);
+++	airoha_ppe_flow_entry_put_devs(e);
++--- a/drivers/net/ethernet/airoha/airoha_eth.h
+++++ b/drivers/net/ethernet/airoha/airoha_eth.h
++@@ -568,0 +569,3 @@
+++	/* Prospective AN7563 wired L4; routed admission remains disabled. */
+++	struct net_device *wired_egress_dev;
+++	bool wired_l4, wired_dead;

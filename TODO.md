@@ -21,11 +21,20 @@ Completed:
 
 Next, in priority order:
 
+- [x] Correct single-bank diagnostic;44actual preconditions and bounded IPv4
+  UNB learning with exact restoration/no BIND/no fault.
+- [x] Interface-pinned PC->DUT->WAN low-rate CPU NAT plus original/reply raw
+  learned-key correlation; not hardware NAT or a performance benchmark.
+- [x] Prospective wired L4 ownership/packet/lifetime source helpers,53tests and
+  isolated ARM64 compilation, while keeping routed admission rejected.
+- [x] Signed normal steering/defaults APK with exact payload ownership and0755
+  modes in a fresh offline root; exact known unowned-file migration only.
+
 - [x] Explicit CT-context producer and rejection-only consumer;120 source-helper
   tests and three ARM64 object builds. Not deployed; internal ABI changed.
 - [x] Pinned bridger ARM32/BPF package build and signature/architecture checks.
   Not installed or hardware-qualified; new matching BPF/VLAN modules required.
-- [ ] Diagnose the bounded learning fixture's read-only preflight rejection,
+- [x] Diagnose the bounded learning fixture's read-only preflight rejection,
   then observe real IPv4 UNB keys with no routed binding and exact restoration.
 - [ ] Complete a restricted wired NAT path: actual equality fields, action and
   invalidation/cache ownership. Separate wire-only ownership from radio queues;
