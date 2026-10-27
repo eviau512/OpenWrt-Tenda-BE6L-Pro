@@ -6,7 +6,7 @@ the requirements below have actual packet-path evidence.
 
 ## Verified Linux-side gap
 
-In the pinned Linux 6.18.55 source, `net/netfilter/nf_flow_table_offload.c`,
+In the original pinned Linux 6.18.55 source, `net/netfilter/nf_flow_table_offload.c`,
 `nf_flow_rule_match()` supplies ingress ifindex, IP/transport fields and selected
 encapsulation fields. This translator contains no `FLOW_DISSECTOR_KEY_CT`,
 `nf_ct_zone()` or equivalent explicit conntrack-zone transfer. A missing zone
@@ -20,9 +20,36 @@ not preserve that domain. The two-core experimental channel carries synthetic
 identity values, but no Linux control-plane adapter currently populates them
 from approved live connections.
 
+## Explicit Linux provenance implemented, not yet deployed
+
+Patch973 now carries a pointer-free16-byte CT-context snapshot on `flow_rule`.
+The producer checks that the flow table and referenced conntrack share a network
+namespace, maps original/reply direction explicitly, and copies effective CT
+zone plus raw zone settings and initial-namespace status. Ordinary TC rules
+retain zero/absent metadata. The AN7563 consumer provides precise refusal
+diagnostics and still rejects every routed request.
+
+The actual source helpers passed120 UBSan cases with CT zones enabled/disabled;
+the allocator, flow-table translator and PPE kernel objects compile for ARM64.
+No image or module was installed. The internal action offset changes: rebuild
+the complete matching kernel/modules and package root before any deployment.
+Matching vermagic or `struct module` size alone does not prove this API matches.
+
+This is a control-plane provenance snapshot, not proof that every subsequent
+packet shares its domain. The next target is a narrowly supported wired LAN/WAN
+IPv4 path. Arbitrary namespace/zone/Wi-Fi support is not required for its first
+test if physical and policy-domain exclusivity are proved and invalidation
+precedes a conflicting topology change. A zone-zero rule alone is insufficient.
+
+Radio RRO/two-worker fences apply where those owners actually hold packets;
+they are not automatically requirements for a separate wired direct-PPE path.
+Likewise, a first bounded NAT path may honestly report byte counters unsupported
+if activity/expiry and safe teardown are sound. Genuine per-flow accounting
+remains a separate TODO and must never be fabricated from global counters.
+
 ## Required implementation order
 
-1. Define an explicit Linux admission contract. Identify the approved flow's
+1. Complete the explicit Linux admission contract. Identify the approved flow's
    network namespace, CT zone and direction, ingress device/port/VLAN stack,
    station/WCID and key/replay generation. Retain references or immutable
    snapshots with defined lifetimes. Reject unavailable or ambiguous identity;

@@ -37,12 +37,12 @@ for relative, item in manifest['checkouts'].items():
     assert capture(['git', 'remote', 'get-url', 'origin'], root).removesuffix('.git') == item['url'].removesuffix('.git'), relative
     if 'patch' in item:
         patch = (BASE / item['patch']).read_bytes()
-        reverse = subprocess.run(['git', 'apply', '--reverse', '--check', '-'], cwd=root,
+        reverse = subprocess.run(['git', 'apply', '--unidiff-zero', '--reverse', '--check', '-'], cwd=root,
                                  input=patch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if reverse.returncode:
             assert args.apply, 'Source delta does not match exported patch: ' + relative
-            run(['git', 'apply', '--check', '-'], root, input=patch)
-            run(['git', 'apply', '-'], root, input=patch)
+            run(['git', 'apply', '--unidiff-zero', '--check', '-'], root, input=patch)
+            run(['git', 'apply', '--unidiff-zero', '-'], root, input=patch)
         if args.apply:
             shutil.copyfile(BASE / item['config'], root / '.config')
 

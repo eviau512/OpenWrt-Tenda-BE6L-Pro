@@ -21,6 +21,20 @@ Completed:
 
 Next, in priority order:
 
+- [x] Explicit CT-context producer and rejection-only consumer;120 source-helper
+  tests and three ARM64 object builds. Not deployed; internal ABI changed.
+- [x] Pinned bridger ARM32/BPF package build and signature/architecture checks.
+  Not installed or hardware-qualified; new matching BPF/VLAN modules required.
+- [ ] Diagnose the bounded learning fixture's read-only preflight rejection,
+  then observe real IPv4 UNB keys with no routed binding and exact restoration.
+- [ ] Complete a restricted wired NAT path: actual equality fields, action and
+  invalidation/cache ownership. Separate wire-only ownership from radio queues;
+  never fabricate unsupported per-flow counters or infer packet-domain safety
+  from a single zone-zero control-plane request.
+- [ ] Rebuild matching kernel/modules/rootfs for973 and bridger; accept a new
+  RAM image and bridger automatic L2 lifecycle. Prioritize PPE/network before
+  advancing native64-bit default services.
+
 0. [ ] Integrate the tested runtime DSA steering policy through normal package/
    build ownership. The corrected image's 5GHz L2 long, CPU controls and active
    lifecycle tests passed; wired software forwarding and actual L4 hashes passed.
@@ -31,6 +45,8 @@ Next, in priority order:
    ingress-domain/CT-zone/WCID/epoch producers, token ownership, both-worker DMA
    completion/quiescence and counter read/consume contracts. Keep CPU routing
    and admission guards until those are proved; global counts are not per-flow.
+   Scope these requirements to actual owners; the first restricted wired NAT
+   experiment need not implement unused radio-worker or byte-accounting APIs.
 2. [ ] Complete current-image2.4GHz lifecycle/matched CPU controls using a reliable
    peer. Replacement Wi-Fi7 client2.4GHz observations are excluded by the user,
    not counted as a DUT fault or a pass. Test actual Mesh peer interoperability.

@@ -2078,3 +2078,124 @@ new file mode 100644
 ++		if (!airoha_is_7563(eth) && hash != AIROHA_RXD4_FOE_ENTRY)
 + 			skb_set_hash(q->skb, jhash_1word(hash, 0),
 + 				     PKT_HASH_TYPE_L4);
+diff --git a/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch b/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch
+new file mode 100644
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/973-net-flowtable-preserve-explicit-ct-context-for-admission.patch
+@@ -0,0 +1,110 @@
++Subject: [PATCH] net: flowtable: preserve explicit CT context for admission
++
++Carry a value-only provenance snapshot from the referenced conntrack through
++normal flowtable rule construction. Include the effective directional zone,
++raw zone settings, direction and explicit initial-network-namespace status.
++Ordinary TC rules have no such provenance. No CT pointer or new packet match
++key is exposed. This experimental internal API is not a hardware admission.
++
++Use the snapshot only for precise AN7563 routed-rejection diagnostics. Keep
++all routed classification, native bind, station and DMA ownership guards.
++The classifier remains L2-only and every routed request remains unsupported.
++The internal flow_rule layout changes: rebuild the complete matching kernel
++and modules before any future image; never install these objects in isolation.
++
++--- a/include/net/flow_offload.h
+++++ b/include/net/flow_offload.h
++@@ -440,0 +441,19 @@
+++/* Value-only provenance, not a hardware packet match or admission grant.
+++ * Ordinary TC rules retain the all-zero/absent context from flow_rule_alloc().
+++ * Consumers must check valid, version and producer before using the snapshot.
+++ */
+++#define FLOW_RULE_CT_CONTEXT_VERSION 1
+++#define FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE 1
+++struct flow_rule_ct_context {
+++	u16 version;
+++	u8 producer;
+++	u8 valid;
+++	u16 zone_id;
+++	u16 zone_raw_id;
+++	u8 zone_dir;
+++	u8 zone_flags;
+++	u8 direction;
+++	u8 initial_netns;
+++	u32 reserved;
+++};
+++
++@@ -442,0 +462 @@
+++	struct flow_rule_ct_context ct_context;
++--- a/net/netfilter/nf_flow_table_offload.c
+++++ b/net/netfilter/nf_flow_table_offload.c
++@@ -14,0 +15 @@
+++#include <net/netfilter/nf_conntrack_zones.h>
++@@ -799,0 +801,33 @@
+++/* The flow table holds the CT reference while this rule is constructed.
+++ * No pointer escapes; this describes the approved CT, not every later packet.
+++ */
+++static bool
+++nf_flow_rule_set_ct_context(struct flow_rule *rule, const struct net *net,
+++			    const struct flow_offload *flow,
+++			    enum flow_offload_tuple_dir dir)
+++{
+++	struct flow_rule_ct_context *context = &rule->ct_context;
+++	const struct nf_conntrack_zone *zone;
+++	enum ip_conntrack_dir ct_dir;
+++
+++	memset(context, 0, sizeof(*context));
+++	if ((unsigned int)dir >= FLOW_OFFLOAD_DIR_MAX ||
+++	    !net_eq(nf_ct_net(flow->ct), net))
+++		return false;
+++
+++	ct_dir = dir == FLOW_OFFLOAD_DIR_ORIGINAL ?
+++		 IP_CT_DIR_ORIGINAL : IP_CT_DIR_REPLY;
+++	zone = nf_ct_zone(flow->ct);
+++	context->version = FLOW_RULE_CT_CONTEXT_VERSION;
+++	context->producer = FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE;
+++	context->zone_id = nf_ct_zone_id(zone, ct_dir);
+++	context->zone_raw_id = zone->id;
+++	context->zone_dir = zone->dir;
+++	context->zone_flags = zone->flags;
+++	context->direction = dir;
+++	context->initial_netns = net_eq(net, &init_net);
+++	context->reserved = 0;
+++	context->valid = 1;
+++	return true;
+++}
+++
++@@ -830,0 +865,3 @@
+++		goto err_flow_match;
+++
+++	if (!nf_flow_rule_set_ct_context(flow_rule->rule, net, flow, dir))
++--- a/drivers/net/ethernet/airoha/airoha_ppe.c
+++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
++@@ -1901,0 +1902,20 @@
+++/* This metadata improves diagnostics only. It is not proof that a
+++ * subsequent packet has the same domain or that the hardware can match it.
+++ */
+++static const char *
+++airoha_ppe_routed_context_error(const struct flow_rule_ct_context *context)
+++{
+++	if (context->valid != 1 ||
+++	    context->version != FLOW_RULE_CT_CONTEXT_VERSION ||
+++	    context->producer != FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE ||
+++	    context->direction > 1 || context->reserved ||
+++	    context->initial_netns > 1)
+++		return "AN7563 routed offload lacks explicit flowtable CT context";
+++	if (!context->initial_netns)
+++		return "AN7563 routed offload requires the initial network namespace";
+++	if (context->zone_id || context->zone_raw_id || context->zone_flags ||
+++	    context->zone_dir != 3)
+++		return "AN7563 routed offload requires an explicit default CT zone";
+++	return "AN7563 routed classification is not implemented";
+++}
+++
++@@ -1937 +1957,3 @@
++-	if (airoha_is_7563(eth) && addr_type)
+++	if (airoha_is_7563(eth) && addr_type) {
+++		NL_SET_ERR_MSG_FMT_MOD(f->common.extack, "%s",
+++				   airoha_ppe_routed_context_error(&rule->ct_context));
++@@ -1938,0 +1961 @@
+++	}
+diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Makefile
+--- a/package/kernel/bpf-headers/Makefile
++++ b/package/kernel/bpf-headers/Makefile
+@@ -86 +86 @@
+-	yes '' | $(KERNEL_MAKE) oldconfig
++	$(KERNEL_MAKE) olddefconfig

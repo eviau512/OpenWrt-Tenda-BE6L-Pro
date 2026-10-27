@@ -1,0 +1,6 @@
+diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Makefile
+--- a/package/kernel/bpf-headers/Makefile
++++ b/package/kernel/bpf-headers/Makefile
+@@ -86 +86 @@
+-	yes '' | $(KERNEL_MAKE) oldconfig
++	$(KERNEL_MAKE) olddefconfig

@@ -21,6 +21,9 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
   [the wired forwarding investigation](docs/WIRED-FORWARDING.md).
 - The full `wpad-mbedtls` variant is selected, including compiled Mesh support.
   Mesh peer interoperability is a separate test, not established by selection.
+- Future build inputs select `bridger` for automatic L2 flow management; see
+  [its build and runtime gates](docs/BRIDGER-INTEGRATION.md). The current image
+  does not contain or qualify it, and it does not supply routed NAT support.
 - All ten MTD partitions and physical BMT write/erase/markbad paths are protected.
   The device profile produces initramfs only and rejects flash upgrades.
 

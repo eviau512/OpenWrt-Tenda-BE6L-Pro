@@ -1,5 +1,31 @@
 # Hardware qualification status
 
+## PPE development follow-up, 2026-10-27 evening
+
+The running image remains `d5a2bc21`; no new firmware was installed. Single-flow
+DUT-local TX/RX reached963/1304Mbit/s at64.4/85.9% CPU. Normalized CPU cost was
+nearly equal, and four-stream TX reached1218Mbit/s. These are TCP endpoints,
+not forwarding tests. See [LOCAL-IPERF.md](LOCAL-IPERF.md).
+
+Patch973 implements explicit CT provenance and rejection diagnostics.120 actual
+source UBSan cases and three ARM64 object compilations passed; routed actions
+remain rejected. This changes the internal flow_rule ABI and requires a full
+matching rebuild before deployment. Wired-only scope and radio ownership are
+now separated in [LIVE-OFFLOAD-PLAN.md](LIVE-OFFLOAD-PLAN.md).
+
+The pinned bridger ARM32 soft-float package and eBPF object built normally;
+package signature, architecture and packaged BPF bytes passed. The current
+kernel lacks required BPF/VLAN modules, so bridger has not been installed or
+hardware-qualified. Future build selections and sparse dependencies are ready.
+A one-line header-only olddefconfig compatibility fix preserves its exact
+configuration while avoiding a host pipe hang. See
+[BRIDGER-INTEGRATION.md](BRIDGER-INTEGRATION.md).
+
+A bounded IPv4 learning fixture was compiled, but its default read-only live
+preflight rejected. No active learning window, routed BIND or NAT test ran.
+Keep that failure visible and diagnose the precise typed precondition before
+attempting any register change. No guard has been relaxed to obtain a pass.
+
 ## RX-hash follow-up, 2026-10-27
 
 The protected `d5a2bc21` RAM image now runs the AN7563 receive-hash correction.

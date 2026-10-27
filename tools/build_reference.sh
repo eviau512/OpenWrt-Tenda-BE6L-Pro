@@ -14,6 +14,12 @@ mkdir -p "$base/logs/proxy-build-1213" "$base/logs/arm64-compat-build" \
 python3 "$base/tools/configure_proxy_packages.py"
 python3 "$base/tools/fix_passwall_compat_arch.py"
 python3 "$base/tools/prepare_user_files.py"
+bridger_llvm=()
+if [[ -n ${BPF_LLVM_ROOT:-} ]]; then
+    bridger_llvm=(--llvm-root "$BPF_LLVM_ROOT")
+fi
+python3 "$base/tools/prepare_bridger.py" "$work/source" --apply "${bridger_llvm[@]}"
+python3 "$base/tools/prepare_bridger.py" "$work/arm64-source" --apply "${bridger_llvm[@]}"
 cd "$work/source"
 make SHELL="$CONFIG_SHELL" defconfig
 grep -qx 'CONFIG_PACKAGE_wpad-mbedtls=y' .config

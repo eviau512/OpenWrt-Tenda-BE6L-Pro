@@ -5,6 +5,10 @@ that the driver accepted a routed flow. The current AN7563 implementation still
 rejects routed IPv4/IPv6 rules and falls back to the CPU. Do not remove that
 guard: ingress identity, DMA completion and per-flow statistics remain open.
 
+Router-local receive/transmit measurements are documented separately in
+[LOCAL-IPERF.md](LOCAL-IPERF.md). Different absolute CPU percentages need to be
+normalized by throughput before comparing costs.
+
 ## Actual findings
 
 The wired path used a separate upstream iperf3 endpoint. The DUT did not run the
