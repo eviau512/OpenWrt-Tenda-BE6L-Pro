@@ -17,6 +17,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef BE6L_FIXTURE_PREFIX
+#define BE6L_FIXTURE_PREFIX "/tmp/be6l-native-netifd-"
+#endif
+
 static volatile sig_atomic_t child_pid = -1;
 static volatile sig_atomic_t expired;
 static void deadline(int signal_number)
@@ -32,7 +36,7 @@ static void fail(const char *label)
 }
 int main(int argc, char **argv)
 {
-    static const char prefix[] = "/tmp/be6l-native-netifd-";
+    static const char prefix[] = BE6L_FIXTURE_PREFIX;
     const struct rlimit core = {0, 0};
     struct stat info;
     char path[PATH_MAX];

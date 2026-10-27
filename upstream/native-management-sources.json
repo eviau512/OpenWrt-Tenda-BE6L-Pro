@@ -1,0 +1,20 @@
+{
+  "luci_commit": "1c67452adb01413e78feb109180bd15186612ead",
+  "ucode_commit": "d2e8b8d2052778557ccca7e781d2ad423324961b",
+  "cached_source_archives": {
+    "libmd-1.2.0.tar.xz": {
+      "bytes": 287992,
+      "sha256": "ac15ffb8430502fbaccdec66c5a82ee0eab0b0f36220df56710feadfeb13d0a0"
+    },
+    "yaml-0.2.5.tar.gz": {
+      "bytes": 609454,
+      "sha256": "c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4"
+    },
+    "lyaml-6.2.7.tar.gz": {
+      "bytes": 49264,
+      "sha256": "9bb489cefae48b150d66f6bab4141d8d5831fcb7465bfc52a9845fa01efc63b0"
+    }
+  },
+  "no_source_downloads_this_round": true,
+  "all_binary_redistribution_licenses_reviewed": false
+}

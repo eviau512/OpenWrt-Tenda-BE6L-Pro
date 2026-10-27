@@ -17,3 +17,4 @@ id_*
 backup*/
 private*/
 upstream/llvm21-soft-builtins/
+upstream/llvm21-soft-builtins-extra/

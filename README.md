@@ -63,3 +63,11 @@ See [acceptance, reproduction and remaining ABI work](docs/NATIVE-SOFTFLOAT.md).
 The corrected runtime now has a [package-managed RAM image](docs/SOFT-APK-BUNDLE.md).
 [Native netifd](docs/SOFT-NETIFD.md) passed a private-namespace static-IP lifecycle.
 The complete native userspace and routed NPU offload remain under development.
+
+## Native management follow-up
+
+The current image still contains ARM32 applications. Reproducible native soft-ABI
+web/Lua dependencies and isolated Chinese Argon login now pass actual tests;
+see [service evidence and limits](docs/SOFT-SERVICES.md) and the
+[package/image integration gates](docs/NATIVE-MANAGEMENT-PLAN.md). A module's
+AArch64 ELF label alone does not establish compatibility with this no-FP CPU.

@@ -1,0 +1,12 @@
+{
+  "commit": "2078da43e25a4623cab2d0d60decddf709aaea28",
+  "files": [
+    {
+      "name": "floatunsisf.c",
+      "bytes": 1774,
+      "git_blob": "ec062b5943e98cb0c2b6588d5b7c728ae7a4d5e3",
+      "sha256": "a002e5243cabecefc49858dc505b1a3f89fdd75362adb00e4bbe3eb707fff9a4"
+    }
+  ],
+  "license_from": "llvm21-soft-builtins/LICENSE.TXT"
+}

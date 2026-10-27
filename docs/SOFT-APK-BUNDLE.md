@@ -146,3 +146,13 @@ firmware, two advancing worker heartbeats and normal-MTU Bing TLS passed final
 checks. Watchdog status was running with24-second timeout and5-second feed;
 actual reset acceptance remains pending. No flash writes or saved bootloader
 environment changes were made. No automatic continuation is scheduled.
+
+## Later acceptance corrections,2026-10-27
+
+The user excludes the replacement endpoint's2.4GHz results from DUT acceptance;
+retain raw observations without assigning a router fault. Current-image5GHz
+active-binding recovery and matched-EHT300s CPU controls have since passed.
+A user-supplied local upstream NTP service also corrected the epoch clock after
+RAM restoration. No ordinary A53 package, new image or default native service
+integration was introduced by those tests. Native web dependencies are separately
+qualified in [SOFT-SERVICES.md](SOFT-SERVICES.md).

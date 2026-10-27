@@ -1,28 +1,50 @@
 # Hardware qualification status
 
-## Package-managed native C image, 2026-10-26 follow-up
+## Current protected native C image,2026-10-27 follow-up
 
-A new RAM image boots native soft-ABI init/procd with corrected libc and58 native
-ELF paths. Four signed packages were installed through ordinary APK transactions;
-init/procd ownership matches the files. Original ARM32 libc and81 matching kernel
-modules remain intact. The actual212-package manifest, embedded CPIO, loaders,
-module layout, MTD guards/digests, native Bing HTTPS/Lua bindings and Chinese
-Argon login page passed. The fresh clock needed volatile UTC calibration;
-autonomous NTP remains unqualified. See [SOFT-APK-BUNDLE.md](SOFT-APK-BUNDLE.md).
+The5b3df962 RAM image remains the protected baseline: native soft-ABI init/procd,
+corrected libc,58 native ELF paths,212 normally installed package records and81
+matching AArch64 modules. Most default applications are still ARM32. Repeated
+RAM restoration, exact PID1/module/protection checks and strict normal-MTU Bing
+TLS passed. A user-provided directly connected NTP service corrected the epoch
+clock automatically; its private address is deliberately excluded from source.
+No new firmware image or default-service replacement is claimed this round.
 
-This image passed both-band short L2 tests with the previous Wi-Fi6 endpoint.
-Its long campaign completed three directions before endpoint replacement, which
-is not a full both-band pass. The replacement Wi-Fi7 endpoint passed5GHz HE CPU
-controls, while2.4GHz shows low-rate/retry/loss symptoms without PPE bindings.
-Default-EHT5GHz L2 hardware forwarding subsequently passed300 seconds per
-direction at269/169 Mbit/s, with6.8/5.9% CPU busy, positive PPE direct-forward
-increments and zero faults. The2MiB integrity check and re-authentication
-passed. New-image2.4GHz and active lifecycle qualification remain incomplete. Different endpoint/PHY conditions
-must not be merged into a peak benchmark.
+Current-image5GHz default-EHT L2 forwarding passed300s per direction at269/169
+Mbit/s, CPU6.8/5.9%, positive PPE direct-forward progress and fault0. It also
+passed active-binding disconnect/driver exit/recovery/rebinding and2MiB SHA256.
+Matched-PHY/duration CPU controls passed273/142Mbit/s with PPEdelta0. These are
+sequential RF samples, not proof of a peak speed advantage. Earlier same-image
+2.4GHz long results from the previous Wi-Fi6 peer remain valid. The replacement
+Wi-Fi7 client's2.4GHz results are excluded at the user's request because that
+client/ROM appears faulty; do not assign them to a DUT regression or turn them
+into passes. Remaining2.4GHz acceptance needs a reliable endpoint.
 
-Native netifd/libnl-tiny have reproducible10-ELF real-Linux-backend closures.
-Private mount/net/PID namespace loopback up/down/up passed with the host network
-and daemon unchanged. System netifd remains ARM32. See [SOFT-NETIFD.md](SOFT-NETIFD.md).
+Native rpcd/uhttpd/TLS and LuCI dependencies now have reproducible67-ELF private
+closures. Actual isolated Chinese Argon login, wrong-password rejection, valid
+cookie/protected-template access, RPC ACL/session revocation, TLS trust rejection,
+Lua-first module import order, digest known answers, real loopback rtnetlink,
+Lua IP/JSON/template/YAML and malformed-input tests passed. A weak initializer
+interposition defect exposed by Lua RTLD_GLOBAL was corrected by an explicit
+module-entry export policy. Full default-service/device-page integration and a
+complete native SDK are still open. See [SOFT-SERVICES.md](SOFT-SERVICES.md) and
+[NATIVE-MANAGEMENT-PLAN.md](NATIVE-MANAGEMENT-PLAN.md).
+
+A content-bound host-only merge preflight found90 ELF paths, zero provider
+conflicts and32 additions totaling2927760 raw bytes. The current Image has only
+393216 bytes of safe headroom: actual normal package composition and compressed
+CPIO measurement must precede another image build or RAM boot.
+
+New specifications corrected several coordinates but still do not establish
+counter read side effects, actual routed identity producers, DMA completion/
+quiescence or genuine per-flow statistics. Software accumulation alone is not
+proof of hardware read-clear. Routed admission guards remain in force; the LuCI
+hardware NAT checkbox is not qualified. Private stock slices/specifications and
+runtime secrets are not published.
+
+Native netifd/libnl-tiny have a reproducible10-ELF real-Linux closure and private
+loopback up/down/up acceptance. System netifd remains ARM32; actual native DHCP,
+WiFi and routing integration are pending. See [SOFT-NETIFD.md](SOFT-NETIFD.md).
 
 ## Earlier frozen native-init baseline, 2026-10-26
 
