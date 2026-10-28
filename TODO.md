@@ -21,10 +21,24 @@ Completed:
 
 Next, in priority order:
 
-- [ ] Resume the owner-paused matching bridger image build: finish final-config
-  external modules, re-probe ABI, audit normal APKs, compose the unchanged
-  native58 profile plus packages, and prove actual CPIO/Image bounds. Only the
-  clean kernel/first module+APK pass is complete; no admitted image exists.
+- [ ] Review https://github.com/pabragin/xiaomi-be5000-openwrt for routed WAN/PPE
+  techniques using pinned necessary files only. Not researched/adopted yet;
+  if any code or method is used, explicitly credit it in README and preserve
+  applicable licensing and revision/file provenance.
+- [ ] Simultaneous upload/download with two independent server ports. Existing
+  20s/300s direction tests were sequential; qualify L2 and routed WAN separately.
+- [ ] Native-service merge compression budget:32 additional ELF paths add601768
+  gzip bytes against327680-byte headroom; assess normal compression/scope before
+  profile/package admission and an actual rebuilt Image.
+- [x] Finish the matching bridger image, normal216-record APK root and actual
+  CPIO/Image/default-loader admission; protected b3ec883f RAM boot and basic
+  runtime passed with84 matching modules and327680-byte Image headroom.
+- [x] Automatic5GHz L2 short test: exact daemon flower/BIND peer correlation,
+  positive PPE progress, integrity/reassociation and cleanup.20s each direction.
+- [x] This image's own automatic5GHz300s each direction, exact peer/rule/BIND
+  evidence, integrity/reassociation/AP teardown and final safety/cleanup.
+- [ ] Reliable2.4GHz/Mesh peer, new-image driver-exit/CPU controls, NAT/IPv6
+  and per-flow accounting remain separate pending work.
 - [x] Actual IPv4 NAT producer/tuple-encoder CPU tests:4098 positive/five
   negative cases, UBSan and two private historical CT/capture correlations.
   No complete BIND image or hardware call; domain/defaults/completion remain.

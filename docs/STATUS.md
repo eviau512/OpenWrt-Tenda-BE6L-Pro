@@ -1,5 +1,18 @@
 # Hardware qualification status
 
+## New bridger RAM image, 2026-10-28 afternoon
+
+Protected `b3ec883f` has booted with84 matching modules,216 actual package
+records, the unchanged58 native soft-ABI ELF profile and enabled bridger.
+Default loaders, package ownership, MTD/BMT guards, NPU workers, Chinese Argon
+UI/Lua and strict Bing TLS passed. Automatic5GHz L2 forwarding reached894/395
+Mbit/s at5.0/4.2% CPU over20seconds each direction, with exact daemon-rule/BIND
+correlation, real PPE progress and integrity/reconnection/teardown checks.
+Its own300-second runs then passed751/381Mbit/s at7.1/4.7% CPU, with no NPU
+fault and successful test-peer/AP teardown. Final protections/digests/TLS and
+test network/key/phone-policy cleanup passed. Routed NAT/IPv6 and per-flow statistics
+are still unqualified. See [BRIDGER-INTEGRATION.md](BRIDGER-INTEGRATION.md).
+
 ## Resumed wired action review, 2026-10-28
 
 Actual Linux NAT producers and Airoha tuple encoders passed 4098 positive/five

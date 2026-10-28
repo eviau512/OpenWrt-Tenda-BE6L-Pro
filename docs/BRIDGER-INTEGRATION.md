@@ -1,5 +1,50 @@
 # Bridger build inputs and acceptance gates
 
+## Protected RAM image and automatic forwarding, 2026-10-28
+
+The completed candidate `b3ec883f5b6c2d90737d138e621ebf0a185bbd199d0757c9a35ef24cb4eea0dd`
+has booted from RAM. Its84 AArch64 modules match the final kernel/config/ABI;
+216 actual installed package records retain the58 native soft-ABI ELF profile.
+Bridger is enabled, network defaults have normal APK ownership, and Tailscale
+and Passwall remain disabled. Ten MTD/BMT guards, native PID1/libc, strict Bing
+TLS, Chinese Argon UI/Lua and advancing NPU workers passed. No flash operation
+or Windows firewall change was needed.
+
+Actual effective Image size is64,684,032 bytes with327,680 bytes before the
+reserved-memory boundary. The129,955,840-byte CPIO SHA-256 is
+`22f2d8185239cb91958dc1f9454e8fc157b02dc4972ba7176bc34059cae40dde`.
+The actual embedded archive, loader-file bytes/modes, native APK signatures and
+owners were checked; its independent RAM chroot loader test passed.
+
+Automatic5GHz L2 forwarding passed20seconds per direction at894/395Mbit/s,
+CPU5.0/4.2%, with integrity/reassociation and teardown checks. Exact peer
+MACs, both daemon-created hardware flower directions, corresponding native L2
+BIND entries and positive PPE progress were required. No manual TC rule was
+inserted. This establishes automatic L2 forwarding; NAT/IPv6 routed offload
+and genuine per-flow accounting remain unqualified.
+
+This image also passed300seconds in each direction at751/381Mbit/s and
+CPU7.1/4.7%, including exact rule/BIND/PPE checks and AP-down cleanup. No NPU
+fault occurred. Final digests/protections/heartbeats/strict TLS passed; test
+networks, keys and phone policy rules were removed while bridger stayed enabled.
+This does not inherit older-image CPU controls, driver-exit or2.4GHz acceptance.
+These runs were sequential normal/reverse transfers, not simultaneous full
+duplex. A parallel upload/download test remains a separate acceptance item.
+The firewall hardware-offload checkbox still cannot grant routed WAN/NAT
+binding through this driver; higher CPU on that separate path is expected.
+
+An offline native-service budget projection adds32ELF paths and601768gzip bytes,
+exceeding the current327680-byte headroom by274088bytes before new package/profile
+costs. Only deliberately unbootable private budget streams were produced;
+normal stronger compression/smaller closure and actual image proof remain.
+
+The versioned image driver and CPIO/ABI admission helpers are now included as
+experimental build sources. They preserve the original validators and reject
+wrong provenance, module layouts, native ownership and Image size. During
+development an empty no-pattern APK query was corrected to an explicit `*`;
+the216-record receipt replaced the empty metadata without altering image bytes.
+The older partial-build checkpoint below is historical.
+
 ## Owner-requested build checkpoint, 2026-10-28
 
 The clean ARM64 kernel with 973/974 and BPF/VLAN selections, first matching
