@@ -1,5 +1,18 @@
 # Hardware qualification status
 
+## Resumed wired action review, 2026-10-28
+
+Actual Linux NAT producers and Airoha tuple encoders passed 4098 positive/five
+negative CPU cases with UBSan and two historical original/reply correlations.
+No complete BIND action or hardware NAT was enabled. New stock-producer evidence
+corrects older field diagrams and exposes a discarded ACK error; native defaults,
+hardware domain boundaries and invalidation completion still need evidence.
+The protected running image remains `d5a2bc21`. A new matching bridger/kernel/
+module/package build is paused at the owner's request. The clean kernel,
+first matching external modules and initial APKs built; final-config module
+rebuild, final audit, root composition and intended image remain unfinished.
+No new-image hardware pass is claimed.
+
 ## IPv4 learning follow-up, 2026-10-28
 
 The actual single-bank preflight now passes44checks. Three5-second learning-only

@@ -1,5 +1,26 @@
 # Bounded IPv4 classification and normal steering ownership
 
+## Resumed action-codec review
+
+The actual pinned Linux IPv4 SNAT/DNAT producers and Airoha tuple encoders
+passed 4098 positive and five negative CPU-only cases with UBSan. Two historical
+original/reply captures independently correlated with conntrack. Address/port
+byte order and translation closure passed; only translated-tuple words 5–7
+changed. No complete BIND image was constructed or published to hardware.
+
+Actual stock address/port/output writers strengthen the action-field evidence.
+They also contradict an older supplied IB1 diagram: state uses bits 29–28,
+packet type 27–25 and UDP bit 30. The stock SRAM wrapper discards its ACK
+routine's error and unconditionally returns success. That return cannot prove
+publication or lookup drain; retain the project's checked failure handling.
+
+The complete native BIND defaults, restricted equality/domain boundary and
+AN7563 invalidation completion remain open. A partial-mask mangle input needs
+an explicit narrow whitelist before future admission. Neither the successful
+tuple tests nor an existing UNB suffix grants routed hardware offload.
+
+## Earlier learning-only qualification
+
 2026-10-28. The protected running image remains `d5a2bc21`. No new kernel image
 or routed BIND action was installed in this round.
 

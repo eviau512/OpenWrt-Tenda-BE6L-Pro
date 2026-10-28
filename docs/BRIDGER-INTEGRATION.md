@@ -1,5 +1,21 @@
 # Bridger build inputs and acceptance gates
 
+## Owner-requested build checkpoint, 2026-10-28
+
+The clean ARM64 kernel with 973/974 and BPF/VLAN selections, first matching
+external modules and initial normal kernel/kmod APKs built. A standard
+baseline-CPIO install established the final initramfs configuration. The owner
+then requested closeout; the final-config external rebuild was stopped and no
+build worker remains. Final APK audit, fresh native58/bridger root, intended
+CPIO and admitted image have not been produced. Intermediate SDK FIT outputs
+are not this candidate. Current hardware remains on the earlier RAM image.
+
+The new `tools/ppe_module_abi.py` records numeric flow-rule layout and exact
+per-module vermagic/struct-module data. Its isolated preflight found 48-byte
+flow_rule, action offset40 and 16-byte CT context at24/version1; struct module
+was704. Re-probe the final configuration and rebuild all consumers before
+accepting modules. The incomplete image driver stays private and unqualified.
+
 Future initramfs builds select `bridger` for automatic L2 bridge acceleration.
 This selection does not add IPv4 NAT or IPv6 routed PPE support. Those paths
 retain their existing rejection and CPU fallback until independently implemented

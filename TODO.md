@@ -21,6 +21,13 @@ Completed:
 
 Next, in priority order:
 
+- [ ] Resume the owner-paused matching bridger image build: finish final-config
+  external modules, re-probe ABI, audit normal APKs, compose the unchanged
+  native58 profile plus packages, and prove actual CPIO/Image bounds. Only the
+  clean kernel/first module+APK pass is complete; no admitted image exists.
+- [x] Actual IPv4 NAT producer/tuple-encoder CPU tests:4098 positive/five
+  negative cases, UBSan and two private historical CT/capture correlations.
+  No complete BIND image or hardware call; domain/defaults/completion remain.
 - [x] Correct single-bank diagnostic;44actual preconditions and bounded IPv4
   UNB learning with exact restoration/no BIND/no fault.
 - [x] Interface-pinned PC->DUT->WAN low-rate CPU NAT plus original/reply raw
