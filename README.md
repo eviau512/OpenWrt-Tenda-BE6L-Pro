@@ -21,9 +21,15 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
   [the wired forwarding investigation](docs/WIRED-FORWARDING.md).
 - The full `wpad-mbedtls` variant is selected, including compiled Mesh support.
   Mesh peer interoperability is a separate test, not established by selection.
-- Future build inputs select `bridger` for automatic L2 flow management; see
-  [its build and runtime gates](docs/BRIDGER-INTEGRATION.md). The current image
-  does not contain or qualify it, and it does not supply routed NAT support.
+- The qualified `b3ec883f` RAM image includes enabled `bridger` for automatic
+  L2 flow management; see [its evidence and limits](docs/BRIDGER-INTEGRATION.md).
+  It does not supply routed NAT support. Its long tests ran each direction
+  separately; simultaneous full-duplex qualification remains pending.
+- A matching XZ initramfs candidate has 14,155,776 bytes of measured Image
+  headroom, with unchanged reserved memory and native package profile.
+  [Static and loader admission](docs/XZ-INITRAMFS.md) passed, but its first
+  RAM boot unexpectedly reset into stock firmware. It is marked failed; do
+  not retry or treat its static headroom as usable firmware qualification.
 - All ten MTD partitions and physical BMT write/erase/markbad paths are protected.
   The device profile produces initramfs only and rejects flash upgrades.
 
@@ -60,6 +66,13 @@ backups are intentionally distributed here. Do not add them to this repository.
 The FIT/payload preparation workflow interoperates with that project's RAM-boot
 inputs. See [NOTICE.md](NOTICE.md) for the exact scope and license boundaries.
 No binary payload from that project is bundled here.
+
+WAN/PPE implementation research also references [Pavel Bragin's BE5000 project](https://github.com/pabragin/xiaomi-be5000-openwrt),
+pinned documentation `d88ed6a` and release `be5000-openwrt-20261026`. We use its
+native-PPE safety and ABI analysis as a research cross-check. This review
+introduced no firmware/ABI replacement; its results do not qualify BE6L WAN/NAT.
+See [exact scope, provenance and licensing](docs/WAN-PPE-REFERENCE.md). Original
+Iscle/Linux authorship and per-file licenses remain intact for any later port.
 
 ## Native soft-float core experiment
 

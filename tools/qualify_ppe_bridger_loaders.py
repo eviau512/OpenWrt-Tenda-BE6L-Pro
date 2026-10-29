@@ -17,17 +17,18 @@ from cpio_selected_files import selected_files
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--work', type=Path, required=True)
+p.add_argument('--artifact-name', choices=('arm64-ppe-bridger','arm64-ppe-bridger-xz-v2'), default='arm64-ppe-bridger')
 a = p.parse_args()
 work = a.work.resolve()
 assert work.parent == Path('/root/be6l-openwrt')
-assert work.name.startswith('ppe-bridger-v1-')
+assert work.name.startswith('ppe-bridger-v1-' if a.artifact_name == 'arm64-ppe-bridger' else 'ppe-bridger-xz-v2-')
 root = work / 'root'
 composition = json.loads((work / 'composition.json').read_text())
 assert Path(composition['root']) == root
 assert composition['userspace_profile_unchanged']
 sha = lambda x: hashlib.sha256(Path(x).read_bytes()).hexdigest()
 old = BASE / 'artifacts/arm64-soft-apk'
-new = BASE / 'artifacts/arm64-ppe-bridger'
+new = BASE / 'artifacts' / a.artifact_name
 prior = json.loads((old / 'build-validation.json').read_text())
 candidate = json.loads((new / 'build-validation.json').read_text())
 assert prior['default_loader_chroot_tested']
