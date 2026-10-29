@@ -3,6 +3,11 @@
 Updated 2026-10-29. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
+The known gzip b3 RAM baseline was restored after the failed XZ attempt on
+2026-10-29. Exact84 module hashes, ten MTD guards and baseline critical hashes,
+NPU progress/fault0, package ownership, LuCI/Lua, NTP and strict TLS passed.
+No new wireless or parallel performance test was run during recovery.
+
 ## Last qualified RAM image
 
 `b3ec883f` booted dual-core AArch64 Linux 6.18.55 with 84 matching modules,

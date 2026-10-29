@@ -36,7 +36,8 @@ requires its own runtime acceptance.
 
 ## Next, in priority order
 
-1. [ ] Restore the known protected gzip RAM baseline. Investigate the failed XZ
+1. [x] Restore and safety-check the known protected gzip RAM baseline.
+   [ ] Investigate the failed XZ
    boot with an automatic bootloader stop before attempting any new image.
    Separately qualify startup, exact modules,
    MTD guards, native loaders, UI/HTTPS, network and PPE. New image results are
