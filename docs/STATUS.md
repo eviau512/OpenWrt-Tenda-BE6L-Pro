@@ -6,7 +6,8 @@ candidates and does not imply a device remains powered or in that RAM image.
 The known gzip b3 RAM baseline was restored after the failed XZ attempt on
 2026-10-29. Exact84 module hashes, ten MTD guards and baseline critical hashes,
 NPU progress/fault0, package ownership, LuCI/Lua, NTP and strict TLS passed.
-No new wireless or parallel performance test was run during recovery.
+That recovery initially ran no new wireless test. The later continuation on the
+same stable boot completed the concurrent L2 result below.
 
 ## Last qualified RAM image
 
@@ -17,17 +18,23 @@ ownership, all ten MTD/BMT guards, NPU worker progress, Chinese Argon UI, Lua /
 Nixio and strict normal-MTU Bing TLS passed. Bridger is installed and enabled;
 Tailscale and Passwall with sing-box are disabled and contain no credentials.
 
-Automatic 5GHz L2 forwarding passed these separate-direction tests:
+Automatic 5GHz L2 forwarding passed the following tests:
 
 | Duration per direction | Forward / reverse | Total CPU busy |
 | --- | --- | --- |
 | 20 seconds | 894 / 395 Mbit/s | 5.0 / 4.2% |
-| 300 seconds | 751 / 381 Mbit/s | 7.1 / 4.7% |
+| 300 seconds, sequential | 751 / 381 Mbit/s | 7.1 / 4.7% |
+| 300 seconds each, concurrent, Ace3V | 777 / 228 Mbit/s | 6.0% combined |
 
 Exact daemon-owned hardware flowers, native L2 BIND peer directions and PPE
 progress correlated with the endpoints. Payload integrity, authentication /
-reassociation and AP-down rule cleanup passed. These were sequential ordinary
-and reverse tests, not simultaneous full duplex or a peak radio guarantee.
+reassociation and AP-down rule cleanup passed. The first two rows were sequential ordinary
+and reverse tests. The concurrent row is PC-to-phone / phone-to-PC and has
+295.028 seconds of conservative common payload time plus both active sockets
+and exact peer bindings at four samples. The live parser initially selected
+the inactive reverse-server receiver summary; independent re-review of both
+endpoint records passed. Process launch skew was not retained, and the result
+is not a peak radio comparison across different clients.
 Earlier image driver-exit, CPU controls and reliable 2.4GHz results remain
 historical evidence and are not inherited by every new image. The replacement
 client's 2.4GHz observations are excluded at the owner's request. Mesh peer
@@ -63,6 +70,12 @@ checksums, including nonlinear access. None changes a routed gate or creates a
 hardware owner. The current RX notification is before GRO/netfilter; setting
 `CHECKSUM_UNNECESSARY` alone does not independently validate those packet bytes.
 
+A new isolated diagnostic library compiles against actual matching Linux APIs
+with retained netdev objects, timer/notifier expiry, copied CT/action data and
+RX validation; 20 new shared-epoch UBSan cases pass. It has no production
+hooks or target execution. Real CT inputs include seven keys, including TOS
+and TCP flags, rather than the earlier five-key synthetic fixture.
+
 The next diagnostic adapter must correlate real CT input, pre-NAT RX evidence
 and later software egress separately, while publishing no BIND. A first closed
 wired test needs a complete native action, actual traffic containment and a
@@ -82,15 +95,30 @@ follow-up requests are retained outside this public source repository.
 
 Native netifd has a real isolated netlink lifecycle; a reproducible 67-ELF
 web/Lua closure passed isolated Chinese Argon login, TLS/RPC authorization,
-Lua-first module imports, digest, parser and netlink tests. A 90-path merge
-preflight identifies 32 additional ELF paths. Normal signed package/profile,
-plugin lookup and full default-service admission are still required. The
+Lua-first module imports, digest, parser and netlink tests. A normal signed 90-path preview
+owns 32 additional ELF paths. Its exact native payloads now pass isolated
+TLS, RPC authorization and Lua/ucode tests after fixture permission corrections.
+A real nested Lua-child negative control and a private path correction with
+ten native imports also pass. The latter is a diagnostic substitution until
+its new package/profile transaction is admitted. Default-service and new-image
+admission remain open. The
 system remains mixed. Ordinary AArch64 FP packages are incompatible with the
 observed CPU, and HWCAP must not be fabricated. See [native service gates](NATIVE-MANAGEMENT-PLAN.md).
 
 PCIe first-handoff BAR/Gen1 behavior, the older bootloader warm-reset stall,
 remaining port/hotplug coverage and actual watchdog reset remain open. None is
-assigned to a clock or hardware fault without evidence. Only initramfs and RAM
+assigned to a clock or hardware fault without evidence. The
+[early reset audit](EARLY-RESET.md) identifies a real outgoing-watchdog handoff
+gap and an asynchronous initramfs wait boundary, without declaring a reset
+cause. New timestamped UART capture is CPU-tested but not live-qualified. Only initramfs and RAM
 boot are supported; no flashable official release or normal kernel upgrade is
 qualified. Raw logs, backups, specification deliveries and credentials remain
 private. See [the prioritized TODO](../TODO.md).
+
+The subsequent v2 normal signed package admits exactly the reviewed Lua-child
+module delta and preserves89 other native paths, all58 base native paths and
+216 original APK records. Its exact90-path package-root fixture has now passed
+on the stable RAM system, including all ten child imports and TLS/RPC controls.
+The resulting offline root still has217 packages. Defaults, image and binary
+redistribution are not promoted. The one-file v2 admission and APK builder are
+versioned separately; the original profile and package remain unchanged.

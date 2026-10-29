@@ -43,10 +43,14 @@ requires its own runtime acceptance.
    MTD guards, native loaders, UI/HTTPS, network and PPE. New image results are
    independent of the b3 acceptance. Verify independent management connectivity
    before every operation that interrupts Ethernet.
-2. [ ] Run genuinely simultaneous upload/download using independent ports and
-   record overlapping active windows, CPU, exact peer bindings and PPE progress.
-   Keep L2, routed WAN/NAT and router-local TCP measurements separate.
-3. [ ] Add a disabled non-publishing diagnostic adapter for real CT/RX/egress
+2. [x] Concurrent L2 acceptance on stable b3: both flows300s, conservative
+   overlap295.028s, about777/228Mbit/s and6.0% combined CPU, with exact peers
+   at four live samples. Endpoint JSON was independently reviewed after a
+   reverse-server parser error; OS process launch skew was not retained.
+   [ ] Keep the corrected harness and new-image results separate from WAN/NAT.
+3. [x] Compile an isolated real-Linux diagnostic library and20 new shared-epoch
+   UBSan cases; no production hook or target execution.
+   [ ] Wire a disabled non-publishing diagnostic adapter for real CT/RX/egress
    observations and selected device references. Do not return hardware success,
    install owners or write BIND entries. Current RX notification precedes GRO /
    netfilter; the checksum label alone is not independent packet validation.
@@ -54,9 +58,14 @@ requires its own runtime acceptance.
    and checked withdrawal or contained resource-retention/reset boundary before
    a controlled routed BIND test. Full wireless/IPv6/accounting support is not a
    prerequisite for that first proof, but later packets must remain contained.
-5. [ ] Execute the exact signed native preview fixture on a stable RAM baseline;
-   normal offline installation already owns all 32 added ELF paths. Complete the
-   nested Lua-bridge C-module-path check. See [preview status](docs/NATIVE-SERVICES-PREVIEW.md).
+5. [x] Execute the exact signed90-path native payload fixture on stable RAM,
+   after correcting fixture permissions. TLS/RPC/Lua/ucode and host preservation
+   passed. A nested-child negative control and a private ten-import path fix
+   also passed.
+   [x] Admit the corrected bridge through a new content-bound v2 profile and
+   normal signed APK transaction, then pass its exact90-path target fixture.
+   [ ] Qualify full native services/default loaders and a separately admitted
+   protected RAM image; no default service was replaced. See [preview status](docs/NATIVE-SERVICES-PREVIEW.md).
    Admit the larger native closure through new signed APKs and a content-bound
    profile; fix plugin paths and qualify exact default loaders before service
    promotion. Keep the frozen 58-path packages and ARM32 defaults intact until

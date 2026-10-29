@@ -23,8 +23,9 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
   Mesh peer interoperability is a separate test, not established by selection.
 - The qualified `b3ec883f` RAM image includes enabled `bridger` for automatic
   L2 flow management; see [its evidence and limits](docs/BRIDGER-INTEGRATION.md).
-  It does not supply routed NAT support. Its long tests ran each direction
-  separately; simultaneous full-duplex qualification remains pending.
+  It does not supply routed NAT support. Its earlier long tests ran each direction
+  separately. A later concurrent 300-second L2 test measured about 777/228
+  Mbit/s with 6.0% combined DUT CPU; see [scope and evidence](docs/STATUS.md).
 - A matching XZ initramfs candidate has 14,155,776 bytes of measured Image
   headroom, with unchanged reserved memory and native package profile.
   [Static and loader admission](docs/XZ-INITRAMFS.md) passed, but its first

@@ -18,12 +18,16 @@ assert result['passed'] and not result['default_services_promoted']
 profile=admit(Path(result['profile_root']),result['profile_lock_sha256']);admit_installed(root,profile)
 out=bundle/'isolated-fixture';assert not out.exists();out.mkdir()
 contents={name:(root/name).read_bytes() for name in profile['files']}
+source_modes={name:(root/name).stat().st_mode & 0o777 for name in contents}
 contents['bin/busybox']=(root/'bin/busybox').read_bytes()
+source_modes['bin/busybox']=(root/'bin/busybox').stat().st_mode & 0o777
 contents['etc/ld-musl-aarch64-soft.path']=(root/'etc/ld-musl-aarch64-soft.path').read_bytes()
 links={'bin/sh':'busybox','lib/ld-musl-aarch64-soft.so.1':'aarch64-soft/libc.so','var/run/ubus.sock':'ubus/ubus.sock'}
 for path in (root/'lib').glob('*.so*'):
     if path.is_symlink():links['lib/'+path.name]=str(path.readlink())
-    elif path.is_file():contents['lib/'+path.name]=path.read_bytes()
+    elif path.is_file():
+        contents['lib/'+path.name]=path.read_bytes()
+        source_modes['lib/'+path.name]=path.stat().st_mode & 0o777
 for command in ('true','false','cat','sleep','ls','readlink','kill','mkdir','ip','grep','sha256sum','printf','cmp'):
     links['bin/'+command]='busybox'
 # Reuse only public literal test code, never old generated passwords/certificates.
@@ -67,7 +71,7 @@ with tarfile.open(fixture,'w') as stream:
         item=tarfile.TarInfo(name);item.type=tarfile.DIRTYPE;item.mode=0o755;item.mtime=int(EPOCH);stream.addfile(item)
     for name,data in sorted(contents.items()):
         item=tarfile.TarInfo(name);item.size=len(data);item.mtime=int(EPOCH)
-        item.mode=0o755 if name in profile['files'] or name.startswith('bin/') or name=='probe.sh' or name.startswith('www/cgi-bin/') else 0o600
+        item.mode=source_modes.get(name, 0o755 if name=='probe.sh' or name.startswith('www/cgi-bin/') else 0o644 if name.startswith('www/') else 0o600)
         stream.addfile(item,io.BytesIO(data))
     for name,target in sorted(links.items()):
         assert not target.startswith('/') and '..' not in Path(target).parts
