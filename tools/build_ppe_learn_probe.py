@@ -12,11 +12,14 @@ from audit_module_layout import elf_sections
 
 BASE = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--artifact-name', choices=('legacy', 'arm64-n1-diag-v2'), default='legacy')
+parser.add_argument('--artifact-name', choices=('legacy', 'arm64-n1-diag-v2','arm64-n1-reasons-v3'), default='legacy')
 args = parser.parse_args()
 candidate = None
 if args.artifact_name == 'arm64-n1-diag-v2':
     from n1_candidate_admission import admit
+    candidate = admit(BASE/'artifacts'/args.artifact_name)
+if args.artifact_name == 'arm64-n1-reasons-v3':
+    from n1_reason_candidate_admission import admit
     candidate = admit(BASE/'artifacts'/args.artifact_name)
 SDK = Path('/root/be6l-openwrt/arm64-source')
 K = SDK / 'build_dir/target-aarch64_cortex-a53_musl/linux-airoha_an7563a64/linux-6.18.55'
@@ -79,7 +82,9 @@ assert hashlib.sha256((K / '.config').read_bytes()).hexdigest() == config
 assert {str(p.relative_to(K)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in protected} == protected_before
 assert b'vermagic=6.18.55 ' in module.read_bytes()
-ART = BASE / ('artifacts/ppe-learn-probe-n1-v2' if candidate else 'artifacts/ppe-learn-probe')
+ART = BASE / {'legacy':'artifacts/ppe-learn-probe',
+              'arm64-n1-diag-v2':'artifacts/ppe-learn-probe-n1-v2',
+              'arm64-n1-reasons-v3':'artifacts/ppe-learn-probe-n1-v3'}[args.artifact_name]
 ART.mkdir(exist_ok=True)
 if (ART / 'manifest.json').exists():
     shutil.copyfile(ART / 'manifest.json', OUT / 'previous-artifact-manifest.json')

@@ -1,12 +1,20 @@
+# SPDX-License-Identifier: MIT
 """Reject weakened N1 admission receipts without modifying candidate files."""
 from pathlib import Path
 import copy
+import argparse
 import json
 from unittest.mock import patch
-from n1_candidate_admission import admit
+p=argparse.ArgumentParser()
+p.add_argument('--artifact-name',choices=('arm64-n1-diag-v2','arm64-n1-reasons-v3'),default='arm64-n1-diag-v2')
+a=p.parse_args()
+if a.artifact_name=='arm64-n1-reasons-v3':
+    from n1_reason_candidate_admission import admit
+else:
+    from n1_candidate_admission import admit
 
 base = Path(__file__).resolve().parents[1]
-artifact = base/'artifacts/arm64-n1-diag-v2'
+artifact = base/'artifacts'/a.artifact_name
 text = (artifact/'build-validation.json').read_text(encoding='utf-8')
 loads = json.loads
 report = loads(text)
@@ -30,6 +38,8 @@ mutations = [
     (('loader_closure_admission_sha256',), '0'*64),
     (('default_loader_evidence',), '../outside'),
 ]
+if a.artifact_name=='arm64-n1-reasons-v3':
+    mutations.append((('diagnostic_snapshot_version',),2))
 for keys, value in mutations:
     changed = copy.deepcopy(report)
     parent = changed
@@ -38,11 +48,11 @@ for keys, value in mutations:
     parent[keys[-1]] = value
     def modified_loads(raw, *args, **kwargs):
         return changed if raw == text else loads(raw, *args, **kwargs)
-    with patch('n1_candidate_admission.json.loads', side_effect=modified_loads):
+    with patch(admit.__module__+'.json.loads', side_effect=modified_loads):
         try:
             admit(artifact)
         except AssertionError:
             pass
         else:
             raise AssertionError('Admission accepted weakened receipt: '+'.'.join(keys))
-print('N1_ADMISSION_BASELINE_AND_17_REJECTIONS_PASS_NO_HARDWARE')
+print('N1_ADMISSION_BASELINE_AND_'+str(len(mutations))+'_REJECTIONS_PASS_NO_HARDWARE')

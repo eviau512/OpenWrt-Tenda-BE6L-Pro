@@ -17,12 +17,12 @@ from cpio_selected_files import selected_files
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--work', type=Path, required=True)
-p.add_argument('--artifact-name', choices=('arm64-ppe-bridger','arm64-ppe-bridger-xz-v2','arm64-n1-diag-v2'), default='arm64-ppe-bridger')
+p.add_argument('--artifact-name', choices=('arm64-ppe-bridger','arm64-ppe-bridger-xz-v2','arm64-n1-diag-v2','arm64-n1-reasons-v3'), default='arm64-ppe-bridger')
 a = p.parse_args()
 work = a.work.resolve()
 assert work.parent == Path('/root/be6l-openwrt')
 prefix = {'arm64-ppe-bridger': 'ppe-bridger-v1-', 'arm64-ppe-bridger-xz-v2': 'ppe-bridger-xz-v2-',
-          'arm64-n1-diag-v2': 'n1-image-v2-'}[a.artifact_name]
+          'arm64-n1-diag-v2': 'n1-image-v2-', 'arm64-n1-reasons-v3': 'n1-image-v3-'}[a.artifact_name]
 assert work.name.startswith(prefix)
 root = work / 'root'
 composition = json.loads((work / 'composition.json').read_text())
@@ -33,11 +33,13 @@ old = BASE / 'artifacts/arm64-soft-apk'
 new = BASE / 'artifacts' / a.artifact_name
 prior = json.loads((old / 'build-validation.json').read_text())
 candidate = json.loads((new / 'build-validation.json').read_text())
-if a.artifact_name == 'arm64-n1-diag-v2':
+if a.artifact_name in ('arm64-n1-diag-v2','arm64-n1-reasons-v3'):
     assert candidate['n1_diagnostic_only'] and candidate['can_publish'] is False
     assert not candidate['diagnostic_default_enabled'] and not candidate['routed_bind_supported']
     assert candidate['source_abi_numeric_layout']['ct_context_version'] == 2
     assert candidate['source_abi_numeric_layout']['ct_context_bytes'] == 56
+    if a.artifact_name == 'arm64-n1-reasons-v3':
+        assert candidate['diagnostic_snapshot_version'] == 3
 assert prior['default_loader_chroot_tested']
 assert prior['normal_native_apk_transaction'] and prior['corrected_fma_libc']
 assert candidate['module_layout_audit']['passed']

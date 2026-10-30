@@ -3781,3 +3781,278 @@ index 000000000..4caa3e9ed
 ++	return false;
 ++}
 ++#endif
+diff --git a/target/linux/airoha/patches-6.18/978-n1-bounded-refusal-reasons.patch b/target/linux/airoha/patches-6.18/978-n1-bounded-refusal-reasons.patch
+new file mode 100644
+index 000000000..0a0364d3b
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/978-n1-bounded-refusal-reasons.patch
+@@ -0,0 +1,269 @@
++--- a/drivers/net/ethernet/airoha/diag.c
+++++ b/drivers/net/ethernet/airoha/diag.c
++@@ -38,6 +38,22 @@
++ 	struct bd_snapshot snapshot;
++ };
++ 
+++
+++/* Only a live CPU lease may count; no packet or hardware state is changed. */
+++static bool bd_count(struct be6l_diag *d, unsigned int reason)
+++{
+++ spin_lock_bh(&d->lock);
+++ if (bd_epoch_live(&d->epoch, ktime_get_ns()))
+++  bd_reason_add(&d->snapshot.reasons, reason);
+++ spin_unlock_bh(&d->lock);
+++ return false;
+++}
+++#define BD_REASON_NAME(name) #name,
+++static const char *const bd_reason_names[] = {
+++ BD_REASON_LIST(BD_REASON_NAME)
+++};
+++#undef BD_REASON_NAME
+++
++ static bool bd_registered(struct net_device *dev)
++ {
++ 	return dev && net_eq(dev_net(dev), &init_net) &&
++@@ -162,7 +178,7 @@
++ 	if (!bd_topology(d) || !bd_epoch_open(&d->epoch, cfg->generation,
++ 					     ktime_get_ns(), cfg->duration_ns))
++ 		goto fail;
++-	d->snapshot.version = 2;
+++	d->snapshot.version = 3;
++ 	d->snapshot.active = d->snapshot.spent = true;
++ 	d->snapshot.unresolved = 0x3f;
++ 	d->snapshot.refs_owned = 3;
++@@ -327,38 +343,41 @@
++ 	unsigned int length, tlen;
++ 	int i, offset;
++ 	bool matched = false;
++-	if (IS_ERR_OR_NULL(d) || !skb || !unbound || skb_vlan_tag_present(skb) ||
+++	if (IS_ERR_OR_NULL(d))
+++  return false;
+++ bd_count(d, BD_REASON_RX_SEEN);
+++ if (!skb || !unbound || skb_vlan_tag_present(skb) ||
++ 	    skb_is_gso(skb) || skb->ip_summed == CHECKSUM_PARTIAL ||
++ 	    !skb_mac_header_was_set(skb) ||
++ 	    (unbound[0] & 0x7e000000) != 0x10000000)
++-		return false;
+++		return bd_count(d, BD_REASON_RX_BASIC);
++ 	offset = skb_mac_offset(skb) + ETH_HLEN;
++ 	if (offset < 0 || (unsigned int)offset > skb->len)
++-		return false;
+++		return bd_count(d, BD_REASON_RX_OFFSET);
++ 	ethernet = skb_header_pointer(skb, offset - ETH_HLEN, sizeof(eb), &eb);
++ 	if (!ethernet || ethernet->h_proto != htons(ETH_P_IP))
++-		return false;
+++		return bd_count(d, BD_REASON_RX_ETH);
++ 	ip = skb_header_pointer(skb, offset, sizeof(ib), &ib);
++ 	if (!ip || ip->version != 4 || ip->ihl != 5 || ip->protocol != IPPROTO_TCP ||
++ 	    ip->ttl <= 1 || (ntohs(ip->frag_off) & 0x3fff))
++-		return false;
+++		return bd_count(d, BD_REASON_RX_IPV4);
++ 	length = ntohs(ip->tot_len);
++ 	if (length < sizeof(ib) + sizeof(tb) || length > skb->len - offset)
++-		return false;
+++		return bd_count(d, BD_REASON_RX_LENGTH);
++ 	tcp = skb_header_pointer(skb, offset + sizeof(ib), sizeof(tb), &tb);
++ 	if (!tcp || tcp->doff < 5 || tcp->doff * 4 > length - sizeof(ib) ||
++ 	    !tcp->ack || tcp->urg || tcp->syn || tcp->fin || tcp->rst)
++-		return false;
+++		return bd_count(d, BD_REASON_RX_TCP);
++ 	tlen = length - sizeof(ib);
++ 	if (!bd_options(skb, offset + sizeof(ib) + sizeof(tb), tcp->doff * 4 - sizeof(tb)) ||
++ 	    ip_compute_csum(ip, sizeof(ib)) ||
++ 	    csum_tcpudp_magic(ip->saddr, ip->daddr, tlen, IPPROTO_TCP,
++ 			     skb_checksum(skb, offset + sizeof(ib), tlen, 0)))
++-		return false;
+++		return bd_count(d, BD_REASON_RX_CSUM_OPTIONS);
++ 	key[0] = ntohl(ip->saddr); key[1] = ntohl(ip->daddr);
++ 	key[2] = (u32)ntohs(tcp->source) << 16 | ntohs(tcp->dest);
++ 	if (memcmp(key, unbound + 1, sizeof(key)))
++-		return false;
+++		return bd_count(d, BD_REASON_RX_UNB_KEY);
++ 	spin_lock_bh(&d->lock);
++ 	if (!bd_epoch_live(&d->epoch, ktime_get_ns()))
++ 		goto out;
++@@ -380,15 +399,18 @@
++ 		row->rx_ns = ktime_get_ns();
++ 		row->rx_matched = matched = true;
++ 	}
+++ if (bd_epoch_live(&d->epoch, ktime_get_ns()))
+++  bd_reason_add(&d->snapshot.reasons,
+++                matched ? BD_REASON_RX_ACCEPTED : BD_REASON_RX_NO_ROW);
++ out:
++-	spin_unlock_bh(&d->lock);
+++ spin_unlock_bh(&d->lock);
++ 	return matched;
++ }
++ void be6l_diag_snapshot(struct be6l_diag *d, struct bd_snapshot *out)
++ {
++ 	int i;
++ 	memset(out, 0, sizeof(*out));
++-	out->version = 2;
+++	out->version = 3;
++ 	if (IS_ERR_OR_NULL(d))
++ 		return;
++ 	spin_lock_bh(&d->lock);
++@@ -503,32 +525,51 @@
++ 	enum ip_conntrack_info info;
++ 	struct nf_conn *ct;
++ 	unsigned int length, tlen;
++-	if (!skb || skb_vlan_tag_present(skb))
++-		return;
++-	rcu_read_lock();
++-	d = rcu_dereference(ppe->route_diag);
++-	if (!d)
++-		goto out;
+++ rcu_read_lock();
+++ d = rcu_dereference(ppe->route_diag);
+++ if (!d)
+++  goto out;
+++ bd_count(d, BD_REASON_TX_SEEN);
+++ if (!skb || skb_vlan_tag_present(skb)) {
+++  bd_count(d, BD_REASON_TX_BASIC);
+++  goto out;
+++ }
++ 	ct = nf_ct_get(skb, &info);
++-	if (!ct || !net_eq(nf_ct_net(ct), &init_net))
++-		goto out;
+++ if (!ct) {
+++  bd_count(d, BD_REASON_TX_NO_CT);
+++  goto out;
+++ }
+++ if (!net_eq(nf_ct_net(ct), &init_net)) {
+++  bd_count(d, BD_REASON_TX_NETNS);
+++  goto out;
+++ }
++ 	zone = nf_ct_zone(ct);
++-	if (zone->id || zone->flags || zone->dir != 3)
++-		goto out;
+++	if (zone->id || zone->flags || zone->dir != 3) {
+++		bd_count(d, BD_REASON_TX_ZONE);
+++		goto out;
+++	}
++ 	eth = skb_header_pointer(skb, 0, sizeof(eb), &eb);
++-	if (!eth || eth->h_proto != htons(ETH_P_IP))
++-		goto out;
+++	if (!eth || eth->h_proto != htons(ETH_P_IP)) {
+++		bd_count(d, BD_REASON_TX_ETH);
+++		goto out;
+++	}
++ 	ip = skb_header_pointer(skb, ETH_HLEN, sizeof(ib), &ib);
++ 	if (!ip || ip->version != 4 || ip->ihl != 5 || ip->protocol != IPPROTO_TCP ||
++-	    (ntohs(ip->frag_off) & 0x3fff))
++-		goto out;
+++	    (ntohs(ip->frag_off) & 0x3fff)) {
+++		bd_count(d, BD_REASON_TX_IPV4);
+++		goto out;
+++	}
++ 	length = ntohs(ip->tot_len);
++-	if (length < sizeof(ib) + sizeof(tb) || skb->len < ETH_HLEN || length > skb->len - ETH_HLEN)
++-		goto out;
+++	if (length < sizeof(ib) + sizeof(tb) || skb->len < ETH_HLEN || length > skb->len - ETH_HLEN) {
+++		bd_count(d, BD_REASON_TX_LENGTH);
+++		goto out;
+++	}
++ 	tcp = skb_header_pointer(skb, ETH_HLEN + sizeof(ib), sizeof(tb), &tb);
++ 	if (!tcp || tcp->doff < 5 || tcp->doff * 4 > length - sizeof(ib) ||
++-	    !bd_options(skb, ETH_HLEN + sizeof(ib) + sizeof(tb), tcp->doff * 4 - sizeof(tb)))
++-		goto out;
+++	    !bd_options(skb, ETH_HLEN + sizeof(ib) + sizeof(tb), tcp->doff * 4 - sizeof(tb))) {
+++		bd_count(d, BD_REASON_TX_TCP_OPTIONS);
+++		goto out;
+++	}
++ 	tlen = length - sizeof(ib);
++ 	sample.observed_ns = ktime_get_ns();
++ 	sample.ct_cookie = (unsigned long)ct;
++@@ -560,12 +601,17 @@
++ 		sample.logical_output_ifindex = d->ifindex[1];
++ 	else if (netdev == d->refs[2] && tag == BIT(d->dsa_index))
++ 		sample.logical_output_ifindex = d->ifindex[0];
++-	else
++-		goto unlock;
++-	if (bd_record_egress(d->snapshot.rows, &sample))
++-		d->snapshot.egress_accepted++;
++-	else
++-		d->snapshot.egress_rejected++;
+++ else {
+++  bd_reason_add(&d->snapshot.reasons, BD_REASON_TX_OUTPUT);
+++  goto unlock;
+++ }
+++ if (bd_record_egress(d->snapshot.rows, &sample)) {
+++  d->snapshot.egress_accepted++;
+++  bd_reason_add(&d->snapshot.reasons, BD_REASON_TX_ACCEPTED);
+++ } else {
+++  d->snapshot.egress_rejected++;
+++  bd_reason_add(&d->snapshot.reasons, BD_REASON_TX_NO_PAIR);
+++ }
++ unlock:
++ 	spin_unlock_bh(&d->lock);
++ out:
++@@ -600,7 +646,7 @@
++ 	s = kzalloc(sizeof(*s), GFP_KERNEL);
++ 	if (!s)
++ 		return -ENOMEM;
++-	s->version = 2;
+++	s->version = 3;
++ 	rcu_read_lock();
++ 	d = rcu_dereference(ppe->route_diag);
++ 	if (d)
++@@ -615,6 +661,9 @@
++ 	seq_printf(seq, "accepted=%llu rejected=%llu replaced=%llu destroyed_rows=%llu ct_calls=%llu ct_rejected=%llu last_ct_errno=%d egress_accepted=%llu egress_rejected=%llu\n",
++ 		   s->accepted, s->rejected, s->replaced, s->destroyed, s->ct_callbacks,
++ 		   s->ct_callback_rejected, s->last_ct_errno, s->egress_accepted, s->egress_rejected);
+++ for (i = 0; i < BD_REASON_COUNT; i++)
+++  seq_printf(seq, "stage=%s count=%llu last=%u\n",
+++             bd_reason_names[i], s->reasons.count[i], i == s->reasons.last);
++ 	for (i = 0; i < BD_SLOTS; i++) {
++ 		const struct bd_row *r = &s->rows[i];
++ 		const struct bd_egress *e = &r->egress;
++--- a/drivers/net/ethernet/airoha/diag.h
+++++ b/drivers/net/ethernet/airoha/diag.h
++@@ -3,6 +3,7 @@
++ #define BE6L_WIRED_DIAG_V1_H
++ #include <linux/types.h>
++ #include <net/flow_offload.h>
+++#include "reasons.h"
++ #define BD_SLOTS 4
++ #define BD_ACTIONS 16
++ struct airoha_ppe;
++@@ -40,6 +41,7 @@
++ 	u64 generation, created_ns, deadline_ns, accepted, rejected, replaced, destroyed;
++ 	u64 egress_accepted, egress_rejected, ct_callbacks, ct_callback_rejected;
++ 	s32 last_ct_errno;
+++	struct bd_reasons reasons;
++ 	struct bd_row rows[BD_SLOTS];
++ };
++ /* CPU diagnostic API with root-only finite observation control. No hardware
++--- /dev/null
+++++ b/drivers/net/ethernet/airoha/reasons.h
++@@ -0,0 +1,29 @@
+++/* SPDX-License-Identifier: GPL-2.0-only */
+++#ifndef BE6L_N1_REASONS_H
+++#define BE6L_N1_REASONS_H
+++/* Bounded CPU counters only. Never authority to admit a packet or BIND. */
+++#define BD_REASON_LIST(X) \
+++ X(RX_SEEN) X(RX_BASIC) X(RX_OFFSET) X(RX_ETH) X(RX_IPV4) \
+++ X(RX_LENGTH) X(RX_TCP) X(RX_CSUM_OPTIONS) X(RX_UNB_KEY) \
+++ X(RX_NO_ROW) X(RX_ACCEPTED) \
+++ X(TX_SEEN) X(TX_BASIC) X(TX_NO_CT) X(TX_NETNS) X(TX_ZONE) \
+++ X(TX_ETH) X(TX_IPV4) X(TX_LENGTH) X(TX_TCP_OPTIONS) \
+++ X(TX_OUTPUT) X(TX_NO_PAIR) X(TX_ACCEPTED)
+++#define BD_REASON_ENUM(name) BD_REASON_##name,
+++enum bd_reason_id { BD_REASON_LIST(BD_REASON_ENUM) BD_REASON_COUNT };
+++#undef BD_REASON_ENUM
+++struct bd_reasons {
+++ u64 count[BD_REASON_COUNT];
+++ u32 last;
+++};
+++/* Caller owns synchronization and the live-lease check. */
+++static inline bool bd_reason_add(struct bd_reasons *state, unsigned int reason)
+++{
+++ if (reason >= BD_REASON_COUNT)
+++  return false;
+++ if (state->count[reason] != ~(u64)0)
+++  state->count[reason]++;
+++ state->last = reason;
+++ return true;
+++}
+++#endif

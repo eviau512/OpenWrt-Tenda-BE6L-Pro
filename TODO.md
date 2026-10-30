@@ -1,3 +1,13 @@
+## Current v3 milestone
+
+- [x] Matched v3 kernel/modules/packages, actual loader fixture and RAM startup.
+- [x] Real CT/UNB correspondence and flow-rule destroy observations.
+- [ ] Per-packet software-egress identity and unmatched-direction diagnosis.
+- [ ] Remaining lifetime, device-change, withdrawal and draining tests.
+- [ ] N2/N3 routed hardware gates; native default-service and Go/C++ work.
+
+See [the v3 result](docs/N1-V3-TARGET.md). Earlier dated milestones follow.
+
 <!-- n1-live-20261030 -->
 ## Latest N1 milestone
 

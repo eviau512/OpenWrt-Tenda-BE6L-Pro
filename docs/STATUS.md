@@ -3,16 +3,17 @@
 Updated 2026-10-30. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
-The matched N1 image9a3955e7 passed its actual loader fixture,checked watchdog
-handoff and startup:84 modules,216 packages,58 native soft C paths,dual CPUs,
-UI/TLS/Lua,NPU and flash guards. A real wired-WAN diagnostic observed two CT
-generations/four direction rows with matching endpoint byte counts. RX/egress
-correlation stayed zero. The failed fractional-sleep sampler is retained and
-fixed offline,not retried. See [limited live evidence](N1-LIVE.md).
-This does not qualify N1 lifetimes,WAN/NAT hardware or native90 promotion.
+The matched N1 v3 image fd30e389 passed its actual loader fixture, checked
+watchdog handoff and startup: 84 modules, 216 packages, 58 native soft C paths,
+dual CPUs, UI/TLS/Lua, NPU and flash guards. A real wired-WAN diagnostic
+correlated CT with 20 UNB RX observations and recorded four flow-rule destroy
+revocations. Software egress remains incomplete: most observed skbs had no CT,
+and another group could not match direction pairs. See the
+[exact target evidence and limitations](N1-V3-TARGET.md).
 
-Historical L2 results below belong to b3 and are not inherited by this changed
-driver image. The known b3 recovery remains immutable.
+The v2 sampler failure remains recorded separately. Historical L2 results
+below belong to b3 and are not inherited by this changed driver image.
+The known b3 recovery remains immutable.
 
 The known gzip b3 RAM baseline was restored after the failed XZ attempt on
 2026-10-29. Exact84 module hashes, ten MTD guards and baseline critical hashes,
@@ -20,7 +21,7 @@ NPU progress/fault0, package ownership, LuCI/Lua, NTP and strict TLS passed.
 That recovery initially ran no new wireless test. The later continuation on the
 same stable boot completed the concurrent L2 result below.
 
-## Last qualified RAM image
+## Historical b3 baseline and L2 qualification
 
 `b3ec883f` booted dual-core AArch64 Linux 6.18.55 with 84 matching modules,
 216 normal APK records and 58 native soft-ABI ELF paths. Most applications
