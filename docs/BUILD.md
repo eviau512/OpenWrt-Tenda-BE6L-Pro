@@ -110,3 +110,20 @@ These are research extensions with documented pinned cached inputs and recovery
 receipts, not a standalone official native SDK. Artifact-specific paths still
 need complete versioned recipes and dual-toolchain ownership. Generic upgrades,
 binary redistribution licensing and new-image acceptance remain separate gates.
+
+## N1 identity ABI candidate
+
+The current source profile also contains default-disabled N1 CPU diagnostics.
+The new internal context is version2/56 bytes. Use the strict v2 ABI checker
+and a full matched kernel/external-module/APK/CPIO build; never hot-mix older
+modules or use vermagic alone. The legacy v1 checker remains strict and unchanged.
+The separate normal pipeline is tools/build_n1_diag_image_v2.py; its derivation
+and source lock require generated actual-code diagnostic evidence from the
+pre-N1 cached tree. This is a maintainer research workflow, not a complete
+native SDK or a promise of clean-room reproduction already achieved.
+
+The ARM32 source patch includes976 and the ARM64 profile includes977. Do not
+apply their deltas twice. Normal build artifacts and generated receipts stay
+private. The N1 candidate has only static image/110-file loader binding so far;
+actual fixture execution, RAM-entry admission and target lifecycle tests remain
+pending. See N1-DIAGNOSTICS.md and WATCHDOG-HANDOFF.md.

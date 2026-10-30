@@ -1,7 +1,17 @@
 # Hardware qualification status
 
-Updated 2026-10-29. This distinguishes the last qualified image from offline
+Updated 2026-10-30. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
+
+The known gzip baseline was again restored through the new checked ARM32
+watchdog intermediate. Actual stop/readback, timestamped handoff, all84 module
+hashes, UI/TLS, NPU progress and flash guards passed. The new N1 identity,
+TC/RX/egress and root-only CPU observer passes58 actual-code cases and a full
+driver link, but has not been armed on the router. Its normal matched build
+is a separate candidate; this is not WAN/NAT or a native service promotion.
+Candidate9a3955e7 passed the normal kernel/module/APK/CPIO/gzip pipeline with
+84 modules,216 packages and327,680 bytes of Image headroom. Its110 loader files
+are statically bound; real fixture execution and RAM boot remain pending.
 
 The known gzip b3 RAM baseline was restored after the failed XZ attempt on
 2026-10-29. Exact84 module hashes, ten MTD guards and baseline critical hashes,

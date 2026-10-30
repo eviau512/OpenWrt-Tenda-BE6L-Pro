@@ -7,6 +7,12 @@ requires its own runtime acceptance.
 
 ## Completed
 
+- [x] Actual checked outgoing ARM32 watchdog stop/readback, timestamped UART
+  capture and known gzip handoff; incoming modules, UI/TLS, NPU and guards passed.
+- [x] N1 version-2 producer identities, real TC/RX/pre-DMA egress taps and
+  root-only finite CPU observation control. 58 actual-code ASan/UBSan cases,
+  complete driver link and matching cached ABI-consumer compilation passed.
+  Target observation and callback/lifecycle stress remain unqualified.
 - [x] Dual-core AArch64 kernel, matching modules and protected RAM startup.
 - [x] Package-owned native no-FP init/procd and selected C components, including
   corrected libc, curl/TLS, Lua/Nixio and strict HTTPS. Most apps remain ARM32.
@@ -37,6 +43,7 @@ requires its own runtime acceptance.
 ## Next, in priority order
 
 1. [x] Restore and safety-check the known protected gzip RAM baseline.
+   [x] Qualify outgoing watchdog shutdown and the timestamped capture on gzip.
    [ ] Investigate the failed XZ
    boot with an automatic bootloader stop before attempting any new image.
    Separately qualify startup, exact modules,
@@ -48,10 +55,14 @@ requires its own runtime acceptance.
    at four live samples. Endpoint JSON was independently reviewed after a
    reverse-server parser error; OS process launch skew was not retained.
    [ ] Keep the corrected harness and new-image results separate from WAN/NAT.
-3. [x] Compile an isolated real-Linux diagnostic library and20 new shared-epoch
-   UBSan cases; no production hook or target execution.
-   [ ] Wire a disabled non-publishing diagnostic adapter for real CT/RX/egress
-   observations and selected device references. Do not return hardware success,
+3. [x] Compile the earlier real-Linux library and20 shared-epoch UBSan cases.
+   [x] Add default-disabled CT/RX/egress driver call sites, producer generations,
+   root-only CPU snapshots and RCU withdrawal. No target execution yet.
+   [x] Complete the normal matched kernel/module/APK/CPIO build and static
+   gzip image/110-file loader binding (new candidate9a3955e7, not RAM booted).
+   [ ] Execute the exact loader fixture, qualify RAM entry and exercise actual
+   CT/UNB/egress and lifecycle races on the candidate.
+   Do not return hardware success,
    install owners or write BIND entries. Current RX notification precedes GRO /
    netfilter; the checksum label alone is not independent packet validation.
 4. [ ] Complete one restricted wired IPv4/TCP native action, closed test domain

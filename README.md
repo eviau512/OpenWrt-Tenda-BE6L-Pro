@@ -33,6 +33,13 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
   not retry or treat its static headroom as usable firmware qualification.
 - All ten MTD partitions and physical BMT write/erase/markbad paths are protected.
   The device profile produces initramfs only and rejects flash upgrades.
+- The outgoing ARM32 watchdog shutdown/readback now passed an actual handoff
+  to the unchanged gzip baseline. [Evidence and limits](docs/WATCHDOG-HANDOFF.md)
+  do not establish the XZ failure's cause.
+- [N1 route diagnostics](docs/N1-DIAGNOSTICS.md) now have real driver taps,
+  a versioned CPU-only interface and source-derived lifecycle/record tests.
+  Their matched-image integration is separate from target acceptance. The
+  observer cannot publish a hardware route and does not qualify WAN/NAT.
 
 The image includes LuCI with Simplified Chinese translations, curl, Lua/Nixio,
 the Argon theme without its configuration application, btop, Tailscale and

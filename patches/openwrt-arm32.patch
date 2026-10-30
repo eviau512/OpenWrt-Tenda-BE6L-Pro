@@ -2,9 +2,15 @@ diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Ma
 index 9154c0373..1bf24d09e 100644
 --- a/package/kernel/bpf-headers/Makefile
 +++ b/package/kernel/bpf-headers/Makefile
-@@ -86 +86 @@ define Build/Configure
+@@ -83,7 +83,7 @@ define Build/Configure
+ 	echo 'CONFIG_CPU_$(if $(CONFIG_BIG_ENDIAN),BIG,LITTLE)_ENDIAN=y' >> $(PKG_BUILD_DIR)/.config
+ 	$(if $(CONFIG_ARCH_64BIT),$(Build/Configure/64))
+ 	grep CONFIG_HZ $(REAL_LINUX_DIR)/.config >> $(PKG_BUILD_DIR)/.config
 -	yes '' | $(KERNEL_MAKE) oldconfig
 +	$(KERNEL_MAKE) olddefconfig
+ 	grep 'CONFIG_HZ=' $(REAL_LINUX_DIR)/.config | \
+ 		cut -d= -f2 | \
+ 		bc -q $(LINUX_DIR)/kernel/time/timeconst.bc \
 diff --git a/package/libs/ncurses/Makefile b/package/libs/ncurses/Makefile
 index bd9c55369..646ff9b93 100644
 --- a/package/libs/ncurses/Makefile
@@ -1453,3 +1459,98 @@ index 000000000..0e221f539
 ++	/* Prospective AN7563 wired L4; routed admission remains disabled. */
 ++	struct net_device *wired_egress_dev;
 ++	bool wired_l4, wired_dead;
+diff --git a/target/linux/airoha/patches-6.18/976-watchdog-checked-kexec-handoff.patch b/target/linux/airoha/patches-6.18/976-watchdog-checked-kexec-handoff.patch
+new file mode 100644
+index 000000000..a243a0f1f
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/976-watchdog-checked-kexec-handoff.patch
+@@ -0,0 +1,89 @@
++--- a/drivers/watchdog/airoha_wdt.c
+++++ b/drivers/watchdog/airoha_wdt.c
++@@ -10,6 +10,7 @@
++  */
++ 
++ #include <linux/kernel.h>
+++#include <linux/kexec.h>
++ #include <linux/module.h>
++ #include <linux/moduleparam.h>
++ #include <linux/types.h>
++@@ -74,7 +75,9 @@
++ 	val &= (~WDT_ENABLE & ~WDT_TIMER_ENABLE);
++ 	writel(val, airoha_wdt->base + TIMER_CTRL);
++ 
++-	return 0;
+++	/* Read back the same documented enable bits; a posted write is not proof. */
+++	val = readl(airoha_wdt->base + TIMER_CTRL);
+++	return val & (WDT_ENABLE | WDT_TIMER_ENABLE) ? -EIO : 0;
++ }
++ 
++ static int airoha_wdt_ping(struct watchdog_device *wdog_dev)
++@@ -91,13 +94,17 @@
++ 
++ static int airoha_wdt_set_timeout(struct watchdog_device *wdog_dev, unsigned int timeout)
++ {
+++	int ret;
+++
+++	if (watchdog_active(wdog_dev)) {
+++		ret = airoha_wdt_stop(wdog_dev);
+++		if (ret)
+++			return ret;
+++		wdog_dev->timeout = timeout;
+++		return airoha_wdt_start(wdog_dev);
+++	}
+++
++ 	wdog_dev->timeout = timeout;
++-
++-	if (watchdog_active(wdog_dev)) {
++-		airoha_wdt_stop(wdog_dev);
++-		return airoha_wdt_start(wdog_dev);
++-	}
++-
++ 	return 0;
++ }
++ 
++@@ -172,12 +179,34 @@
++ 	return 0;
++ }
++ 
+++/* Standard kexec sets kexec_in_progress before device_shutdown().
+++ * Do not alter the ordinary reboot watchdog policy or override NOWAYOUT.
+++ * This void callback cannot veto kexec: a failure log must fail boot admission,
+++ * and the external UART monitor must retain reset evidence and stop autoboot.
+++ */
+++static void airoha_wdt_shutdown(struct platform_device *pdev)
+++{
+++	struct airoha_wdt_desc *wdt = platform_get_drvdata(pdev);
+++
+++	if (!kexec_in_progress || !wdt)
+++		return;
+++	if (test_bit(WDOG_NO_WAY_OUT, &wdt->wdog_dev.status)) {
+++		dev_err(&pdev->dev, "BE6L_WDT_KEXEC_REFUSED nowayout=1\n");
+++		return;
+++	}
+++	if (airoha_wdt_stop(&wdt->wdog_dev)) {
+++		dev_err(&pdev->dev, "BE6L_WDT_KEXEC_STOP_FAILED\n");
+++		return;
+++	}
+++	dev_info(&pdev->dev, "BE6L_WDT_KEXEC_STOPPED enable_readback=0\n");
+++}
+++
++ static int airoha_wdt_suspend(struct device *dev)
++ {
++ 	struct airoha_wdt_desc *airoha_wdt = dev_get_drvdata(dev);
++ 
++ 	if (watchdog_active(&airoha_wdt->wdog_dev))
++-		airoha_wdt_stop(&airoha_wdt->wdog_dev);
+++		return airoha_wdt_stop(&airoha_wdt->wdog_dev);
++ 
++ 	return 0;
++ }
++@@ -204,6 +233,7 @@
++ 
++ static struct platform_driver airoha_wdt_driver = {
++ 	.probe = airoha_wdt_probe,
+++	.shutdown = airoha_wdt_shutdown,
++ 	.driver = {
++ 		.name = "airoha-wdt",
++ 		.pm = pm_sleep_ptr(&airoha_wdt_pm_ops),

@@ -15,9 +15,15 @@ diff --git a/package/kernel/bpf-headers/Makefile b/package/kernel/bpf-headers/Ma
 index 9154c0373..1bf24d09e 100644
 --- a/package/kernel/bpf-headers/Makefile
 +++ b/package/kernel/bpf-headers/Makefile
-@@ -86 +86 @@ define Build/Configure
+@@ -83,7 +83,7 @@ define Build/Configure
+ 	echo 'CONFIG_CPU_$(if $(CONFIG_BIG_ENDIAN),BIG,LITTLE)_ENDIAN=y' >> $(PKG_BUILD_DIR)/.config
+ 	$(if $(CONFIG_ARCH_64BIT),$(Build/Configure/64))
+ 	grep CONFIG_HZ $(REAL_LINUX_DIR)/.config >> $(PKG_BUILD_DIR)/.config
 -	yes '' | $(KERNEL_MAKE) oldconfig
 +	$(KERNEL_MAKE) olddefconfig
+ 	grep 'CONFIG_HZ=' $(REAL_LINUX_DIR)/.config | \
+ 		cut -d= -f2 | \
+ 		bc -q $(LINUX_DIR)/kernel/time/timeconst.bc \
 diff --git a/package/kernel/mt76/Makefile b/package/kernel/mt76/Makefile
 index 03de13a00..895fff744 100644
 --- a/package/kernel/mt76/Makefile
@@ -2585,3 +2591,1193 @@ index 000000000..0e221f539
 ++	/* Prospective AN7563 wired L4; routed admission remains disabled. */
 ++	struct net_device *wired_egress_dev;
 ++	bool wired_l4, wired_dead;
+diff --git a/target/linux/airoha/patches-6.18/977-n1-identity-and-inert-driver-taps.patch b/target/linux/airoha/patches-6.18/977-n1-identity-and-inert-driver-taps.patch
+new file mode 100644
+index 000000000..4caa3e9ed
+--- /dev/null
++++ b/target/linux/airoha/patches-6.18/977-n1-identity-and-inert-driver-taps.patch
+@@ -0,0 +1,1184 @@
++--- a/include/net/flow_offload.h
+++++ b/include/net/flow_offload.h
++@@ -442,7 +442,7 @@
++  * Ordinary TC rules retain the all-zero/absent context from flow_rule_alloc().
++  * Consumers must check valid, version and producer before using the snapshot.
++  */
++-#define FLOW_RULE_CT_CONTEXT_VERSION 1
+++#define FLOW_RULE_CT_CONTEXT_VERSION 2
++ #define FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE 1
++ struct flow_rule_ct_context {
++ 	u16 version;
++@@ -455,6 +455,8 @@
++ 	u8 direction;
++ 	u8 initial_netns;
++ 	u32 reserved;
+++	/* Diagnostic scalar cookies only; never dereference or use as admission. */
+++	u64 generation, ct_cookie, flow_cookie, tuple_cookie[2];
++ };
++ 
++ struct flow_rule {
++@@ -462,6 +464,8 @@
++ 	struct flow_rule_ct_context ct_context;
++ 	struct flow_action	action;
++ };
+++
+++u64 flow_offload_diag_next_generation(void);
++ 
++ struct flow_rule *flow_rule_alloc(unsigned int num_actions);
++ 
++@@ -716,6 +720,7 @@
++ 	enum flow_cls_command command;
++ 	bool use_act_stats;
++ 	unsigned long cookie;
+++	struct flow_rule_ct_context ct_context;
++ 	struct flow_rule *rule;
++ 	struct flow_stats stats;
++ 	u32 classid;
++--- a/include/net/netfilter/nf_flow_table.h
+++++ b/include/net/netfilter/nf_flow_table.h
++@@ -184,6 +184,7 @@
++ struct flow_offload {
++ 	struct flow_offload_tuple_rhash		tuplehash[FLOW_OFFLOAD_DIR_MAX];
++ 	struct nf_conn				*ct;
+++	u64					diag_generation;
++ 	unsigned long				flags;
++ 	u16					type;
++ 	u32					timeout;
++--- a/net/netfilter/nf_flow_table_core.c
+++++ b/net/netfilter/nf_flow_table_core.c
++@@ -1,5 +1,6 @@
++ // SPDX-License-Identifier: GPL-2.0-only
++ #include <linux/kernel.h>
+++#include <net/flow_offload.h>
++ #include <linux/init.h>
++ #include <linux/module.h>
++ #include <linux/netfilter.h>
++@@ -61,6 +62,8 @@
++ 
++ 	refcount_inc(&ct->ct_general.use);
++ 	flow->ct = ct;
+++	/* Zero on serial wrap makes diagnostics invalid, never hardware success. */
+++	flow->diag_generation = flow_offload_diag_next_generation();
++ 
++ 	flow_offload_fill_dir(flow, FLOW_OFFLOAD_DIR_ORIGINAL);
++ 	flow_offload_fill_dir(flow, FLOW_OFFLOAD_DIR_REPLY);
++--- a/net/netfilter/nf_flow_table_offload.c
+++++ b/net/netfilter/nf_flow_table_offload.c
++@@ -802,17 +802,16 @@
++  * No pointer escapes; this describes the approved CT, not every later packet.
++  */
++ static bool
++-nf_flow_rule_set_ct_context(struct flow_rule *rule, const struct net *net,
+++nf_flow_rule_set_ct_context(struct flow_rule_ct_context *context, const struct net *net,
++ 			    const struct flow_offload *flow,
++ 			    enum flow_offload_tuple_dir dir)
++ {
++-	struct flow_rule_ct_context *context = &rule->ct_context;
++ 	const struct nf_conntrack_zone *zone;
++ 	enum ip_conntrack_dir ct_dir;
++ 
++ 	memset(context, 0, sizeof(*context));
++ 	if ((unsigned int)dir >= FLOW_OFFLOAD_DIR_MAX ||
++-	    !net_eq(nf_ct_net(flow->ct), net))
+++	    !net_eq(nf_ct_net(flow->ct), net) || !flow->diag_generation)
++ 		return false;
++ 
++ 	ct_dir = dir == FLOW_OFFLOAD_DIR_ORIGINAL ?
++@@ -827,6 +826,11 @@
++ 	context->direction = dir;
++ 	context->initial_netns = net_eq(net, &init_net);
++ 	context->reserved = 0;
+++	context->generation = flow->diag_generation;
+++	context->ct_cookie = (unsigned long)flow->ct;
+++	context->flow_cookie = (unsigned long)flow;
+++	context->tuple_cookie[0] = (unsigned long)&flow->tuplehash[0].tuple;
+++	context->tuple_cookie[1] = (unsigned long)&flow->tuplehash[1].tuple;
++ 	context->valid = 1;
++ 	return true;
++ }
++@@ -864,7 +868,7 @@
++ 	if (err < 0)
++ 		goto err_flow_match;
++ 
++-	if (!nf_flow_rule_set_ct_context(flow_rule->rule, net, flow, dir))
+++	if (!nf_flow_rule_set_ct_context(&flow_rule->rule->ct_context, net, flow, dir))
++ 		goto err_flow_match;
++ 
++ 	flow_rule->rule->action.num_entries = 0;
++@@ -954,6 +958,12 @@
++ 
++ 	nf_flow_offload_init(&cls_flow, proto, priority, cmd,
++ 			     &flow->tuplehash[dir].tuple, &extack);
+++	/* Preserve producer identity for DESTROY/STATS as well as REPLACE.
+++	 * The flow-table worker still owns the flow and its CT reference here.
+++	 */
+++	if (!nf_flow_rule_set_ct_context(&cls_flow.ct_context,
+++				       read_pnet(&flowtable->net), flow, dir))
+++		return 0;
++ 	if (cmd == FLOW_CLS_REPLACE)
++ 		cls_flow.rule = flow_rule->rule;
++ 
++--- a/drivers/net/ethernet/airoha/airoha_ppe.c
+++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
++@@ -18,6 +18,7 @@
++ 
++ #include "airoha_regs.h"
++ #include "airoha_eth.h"
+++#include "diag.h"
++ 
++ /* Serialize airoha_gdm_dev flags, QDMA pointer and PPE CPU port
++  * configuration.
++@@ -1605,6 +1606,12 @@
++ 	if (state != AIROHA_FOE_STATE_UNBIND)
++ 		goto unlock;
++ 
+++	/* Observe only the existing CPU copy under ppe_lock. No new SRAM request,
+++	 * DMA ownership or atomic hardware snapshot is implied by this tap.
+++	 */
+++	if (airoha_is_7563(ppe->eth) && !rx_wlan)
+++		be6l_diag_driver_rx(ppe, skb, (const u32 *)hwe);
+++
++ 	if (airoha_is_7563(ppe->eth) &&
++ 	    FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, hwe->ib1) ==
++ 	    PPE_PKT_TYPE_BRIDGE)
++@@ -2449,6 +2456,7 @@
++ static int airoha_ppe_flow_offload_cmd(struct airoha_eth *eth,
++ 				       struct flow_cls_offload *f)
++ {
+++	be6l_diag_driver_command(eth->ppe, f);
++ 	switch (f->command) {
++ 	case FLOW_CLS_REPLACE:
++ 		return airoha_ppe_flow_offload_replace(eth, f);
++@@ -2743,6 +2751,7 @@
++ 		ppe->dev.ops.check_skb_domain = airoha_ppe_check_skb_domain;
++ 	ppe->dev.priv = ppe;
++ 	ppe->eth = eth;
+++	mutex_init(&ppe->diag_mutex);
++ 	eth->ppe = ppe;
++ 
++ 	ppe_num_entries = airoha_ppe_get_total_num_entries(ppe);
++@@ -2806,6 +2815,7 @@
++ 	if (airoha_is_7563(eth))
++ 		airoha_ppe_an7563_init(ppe);
++ 
+++	be6l_diag_debugfs_init(ppe);
++ 	return 0;
++ 
++ error_l2_flow_table_destroy:
++@@ -2832,6 +2842,8 @@
++ 
++ 	if (!eth->ppe)
++ 		return;
+++
+++	be6l_diag_driver_stop(eth->ppe);
++ 
++ 	if (eth->ppe->netdevice_registered)
++ 		unregister_netdevice_notifier(&eth->ppe->netdevice_nb);
++--- a/drivers/net/ethernet/airoha/airoha_eth.h
+++++ b/drivers/net/ethernet/airoha/airoha_eth.h
++@@ -679,7 +679,13 @@
++ #define AIROHA_RXD4_PPE_CPU_REASON	GENMASK(20, 16)
++ #define AIROHA_RXD4_FOE_ENTRY		GENMASK(15, 0)
++ 
+++struct be6l_diag;
+++
++ struct airoha_ppe {
+++	/* CPU observer only; the control mutex serializes publication/removal. */
+++	struct mutex diag_mutex;
+++	struct be6l_diag __rcu *route_diag;
+++	bool diag_spent;
++ 	struct airoha_ppe_dev dev;
++ 	struct airoha_eth *eth;
++ 
++--- a/drivers/net/ethernet/airoha/Makefile
+++++ b/drivers/net/ethernet/airoha/Makefile
++@@ -4,7 +4,7 @@
++ #
++ 
++ obj-$(CONFIG_NET_AIROHA) += airoha-eth.o
++-airoha-eth-y := airoha_eth.o airoha_ppe.o
+++airoha-eth-y := airoha_eth.o airoha_ppe.o diag.o
++ airoha-eth-$(CONFIG_DEBUG_FS) += airoha_ppe_debugfs.o
++ obj-$(CONFIG_NET_AIROHA_NPU) += airoha_npu.o
++ obj-$(CONFIG_NET_AIROHA_AN7552_NPU) += an7552_npu.o
++--- a/drivers/net/ethernet/airoha/airoha_eth.c
+++++ b/drivers/net/ethernet/airoha/airoha_eth.c
++@@ -22,6 +22,7 @@
++ 
++ #include "airoha_regs.h"
++ #include "airoha_eth.h"
+++#include "diag.h"
++ 
++ u32 airoha_rr(void __iomem *base, u32 offset)
++ {
++@@ -2801,6 +2802,8 @@
++ 	dma_addr_t dma_addr;
++ 	u32 tag, msg1, val;
++ 	u16 index;
+++	bool diag_was_gso;
+++	u8 diag_summed_before;
++ 
++ 	if (WARN_ON_ONCE(!q->ndesc))
++ 		goto drop;
++@@ -2817,6 +2820,8 @@
++ 		return NETDEV_TX_BUSY;
++ 	}
++ 
+++	diag_was_gso = skb_is_gso(skb);
+++	diag_summed_before = skb->ip_summed;
++ 	/* These helpers may rewrite skb data; reserve capacity first. */
++ 	if (skb_linearize(skb) ||
++ 	    (skb->ip_summed == CHECKSUM_PARTIAL && skb_checksum_help(skb))) {
++@@ -2825,6 +2830,8 @@
++ 	}
++ 	/* DSA tag extraction mutates skb; never do it before a BUSY exit. */
++ 	tag = airoha_get_dsa_tag(skb, dev);
+++	be6l_diag_driver_tx(((struct airoha_gdm_dev *)netdev_priv(dev))->eth->ppe,
+++			    skb, dev, tag, diag_was_gso, diag_summed_before);
++ 	dma_addr = dma_map_single(dev->dev.parent, skb->data, skb->len,
++ 				  DMA_TO_DEVICE);
++ 	if (unlikely(dma_mapping_error(dev->dev.parent, dma_addr))) {
++--- a/net/core/flow_offload.c
+++++ b/net/core/flow_offload.c
++@@ -1,11 +1,22 @@
++ /* SPDX-License-Identifier: GPL-2.0 */
++ #include <linux/kernel.h>
+++#include <linux/atomic.h>
+++#include <linux/export.h>
++ #include <linux/slab.h>
++ #include <net/act_api.h>
++ #include <net/flow_offload.h>
++ #include <linux/rtnetlink.h>
++ #include <linux/mutex.h>
++ #include <linux/rhashtable.h>
+++
+++/* Kernel-lifetime serial: unloading nf_flow_table must not reset identities. */
+++static atomic64_t flow_diag_serial = ATOMIC64_INIT(0);
+++
+++u64 flow_offload_diag_next_generation(void)
+++{
+++	return atomic64_inc_return(&flow_diag_serial);
+++}
+++EXPORT_SYMBOL_GPL(flow_offload_diag_next_generation);
++ 
++ struct flow_rule *flow_rule_alloc(unsigned int num_actions)
++ {
++--- /dev/null
+++++ b/drivers/net/ethernet/airoha/diag.c
++@@ -0,0 +1,687 @@
+++// SPDX-License-Identifier: GPL-2.0-only
+++/* CPU-only observer. It has no PPE SRAM, owner, BIND or MMIO interface. */
+++#include <linux/err.h>
+++#include <linux/debugfs.h>
+++#include <linux/seq_file.h>
+++#include <linux/uaccess.h>
+++#include <linux/module.h>
+++#include <linux/etherdevice.h>
+++#include <linux/if_vlan.h>
+++#include <linux/ip.h>
+++#include <linux/ktime.h>
+++#include <linux/notifier.h>
+++#include <linux/rtnetlink.h>
+++#include <linux/slab.h>
+++#include <linux/spinlock.h>
+++#include <linux/tcp.h>
+++#include <linux/workqueue.h>
+++#include <net/checksum.h>
+++#include <net/dsa.h>
+++#include <net/dst_metadata.h>
+++#include <net/ip.h>
+++#include <net/netfilter/nf_conntrack.h>
+++#include <net/netfilter/nf_conntrack_zones.h>
+++#include "airoha_eth.h"
+++#include "diag.h"
+++#include "epoch.h"
+++#include "record.h"
+++
+++enum { BD_OPEN, BD_EXPIRED, BD_CHANGED, BD_DESTROYED };
+++struct be6l_diag {
+++	spinlock_t lock;
+++	struct delayed_work expiry;
+++	struct notifier_block notifier;
+++	struct airoha_ppe *ppe;
+++	struct bd_epoch epoch;
+++	struct net_device *refs[3]; /* LAN user, real WAN, LAN conduit. */
+++	int ifindex[3], dsa_index;
+++	struct bd_snapshot snapshot;
+++};
+++
+++static bool bd_registered(struct net_device *dev)
+++{
+++	return dev && net_eq(dev_net(dev), &init_net) &&
+++	       READ_ONCE(dev->reg_state) == NETREG_REGISTERED && !is_vlan_dev(dev);
+++}
+++/* Match real registered GDM objects before inspecting their private data. */
+++static bool bd_gdm(struct airoha_ppe *ppe, struct net_device *dev, int id)
+++{
+++	unsigned int i, j;
+++	for (i = 0; i < ARRAY_SIZE(ppe->eth->ports); i++) {
+++		struct airoha_gdm_port *port = ppe->eth->ports[i];
+++		if (!port || port->id != id)
+++			continue;
+++		for (j = 0; j < ARRAY_SIZE(port->devs); j++)
+++			if (port->devs[j] && netdev_from_priv(port->devs[j]) == dev)
+++				return id != AIROHA_GDM2_IDX ||
+++				       !airoha_is_lan_gdm_dev(port->devs[j]);
+++	}
+++	return false;
+++}
+++/* Must hold RTNL. Physical DSA index is an explicit observed configuration,
+++ * never the synthetic index2 from a host fixture. */
+++static bool bd_topology(struct be6l_diag *d)
+++{
+++	struct dsa_port *dp;
+++	int i;
+++	for (i = 0; i < 3; i++)
+++		if (!bd_registered(d->refs[i]) || d->refs[i]->ifindex != d->ifindex[i])
+++			return false;
+++	dp = dsa_port_from_netdev(d->refs[0]);
+++	return !IS_ERR(dp) && !dp->ds->index && dp->type == DSA_PORT_TYPE_USER &&
+++	       dp->index == d->dsa_index && dsa_port_to_conduit(dp) == d->refs[2] &&
+++	       bd_gdm(d->ppe, d->refs[2], AIROHA_GDM1_IDX) &&
+++	       bd_gdm(d->ppe, d->refs[1], AIROHA_GDM2_IDX);
+++}
+++/* Single ownership transition under our own lock. No PPE lock or owner touched. */
+++static void bd_revoke(struct be6l_diag *d, u32 reason)
+++{
+++	struct net_device *put[3] = {};
+++	int i;
+++	spin_lock_bh(&d->lock);
+++	if (bd_epoch_close(&d->epoch)) {
+++		memcpy(put, d->refs, sizeof(put));
+++		memset(d->refs, 0, sizeof(d->refs));
+++		d->snapshot.active = false;
+++		d->snapshot.refs_owned = 0;
+++		d->snapshot.reason = reason;
+++		for (i = 0; i < BD_SLOTS; i++) {
+++			if (d->snapshot.rows[i].used) {
+++				d->snapshot.rows[i].used = false;
+++				d->snapshot.rows[i].revoked = true;
+++			}
+++		}
+++	}
+++	spin_unlock_bh(&d->lock);
+++	for (i = 0; i < 3; i++)
+++		dev_put(put[i]);
+++}
+++static void bd_expire(struct work_struct *work)
+++{
+++	struct be6l_diag *d = container_of(to_delayed_work(work), struct be6l_diag, expiry);
+++	bd_revoke(d, BD_EXPIRED);
+++}
+++static int bd_event(struct notifier_block *nb, unsigned long event, void *ptr)
+++{
+++	struct be6l_diag *d = container_of(nb, struct be6l_diag, notifier);
+++	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+++	bool affected = false;
+++	int i;
+++	switch (event) {
+++	case NETDEV_UNREGISTER: case NETDEV_GOING_DOWN: case NETDEV_PRECHANGEUPPER:
+++	case NETDEV_CHANGEUPPER: case NETDEV_CHANGEADDR: case NETDEV_CHANGEMTU:
+++	case NETDEV_CHANGE: case NETDEV_CHANGENAME:
+++		break;
+++	default:
+++		return NOTIFY_DONE;
+++	}
+++	spin_lock_bh(&d->lock);
+++	for (i = 0; i < 3; i++)
+++		affected |= d->refs[i] == dev;
+++	spin_unlock_bh(&d->lock);
+++	if (affected)
+++		bd_revoke(d, BD_CHANGED);
+++	return NOTIFY_DONE;
+++}
+++struct be6l_diag *be6l_diag_create(struct airoha_ppe *ppe, const struct bd_config *cfg)
+++{
+++	struct be6l_diag *d;
+++	struct dsa_port *dp;
+++	int err, i;
+++	if (!cfg || !cfg->enabled)
+++		return ERR_PTR(-EACCES);
+++	if (!ppe || !airoha_is_7563(ppe->eth) || ppe->eth->soc->num_ppe != 1 ||
+++	    cfg->lan_ifindex <= 0 || cfg->wan_ifindex <= 0 ||
+++	    cfg->lan_ifindex == cfg->wan_ifindex || cfg->expected_dsa_port < 0 ||
+++	    cfg->expected_dsa_port >= 5)
+++		return ERR_PTR(-EINVAL);
+++	d = kzalloc(sizeof(*d), GFP_KERNEL);
+++	if (!d)
+++		return ERR_PTR(-ENOMEM);
+++	spin_lock_init(&d->lock);
+++	INIT_DELAYED_WORK(&d->expiry, bd_expire);
+++	d->ppe = ppe;
+++	d->dsa_index = cfg->expected_dsa_port;
+++	d->notifier.notifier_call = bd_event;
+++	/* Register before taking topology snapshots; open also holds RTNL. */
+++	err = register_netdevice_notifier(&d->notifier);
+++	if (err)
+++		goto free;
+++	rtnl_lock();
+++	d->refs[0] = dev_get_by_index(&init_net, cfg->lan_ifindex);
+++	d->refs[1] = dev_get_by_index(&init_net, cfg->wan_ifindex);
+++	if (!bd_registered(d->refs[0]) || !bd_registered(d->refs[1]))
+++		goto fail;
+++	dp = dsa_port_from_netdev(d->refs[0]);
+++	if (IS_ERR(dp))
+++		goto fail;
+++	d->refs[2] = dsa_port_to_conduit(dp);
+++	dev_hold(d->refs[2]);
+++	for (i = 0; i < 3; i++)
+++		d->ifindex[i] = d->refs[i]->ifindex;
+++	if (!bd_topology(d) || !bd_epoch_open(&d->epoch, cfg->generation,
+++					     ktime_get_ns(), cfg->duration_ns))
+++		goto fail;
+++	d->snapshot.version = 2;
+++	d->snapshot.active = d->snapshot.spent = true;
+++	d->snapshot.unresolved = 0x3f;
+++	d->snapshot.refs_owned = 3;
+++	d->snapshot.generation = d->epoch.generation;
+++	d->snapshot.created_ns = d->epoch.created;
+++	d->snapshot.deadline_ns = d->epoch.deadline;
+++	memcpy(d->snapshot.input_ifindex, d->ifindex, sizeof(d->ifindex));
+++	rtnl_unlock();
+++	schedule_delayed_work(&d->expiry, nsecs_to_jiffies(cfg->duration_ns) + 1);
+++	return d;
+++fail:
+++	for (i = 0; i < 3; i++)
+++		dev_put(d->refs[i]);
+++	rtnl_unlock();
+++	unregister_netdevice_notifier(&d->notifier);
+++	err = -EOPNOTSUPP;
+++free:
+++	kfree(d);
+++	return ERR_PTR(err);
+++}
+++void be6l_diag_destroy(struct be6l_diag *d)
+++{
+++	if (IS_ERR_OR_NULL(d))
+++		return;
+++	/* The owning driver must first unpublish and drain its CT/RX taps. */
+++	unregister_netdevice_notifier(&d->notifier);
+++	cancel_delayed_work_sync(&d->expiry);
+++	bd_revoke(d, BD_DESTROYED);
+++	kfree(d);
+++}
+++static bool bd_context(const struct flow_rule_ct_context *c)
+++{
+++	return bd_identity_valid(c) && c->version == FLOW_RULE_CT_CONTEXT_VERSION &&
+++	       c->producer == FLOW_RULE_CT_CONTEXT_NF_FLOWTABLE &&
+++	       c->direction <= 1 && c->initial_netns == 1 && !c->zone_id &&
+++	       !c->zone_raw_id && !c->zone_flags && c->zone_dir == 3 && !c->reserved;
+++}
+++int be6l_diag_note_ct(struct be6l_diag *d, const struct flow_rule *rule)
+++{
+++	struct flow_match_meta meta;
+++	struct flow_match_basic basic;
+++	struct flow_match_control control;
+++	struct flow_match_ipv4_addrs ip;
+++	struct flow_match_ports ports;
+++	struct flow_match_ip tos;
+++	struct flow_match_tcp tcp;
+++	const struct flow_action_entry *act;
+++	struct net_device *output = NULL;
+++	struct bd_row row = {};
+++	u64 keys = BIT_ULL(FLOW_DISSECTOR_KEY_META) | BIT_ULL(FLOW_DISSECTOR_KEY_BASIC) |
+++		   BIT_ULL(FLOW_DISSECTOR_KEY_CONTROL) | BIT_ULL(FLOW_DISSECTOR_KEY_IPV4_ADDRS) |
+++		   BIT_ULL(FLOW_DISSECTOR_KEY_PORTS) | BIT_ULL(FLOW_DISSECTOR_KEY_IP) |
+++		   BIT_ULL(FLOW_DISSECTOR_KEY_TCP);
+++	int i, redirects = 0, error = -EOPNOTSUPP;
+++	if (IS_ERR_OR_NULL(d) || !rule || !bd_context(&rule->ct_context) ||
+++	    rule->match.dissector->used_keys != keys ||
+++	    !rule->action.num_entries || rule->action.num_entries > BD_ACTIONS)
+++		return error;
+++	flow_rule_match_meta(rule, &meta);
+++	flow_rule_match_basic(rule, &basic);
+++	flow_rule_match_control(rule, &control);
+++	flow_rule_match_ipv4_addrs(rule, &ip);
+++	flow_rule_match_ports(rule, &ports);
+++	flow_rule_match_ip(rule, &tos);
+++	flow_rule_match_tcp(rule, &tcp);
+++	if (meta.mask->ingress_ifindex != -1 || meta.mask->ingress_iftype || meta.mask->l2_miss ||
+++	    basic.key->n_proto != htons(ETH_P_IP) || basic.key->ip_proto != IPPROTO_TCP ||
+++	    basic.mask->n_proto != htons(0xffff) || basic.mask->ip_proto != 0xff ||
+++	    control.key->addr_type != FLOW_DISSECTOR_KEY_IPV4_ADDRS ||
+++	    control.mask->addr_type != 0xffff || control.mask->thoff || control.mask->flags ||
+++	    ip.mask->src != htonl(0xffffffff) || ip.mask->dst != htonl(0xffffffff) ||
+++	    ports.mask->src != htons(0xffff) || ports.mask->dst != htons(0xffff) ||
+++	    tos.mask->tos != 0xff || tos.mask->ttl ||
+++	    tcp.key->flags || tcp.mask->flags != htons(0x0005))
+++		return error;
+++	row.direction = rule->ct_context.direction;
+++	row.context = rule->ct_context;
+++	row.tos = tos.key->tos;
+++	row.tcp_flags = ntohs(tcp.key->flags);
+++	row.tcp_mask = ntohs(tcp.mask->flags);
+++	row.key[0] = ntohl(ip.key->src);
+++	row.key[1] = ntohl(ip.key->dst);
+++	row.key[2] = (u32)ntohs(ports.key->src) << 16 | ntohs(ports.key->dst);
+++	row.action_count = rule->action.num_entries;
+++	flow_action_for_each(i, act, &rule->action) {
+++		struct bd_action_copy *copy = &row.actions[i];
+++		copy->id = act->id;
+++		switch (act->id) {
+++		case FLOW_ACTION_REDIRECT:
+++			if (++redirects != 1 || !act->dev)
+++				return error;
+++			output = act->dev;
+++			row.output_ifindex = act->dev->ifindex;
+++			break;
+++		case FLOW_ACTION_MANGLE:
+++			copy->htype = act->mangle.htype;
+++			copy->offset = act->mangle.offset;
+++			copy->mask = act->mangle.mask;
+++			copy->value = act->mangle.val;
+++			break;
+++		case FLOW_ACTION_CSUM:
+++			copy->checksum_flags = act->csum_flags;
+++			break;
+++		default:
+++			return error;
+++		}
+++	}
+++	if (redirects != 1)
+++		return error;
+++	spin_lock_bh(&d->lock);
+++	if (!bd_epoch_live(&d->epoch, ktime_get_ns())) {
+++		error = -ESTALE;
+++		goto out;
+++	}
+++	if (meta.key->ingress_ifindex != d->ifindex[row.direction] ||
+++	    row.output_ifindex != d->ifindex[!row.direction] ||
+++	    output != d->refs[!row.direction])
+++		goto out;
+++	row.used = true;
+++	row.observed_ns = ktime_get_ns();
+++	error = bd_record_replace(d->snapshot.rows, &row);
+++	if (error > 0) {
+++		d->snapshot.accepted++;
+++		if (error == 2)
+++			d->snapshot.replaced++;
+++		error = 0;
+++	}
+++
+++out:
+++	if (error)
+++		d->snapshot.rejected++;
+++	spin_unlock_bh(&d->lock);
+++	return error;
+++}
+++static bool bd_options(struct sk_buff *skb, int offset, unsigned int length)
+++{
+++	u8 buffer[40], *bytes;
+++	unsigned int i = 0;
+++	if (!length)
+++		return true;
+++	if (length > sizeof(buffer))
+++		return false;
+++	bytes = skb_header_pointer(skb, offset, length, buffer);
+++	if (!bytes)
+++		return false;
+++	while (i < length) {
+++		if (!bytes[i]) return true;
+++		if (bytes[i] == 1) { i++; continue; }
+++		if (i + 1 >= length || bytes[i + 1] < 2 || bytes[i + 1] > length - i)
+++			return false;
+++		i += bytes[i + 1];
+++	}
+++	return true;
+++}
+++bool be6l_diag_note_rx(struct be6l_diag *d, struct sk_buff *skb, const u32 unbound[20])
+++{
+++	struct iphdr ib, *ip;
+++	struct tcphdr tb, *tcp;
+++	struct ethhdr eb, *ethernet;
+++	struct metadata_dst *md;
+++	u32 key[3];
+++	unsigned int length, tlen;
+++	int i, offset;
+++	bool matched = false;
+++	if (IS_ERR_OR_NULL(d) || !skb || !unbound || skb_vlan_tag_present(skb) ||
+++	    skb_is_gso(skb) || skb->ip_summed == CHECKSUM_PARTIAL ||
+++	    !skb_mac_header_was_set(skb) ||
+++	    (unbound[0] & 0x7e000000) != 0x10000000)
+++		return false;
+++	offset = skb_mac_offset(skb) + ETH_HLEN;
+++	if (offset < 0 || (unsigned int)offset > skb->len)
+++		return false;
+++	ethernet = skb_header_pointer(skb, offset - ETH_HLEN, sizeof(eb), &eb);
+++	if (!ethernet || ethernet->h_proto != htons(ETH_P_IP))
+++		return false;
+++	ip = skb_header_pointer(skb, offset, sizeof(ib), &ib);
+++	if (!ip || ip->version != 4 || ip->ihl != 5 || ip->protocol != IPPROTO_TCP ||
+++	    ip->ttl <= 1 || (ntohs(ip->frag_off) & 0x3fff))
+++		return false;
+++	length = ntohs(ip->tot_len);
+++	if (length < sizeof(ib) + sizeof(tb) || length > skb->len - offset)
+++		return false;
+++	tcp = skb_header_pointer(skb, offset + sizeof(ib), sizeof(tb), &tb);
+++	if (!tcp || tcp->doff < 5 || tcp->doff * 4 > length - sizeof(ib) ||
+++	    !tcp->ack || tcp->urg || tcp->syn || tcp->fin || tcp->rst)
+++		return false;
+++	tlen = length - sizeof(ib);
+++	if (!bd_options(skb, offset + sizeof(ib) + sizeof(tb), tcp->doff * 4 - sizeof(tb)) ||
+++	    ip_compute_csum(ip, sizeof(ib)) ||
+++	    csum_tcpudp_magic(ip->saddr, ip->daddr, tlen, IPPROTO_TCP,
+++			     skb_checksum(skb, offset + sizeof(ib), tlen, 0)))
+++		return false;
+++	key[0] = ntohl(ip->saddr); key[1] = ntohl(ip->daddr);
+++	key[2] = (u32)ntohs(tcp->source) << 16 | ntohs(tcp->dest);
+++	if (memcmp(key, unbound + 1, sizeof(key)))
+++		return false;
+++	spin_lock_bh(&d->lock);
+++	if (!bd_epoch_live(&d->epoch, ktime_get_ns()))
+++		goto out;
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		struct bd_row *row = &d->snapshot.rows[i];
+++		bool input = skb->dev == d->refs[row->direction];
+++		if (!row->used || memcmp(row->key, key, sizeof(key)) || ip->tos != row->tos ||
+++		    length > READ_ONCE(d->refs[row->direction]->mtu) ||
+++		    length > READ_ONCE(d->refs[!row->direction]->mtu))
+++			continue;
+++		if (!row->direction && skb->dev == d->refs[2]) {
+++			md = skb_metadata_dst(skb);
+++			input = md && md->type == METADATA_HW_PORT_MUX &&
+++				md->u.port_info.port_id == d->dsa_index;
+++		}
+++		if (!input)
+++			continue;
+++		memcpy(row->unbound, unbound, sizeof(row->unbound));
+++		row->rx_ns = ktime_get_ns();
+++		row->rx_matched = matched = true;
+++	}
+++out:
+++	spin_unlock_bh(&d->lock);
+++	return matched;
+++}
+++void be6l_diag_snapshot(struct be6l_diag *d, struct bd_snapshot *out)
+++{
+++	int i;
+++	memset(out, 0, sizeof(*out));
+++	out->version = 2;
+++	if (IS_ERR_OR_NULL(d))
+++		return;
+++	spin_lock_bh(&d->lock);
+++	*out = d->snapshot;
+++	/* Delayed work is cleanup, not the authority for observation expiry. */
+++	out->active = bd_epoch_live(&d->epoch, ktime_get_ns());
+++	out->can_publish = false;
+++	out->unresolved = 0x3f;
+++	if (!out->active)
+++		for (i = 0; i < BD_SLOTS; i++)
+++			if (out->rows[i].used) {
+++				out->rows[i].used = false;
+++				out->rows[i].revoked = true;
+++			}
+++	spin_unlock_bh(&d->lock);
+++}
+++
+++/* The owner publishes once and unpublishes before draining/freeing. RX/TC
+++ * readers cannot extend the finite lease. Callback return values never change
+++ * a TC result, routed refusal, PPE owner, or hardware state.
+++ */
+++int be6l_diag_driver_arm(struct airoha_ppe *ppe, const struct bd_config *cfg)
+++{
+++	struct be6l_diag *d;
+++	int error = 0;
+++	mutex_lock(&ppe->diag_mutex);
+++	if (ppe->diag_spent) {
+++		error = -EALREADY;
+++		goto out;
+++	}
+++	d = be6l_diag_create(ppe, cfg);
+++	if (IS_ERR(d)) {
+++		error = PTR_ERR(d);
+++		goto out;
+++	}
+++	ppe->diag_spent = true;
+++	rcu_assign_pointer(ppe->route_diag, d);
+++out:
+++	mutex_unlock(&ppe->diag_mutex);
+++	return error;
+++}
+++void be6l_diag_driver_command(struct airoha_ppe *ppe, const struct flow_cls_offload *f)
+++{
+++	const struct flow_rule_ct_context *c = &f->ct_context;
+++	struct be6l_diag *d;
+++	rcu_read_lock();
+++	d = rcu_dereference(ppe->route_diag);
+++	if (!d)
+++		goto out;
+++	if (!bd_identity_valid(c) || f->cookie != c->tuple_cookie[c->direction])
+++		goto out;
+++	if (f->command == FLOW_CLS_REPLACE && f->rule &&
+++	    !memcmp(c, &f->rule->ct_context, sizeof(*c))) {
+++		int error = be6l_diag_note_ct(d, f->rule);
+++		spin_lock_bh(&d->lock);
+++		if (bd_epoch_live(&d->epoch, ktime_get_ns())) {
+++			d->snapshot.ct_callbacks++;
+++			d->snapshot.last_ct_errno = error;
+++			if (error)
+++				d->snapshot.ct_callback_rejected++;
+++		}
+++		spin_unlock_bh(&d->lock);
+++	}
+++	else if (f->command == FLOW_CLS_DESTROY) {
+++		spin_lock_bh(&d->lock);
+++		if (bd_epoch_live(&d->epoch, ktime_get_ns()))
+++			d->snapshot.destroyed += bd_record_destroy(d->snapshot.rows, c, f->cookie);
+++		spin_unlock_bh(&d->lock);
+++	}
+++out:
+++	rcu_read_unlock();
+++}
+++void be6l_diag_driver_rx(struct airoha_ppe *ppe, struct sk_buff *skb, const u32 unbound[20])
+++{
+++	struct be6l_diag *d;
+++	rcu_read_lock();
+++	d = rcu_dereference(ppe->route_diag);
+++	if (d)
+++		be6l_diag_note_rx(d, skb, unbound);
+++	rcu_read_unlock();
+++}
+++void be6l_diag_driver_stop(struct airoha_ppe *ppe)
+++{
+++	struct be6l_diag *d;
+++	mutex_lock(&ppe->diag_mutex);
+++	/* Prevent an arm racing with removal when no session had been opened. */
+++	ppe->diag_spent = true;
+++	d = rcu_replace_pointer(ppe->route_diag, NULL, lockdep_is_held(&ppe->diag_mutex));
+++	if (d) {
+++		synchronize_rcu();
+++		/* Actual create/destroy register and withdraw the notifier, cancel
+++		 * delayed expiry, release netdev refs and finally free the observer.
+++		 */
+++		be6l_diag_destroy(d);
+++	}
+++	mutex_unlock(&ppe->diag_mutex);
+++}
+++
+++/* Observe the post-neighbor, post-checksum-helper, post-DSA-extraction frame
+++ * before dma_map_single. A later DMA/queue failure remains possible. This is
+++ * not a wire-delivery receipt and the skb's CT is only borrowed during call.
+++ */
+++void be6l_diag_driver_tx(struct airoha_ppe *ppe, struct sk_buff *skb,
+++		       struct net_device *netdev, u32 tag, bool was_gso, u8 summed_before)
+++{
+++	struct be6l_diag *d;
+++	struct bd_egress sample = {};
+++	struct ethhdr eb, *eth;
+++	struct iphdr ib, *ip;
+++	struct tcphdr tb, *tcp;
+++	const struct nf_conntrack_zone *zone;
+++	enum ip_conntrack_info info;
+++	struct nf_conn *ct;
+++	unsigned int length, tlen;
+++	if (!skb || skb_vlan_tag_present(skb))
+++		return;
+++	rcu_read_lock();
+++	d = rcu_dereference(ppe->route_diag);
+++	if (!d)
+++		goto out;
+++	ct = nf_ct_get(skb, &info);
+++	if (!ct || !net_eq(nf_ct_net(ct), &init_net))
+++		goto out;
+++	zone = nf_ct_zone(ct);
+++	if (zone->id || zone->flags || zone->dir != 3)
+++		goto out;
+++	eth = skb_header_pointer(skb, 0, sizeof(eb), &eb);
+++	if (!eth || eth->h_proto != htons(ETH_P_IP))
+++		goto out;
+++	ip = skb_header_pointer(skb, ETH_HLEN, sizeof(ib), &ib);
+++	if (!ip || ip->version != 4 || ip->ihl != 5 || ip->protocol != IPPROTO_TCP ||
+++	    (ntohs(ip->frag_off) & 0x3fff))
+++		goto out;
+++	length = ntohs(ip->tot_len);
+++	if (length < sizeof(ib) + sizeof(tb) || skb->len < ETH_HLEN || length > skb->len - ETH_HLEN)
+++		goto out;
+++	tcp = skb_header_pointer(skb, ETH_HLEN + sizeof(ib), sizeof(tb), &tb);
+++	if (!tcp || tcp->doff < 5 || tcp->doff * 4 > length - sizeof(ib) ||
+++	    !bd_options(skb, ETH_HLEN + sizeof(ib) + sizeof(tb), tcp->doff * 4 - sizeof(tb)))
+++		goto out;
+++	tlen = length - sizeof(ib);
+++	sample.observed_ns = ktime_get_ns();
+++	sample.ct_cookie = (unsigned long)ct;
+++	sample.direction = CTINFO2DIR(info);
+++	sample.key[0] = ntohl(ip->saddr);
+++	sample.key[1] = ntohl(ip->daddr);
+++	sample.key[2] = (u32)ntohs(tcp->source) << 16 | ntohs(tcp->dest);
+++	sample.actual_ifindex = netdev->ifindex;
+++	sample.tag = tag;
+++	sample.frame_bytes = skb->len;
+++	sample.was_gso = was_gso;
+++	sample.summed_before = summed_before;
+++	sample.summed_after = skb->ip_summed;
+++	sample.ttl = ip->ttl;
+++	sample.seq = ntohl(tcp->seq);
+++	sample.ack_seq = ntohl(tcp->ack_seq);
+++	ether_addr_copy(sample.src_mac, eth->h_source);
+++	ether_addr_copy(sample.dst_mac, eth->h_dest);
+++	sample.format_complete = !was_gso && skb->ip_summed != CHECKSUM_PARTIAL &&
+++		!ip_compute_csum(ip, sizeof(ib)) &&
+++		!csum_tcpudp_magic(ip->saddr, ip->daddr, tlen, IPPROTO_TCP,
+++				   skb_checksum(skb, ETH_HLEN + sizeof(ib), tlen, 0));
+++	/* No state in this sample can establish successful DMA or wire delivery. */
+++	sample.delivered = false;
+++	spin_lock_bh(&d->lock);
+++	if (!bd_epoch_live(&d->epoch, ktime_get_ns()))
+++		goto unlock;
+++	if (netdev == d->refs[1] && !tag)
+++		sample.logical_output_ifindex = d->ifindex[1];
+++	else if (netdev == d->refs[2] && tag == BIT(d->dsa_index))
+++		sample.logical_output_ifindex = d->ifindex[0];
+++	else
+++		goto unlock;
+++	if (bd_record_egress(d->snapshot.rows, &sample))
+++		d->snapshot.egress_accepted++;
+++	else
+++		d->snapshot.egress_rejected++;
+++unlock:
+++	spin_unlock_bh(&d->lock);
+++out:
+++	rcu_read_unlock();
+++}
+++
+++/* CPU-only opt-in. This does not enable UNB classification or a BIND path.
+++ * The existing independent learning-window preflight remains required.
+++ */
+++static int bd_parse_arm(const char *buffer, struct bd_config *cfg)
+++{
+++	unsigned long long generation;
+++	char extra;
+++	memset(cfg, 0, sizeof(*cfg));
+++	if (sscanf(buffer, "arm %d %d %d %llu %c", &cfg->lan_ifindex,
+++		   &cfg->wan_ifindex, &cfg->expected_dsa_port, &generation, &extra) != 4 ||
+++	    cfg->lan_ifindex <= 0 || cfg->wan_ifindex <= 0 ||
+++	    cfg->lan_ifindex == cfg->wan_ifindex || cfg->expected_dsa_port < 0 ||
+++	    cfg->expected_dsa_port >= 5 || !generation)
+++		return -EINVAL;
+++	cfg->enabled = true;
+++	cfg->generation = generation;
+++	cfg->duration_ns = 5ULL * 1000 * 1000 * 1000;
+++	return 0;
+++}
+++static int bd_control_show(struct seq_file *seq, void *unused)
+++{
+++	struct airoha_ppe *ppe = seq->private;
+++	struct bd_snapshot *s;
+++	struct be6l_diag *d;
+++	unsigned int i, j;
+++	s = kzalloc(sizeof(*s), GFP_KERNEL);
+++	if (!s)
+++		return -ENOMEM;
+++	s->version = 2;
+++	rcu_read_lock();
+++	d = rcu_dereference(ppe->route_diag);
+++	if (d)
+++		be6l_diag_snapshot(d, s);
+++	else
+++		s->spent = READ_ONCE(ppe->diag_spent);
+++	rcu_read_unlock();
+++	seq_printf(seq, "version=%u can_publish=%u active=%u spent=%u reason=%u unresolved=%u refs_owned=%u\n",
+++		   s->version, s->can_publish, s->active, s->spent, s->reason, s->unresolved, s->refs_owned);
+++	seq_printf(seq, "lease_generation=%llu created_ns=%llu deadline_ns=%llu lan=%u wan=%u conduit=%u\n",
+++		   s->generation, s->created_ns, s->deadline_ns, s->input_ifindex[0], s->input_ifindex[1], s->input_ifindex[2]);
+++	seq_printf(seq, "accepted=%llu rejected=%llu replaced=%llu destroyed_rows=%llu ct_calls=%llu ct_rejected=%llu last_ct_errno=%d egress_accepted=%llu egress_rejected=%llu\n",
+++		   s->accepted, s->rejected, s->replaced, s->destroyed, s->ct_callbacks,
+++		   s->ct_callback_rejected, s->last_ct_errno, s->egress_accepted, s->egress_rejected);
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		const struct bd_row *r = &s->rows[i];
+++		const struct bd_egress *e = &r->egress;
+++		seq_printf(seq, "row=%u used=%u revoked=%u direction=%u flow_generation=%llu producer=%u version=%u initial_netns=%u zone=%u raw_zone=%u zone_dir=%u zone_flags=%u key=%08x,%08x,%08x out=%u rx=%u rx_ns=%llu observed_ns=%llu\n",
+++			i, r->used, r->revoked, r->direction, r->context.generation, r->context.producer,
+++			r->context.version, r->context.initial_netns, r->context.zone_id,
+++			r->context.zone_raw_id, r->context.zone_dir, r->context.zone_flags,
+++			r->key[0], r->key[1], r->key[2], r->output_ifindex, r->rx_matched, r->rx_ns, r->observed_ns);
+++		for (j = 0; j < min_t(u32, r->action_count, BD_ACTIONS); j++) {
+++			const struct bd_action_copy *a = &r->actions[j];
+++			seq_printf(seq, "row=%u action=%u id=%u htype=%u offset=%u mask=%08x value=%08x csum=%u\n",
+++				i, j, a->id, a->htype, a->offset, a->mask, a->value, a->checksum_flags);
+++		}
+++		seq_printf(seq, "row=%u egress_ns=%llu same_ct=%u ct_direction=%u actual_if=%u logical_if=%u tag=%x key=%08x,%08x,%08x bytes=%u original_gso=%u summed_before=%u summed_after=%u format_complete=%u delivered=%u ttl=%u seq=%u ack_seq=%u\n",
+++			i, e->observed_ns, e->ct_cookie && e->ct_cookie == r->context.ct_cookie, e->direction,
+++			e->actual_ifindex, e->logical_output_ifindex, e->tag, e->key[0], e->key[1], e->key[2],
+++			e->frame_bytes, e->was_gso, e->summed_before, e->summed_after, e->format_complete,
+++			e->delivered, e->ttl, e->seq, e->ack_seq);
+++	}
+++	/* No raw kernel pointer cookies, credentials, or hardware owners exported. */
+++	kfree(s);
+++	return 0;
+++}
+++static int bd_control_open(struct inode *inode, struct file *file)
+++{
+++	return single_open(file, bd_control_show, inode->i_private);
+++}
+++static ssize_t bd_control_write(struct file *file, const char __user *data,
+++				size_t length, loff_t *position)
+++{
+++	struct seq_file *seq = file->private_data;
+++	struct airoha_ppe *ppe = seq->private;
+++	struct bd_config cfg;
+++	struct be6l_diag *d;
+++	char buffer[128];
+++	int error;
+++	if (!length || length >= sizeof(buffer))
+++		return -EINVAL;
+++	if (copy_from_user(buffer, data, length))
+++		return -EFAULT;
+++	if (memchr(buffer, 0, length))
+++		return -EINVAL;
+++	buffer[length] = 0;
+++	if (!strcmp(strim(buffer), "stop")) {
+++		rcu_read_lock();
+++		d = rcu_dereference(ppe->route_diag);
+++		if (d)
+++			bd_revoke(d, BD_DESTROYED);
+++		rcu_read_unlock();
+++		return length;
+++	}
+++	error = bd_parse_arm(buffer, &cfg);
+++	if (error)
+++		return error;
+++	error = be6l_diag_driver_arm(ppe, &cfg);
+++	return error ? error : length;
+++}
+++static const struct file_operations bd_control_fops = {
+++	.owner = THIS_MODULE,
+++	.open = bd_control_open,
+++	.read = seq_read,
+++	.write = bd_control_write,
+++	.llseek = seq_lseek,
+++	.release = single_release,
+++};
+++void be6l_diag_debugfs_init(struct airoha_ppe *ppe)
+++{
+++	if (airoha_is_7563(ppe->eth))
+++		debugfs_create_file("route_diag", 0600, ppe->debugfs_dir, ppe, &bd_control_fops);
+++}
++--- /dev/null
+++++ b/drivers/net/ethernet/airoha/diag.h
++@@ -0,0 +1,63 @@
+++/* SPDX-License-Identifier: GPL-2.0-only */
+++#ifndef BE6L_WIRED_DIAG_V1_H
+++#define BE6L_WIRED_DIAG_V1_H
+++#include <linux/types.h>
+++#include <net/flow_offload.h>
+++#define BD_SLOTS 4
+++#define BD_ACTIONS 16
+++struct airoha_ppe;
+++struct be6l_diag;
+++struct sk_buff;
+++struct bd_config {
+++	bool enabled; /* A zero-initialized configuration is inert. */
+++	int lan_ifindex, wan_ifindex, expected_dsa_port;
+++	u64 generation, duration_ns;
+++};
+++struct bd_action_copy {
+++	u32 id, htype, offset, mask, value, checksum_flags;
+++};
+++struct bd_egress {
+++	u64 observed_ns, ct_cookie;
+++	u32 key[3], actual_ifindex, logical_output_ifindex, tag, frame_bytes, seq, ack_seq;
+++	u8 direction, summed_before, summed_after, ttl, src_mac[6], dst_mac[6];
+++	bool was_gso, format_complete, delivered;
+++};
+++struct bd_row {
+++	bool used, rx_matched, revoked;
+++	u8 direction, tos;
+++	u16 tcp_flags, tcp_mask;
+++	u32 key[3], output_ifindex, action_count;
+++	u32 unbound[20];
+++	u64 observed_ns, rx_ns;
+++	struct flow_rule_ct_context context;
+++	struct bd_action_copy actions[BD_ACTIONS];
+++	struct bd_egress egress;
+++};
+++struct bd_snapshot {
+++	u32 version;
+++	bool active, spent, can_publish;
+++	u32 unresolved, reason, input_ifindex[3], refs_owned;
+++	u64 generation, created_ns, deadline_ns, accepted, rejected, replaced, destroyed;
+++	u64 egress_accepted, egress_rejected, ct_callbacks, ct_callback_rejected;
+++	s32 last_ct_errno;
+++	struct bd_row rows[BD_SLOTS];
+++};
+++/* CPU diagnostic API with root-only finite observation control. No hardware
+++ * publisher exists. The driver drains readers before destroy.
+++ */
+++struct be6l_diag *be6l_diag_create(struct airoha_ppe *, const struct bd_config *);
+++void be6l_diag_destroy(struct be6l_diag *);
+++int be6l_diag_note_ct(struct be6l_diag *, const struct flow_rule *);
+++bool be6l_diag_note_rx(struct be6l_diag *, struct sk_buff *, const u32 unbound[20]);
+++void be6l_diag_snapshot(struct be6l_diag *, struct bd_snapshot *);
+++/* Inert driver taps. Arm runs in process context without RTNL; root-only
+++ * control opens CPU observation once. No automatic arming or UNB write.
+++ */
+++int be6l_diag_driver_arm(struct airoha_ppe *, const struct bd_config *);
+++void be6l_diag_driver_command(struct airoha_ppe *, const struct flow_cls_offload *);
+++void be6l_diag_driver_rx(struct airoha_ppe *, struct sk_buff *, const u32 [20]);
+++void be6l_diag_driver_stop(struct airoha_ppe *);
+++void be6l_diag_driver_tx(struct airoha_ppe *, struct sk_buff *, struct net_device *, u32, bool, u8);
+++void be6l_diag_debugfs_init(struct airoha_ppe *);
+++
+++#endif
++--- /dev/null
+++++ b/drivers/net/ethernet/airoha/epoch.h
++@@ -0,0 +1,29 @@
+++/* SPDX-License-Identifier: MIT */
+++/* Same finite epoch logic is compiled by the real kernel adapter and host test. */
+++#define BD_MAX_NS 5000000000ULL
+++struct bd_epoch {
+++	bool active, spent;
+++	u64 generation, created, deadline;
+++};
+++static inline bool bd_epoch_open(struct bd_epoch *e, u64 generation,
+++				u64 now, u64 duration)
+++{
+++	if (e->active || e->spent || !generation || !duration ||
+++	    duration > BD_MAX_NS || now > (~(u64)0) - duration)
+++		return false;
+++	e->active = e->spent = true;
+++	e->generation = generation;
+++	e->created = now;
+++	e->deadline = now + duration;
+++	return true;
+++}
+++static inline bool bd_epoch_live(const struct bd_epoch *e, u64 now)
+++{
+++	return e->active && now >= e->created && now < e->deadline;
+++}
+++static inline bool bd_epoch_close(struct bd_epoch *e)
+++{
+++	bool owned = e->active;
+++	e->active = false;
+++	return owned;
+++}
++--- /dev/null
+++++ b/drivers/net/ethernet/airoha/record.h
++@@ -0,0 +1,127 @@
+++/* SPDX-License-Identifier: GPL-2.0-only */
+++#ifndef BE6L_DIAG_RECORD_V2_H
+++#define BE6L_DIAG_RECORD_V2_H
+++/* Called under the adapter's lock. No pointers are dereferenced or retained.
+++ * These are diagnostic identities, never authority to publish a hardware rule.
+++ */
+++static bool bd_identity_valid(const struct flow_rule_ct_context *c)
+++{
+++	return c->valid == 1 && c->version == 2 && c->producer == 1 &&
+++	       c->direction < 2 && c->generation && c->ct_cookie && c->flow_cookie &&
+++	       c->tuple_cookie[0] && c->tuple_cookie[1] &&
+++	       c->tuple_cookie[0] != c->tuple_cookie[1];
+++}
+++/* 0 duplicate, 1 new row, 2 newer producer generation replacing the same key. */
+++static void bd_record_revoke_pair(struct bd_row rows[BD_SLOTS],
+++				  const struct flow_rule_ct_context *context)
+++{
+++	unsigned int i;
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		struct bd_row *row = &rows[i];
+++		if (row->used && row->context.generation == context->generation &&
+++		    row->context.flow_cookie == context->flow_cookie &&
+++		    row->context.ct_cookie == context->ct_cookie) {
+++			row->used = false;
+++			row->revoked = true;
+++		}
+++	}
+++}
+++static int bd_record_replace(struct bd_row rows[BD_SLOTS], const struct bd_row *row)
+++{
+++	int i, slot = -1, result = 1;
+++	if (!bd_identity_valid(&row->context) || !row->used || row->revoked ||
+++	    row->direction != row->context.direction || row->action_count > BD_ACTIONS)
+++		return -EINVAL;
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		struct bd_row *old = &rows[i];
+++		if (!old->used && !old->revoked) {
+++			if (slot < 0)
+++				slot = i;
+++			continue;
+++		}
+++		if (memcmp(old->key, row->key, sizeof(row->key)))
+++			continue;
+++		if (old->context.generation == row->context.generation) {
+++			if (old->revoked)
+++				return -ESTALE;
+++			if (memcmp(&old->context, &row->context, sizeof(row->context)) ||
+++			    old->direction != row->direction || old->tos != row->tos ||
+++			    old->output_ifindex != row->output_ifindex ||
+++			    old->action_count != row->action_count ||
+++			    memcmp(old->actions, row->actions, sizeof(row->actions))) {
+++				bd_record_revoke_pair(rows, &old->context);
+++				return -EEXIST;
+++			}
+++			return 0;
+++		}
+++		if (row->context.generation < old->context.generation)
+++			return -ESTALE;
+++		bd_record_revoke_pair(rows, &old->context);
+++		slot = i;
+++		result = 2;
+++		break;
+++	}
+++	if (slot < 0)
+++		return -ENOSPC;
+++	memcpy(&rows[slot], row, sizeof(*row));
+++	/* A newly observed producer cannot inherit packet evidence from an older
+++	 * generation, even if a future caller accidentally supplies such fields.
+++	 */
+++	rows[slot].rx_matched = false;
+++	rows[slot].rx_ns = 0;
+++	memset(rows[slot].unbound, 0, sizeof(rows[slot].unbound));
+++	memset(&rows[slot].egress, 0, sizeof(rows[slot].egress));
+++	return result;
+++}
+++static unsigned int bd_record_destroy(struct bd_row rows[BD_SLOTS],
+++				     const struct flow_rule_ct_context *context,
+++				     unsigned long cookie)
+++{
+++	unsigned int i, removed = 0;
+++	if (!bd_identity_valid(context) || cookie != context->tuple_cookie[context->direction])
+++		return 0;
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		struct bd_row *row = &rows[i];
+++		if (row->used && !memcmp(&row->context, context, sizeof(*context))) {
+++			row->used = false;
+++			row->revoked = true;
+++			removed++;
+++		}
+++	}
+++	return removed;
+++}
+++/* Correlate a software egress with the same borrowed CT and both Linux rule
+++ * directions. This does not establish a per-packet generation or admit BIND.
+++ */
+++static bool bd_record_egress(struct bd_row rows[BD_SLOTS], const struct bd_egress *sample)
+++{
+++	unsigned int i, j;
+++	if (sample->direction > 1 || !sample->ct_cookie || sample->delivered)
+++		return false;
+++	for (i = 0; i < BD_SLOTS; i++) {
+++		struct bd_row *row = &rows[i];
+++		const struct flow_rule_ct_context *c = &row->context;
+++		if (!row->used || row->direction != sample->direction ||
+++		    c->ct_cookie != sample->ct_cookie ||
+++		    row->output_ifindex != sample->logical_output_ifindex)
+++			continue;
+++		for (j = 0; j < BD_SLOTS; j++) {
+++			const struct bd_row *opposite = &rows[j];
+++			const struct flow_rule_ct_context *other = &opposite->context;
+++			u32 ports;
+++			if (!opposite->used || opposite->direction == row->direction ||
+++			    other->generation != c->generation || other->ct_cookie != c->ct_cookie ||
+++			    other->flow_cookie != c->flow_cookie ||
+++			    memcmp(other->tuple_cookie, c->tuple_cookie, sizeof(c->tuple_cookie)))
+++				continue;
+++			ports = (opposite->key[2] << 16) | (opposite->key[2] >> 16);
+++			if (sample->key[0] != opposite->key[1] || sample->key[1] != opposite->key[0] ||
+++			    sample->key[2] != ports)
+++				continue;
+++			memcpy(&row->egress, sample, sizeof(*sample));
+++			return true;
+++		}
+++	}
+++	return false;
+++}
+++#endif

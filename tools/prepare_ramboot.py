@@ -67,6 +67,9 @@ def image(nodes, name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('fit', type=Path)
+    parser.add_argument('--output-dir', type=Path,
+                        help='New directory under artifacts; preserve the existing recovery payload')
+    parser.add_argument('--require-watchdog-handoff', action='store_true')
     parser.add_argument('--omit-wan-phy-reset-gpio13', action='store_true')
     parser.add_argument('--diagnostic-option', action='append', default=[],
     choices=('initcall_debug', 'clk_ignore_unused', 'pd_ignore_unused', 'rdinit=/bin/sh',
@@ -75,7 +78,11 @@ def main():
     args = parser.parse_args()
     source = args.fit.resolve()
     fit_bytes = source.read_bytes()
-    assert len(fit_bytes) <= 32 * 1024 * 1024, 'Unexpectedly large FIT'
+    # The old 32MiB input cap describes the recovery payload, not the NPU RAM
+    # boundary. An independently output checked-WDT candidate may carry the
+    # full package set; the actual decoded-kernel boundary remains unchanged.
+    fit_limit = (64 if args.require_watchdog_handoff and args.output_dir else 32) * 1024 * 1024
+    assert len(fit_bytes) <= fit_limit, 'Unexpectedly large FIT'
     nodes = tree(fit_bytes)
     config = text(nodes['/configurations']['default'])
     refs = nodes['/configurations/' + config]
@@ -96,6 +103,10 @@ def main():
     assert 0x178000 < len(kernel) < max_kernel, 'Image overlaps NPU reserved memory'
     assert b'airoha,bmt-read-only\0' in kernel, 'Kernel does not contain the matching BMT guard'
     assert b'mtk-bmt: physical writes disabled for RAM-only bring-up' in kernel
+    if args.require_watchdog_handoff:
+        for marker in (b'BE6L_WDT_KEXEC_STOPPED enable_readback=0',
+                       b'BE6L_WDT_KEXEC_STOP_FAILED', b'BE6L_WDT_KEXEC_REFUSED nowayout=1'):
+            assert marker in kernel, 'Compiled watchdog handoff marker missing'
     board = tree(dtb)
     assert b'tenda,be6l-pro' in board['/']['compatible'].split(b'\0')
     nand = '/soc/spi@1fa10000/nand@0'
@@ -107,8 +118,11 @@ def main():
     assert board['/reserved-memory/npu-firmware@84000000']['reg'] == struct.pack('>II', 0x84000000, 0x400000)
     assert board['/reserved-memory/npu-pkt@84400000']['reg'] == struct.pack('>II', 0x84400000, 0x1600000)
 
-    out = BASE / 'artifacts/ramboot'
-    out.mkdir(parents=True, exist_ok=True)
+    out = args.output_dir.resolve() if args.output_dir else BASE / 'artifacts/ramboot'
+    if args.output_dir:
+        assert out.is_relative_to((BASE / 'artifacts').resolve())
+        assert out != (BASE / 'artifacts').resolve() and not out.exists()
+    out.mkdir(parents=True, exist_ok=not bool(args.output_dir))
     (out / 'openwrt-kernel').write_bytes(kernel)
     (out / 'openwrt.dtb').write_bytes(dtb)
     loader_args = [sys.executable, str(BASE / 'tools/build_split_loader.py'),
@@ -147,6 +161,12 @@ def main():
         'wireless_disabled': False, 'flash': 'read-only', 'files': [],
         'diagnostic_options': args.diagnostic_option,
         'diagnostic_no_wan_phy_reset': args.omit_wan_phy_reset_gpio13,
+        'compiled_watchdog_handoff_markers': args.require_watchdog_handoff,
+        'watchdog_handoff_runtime_qualified': False,
+        'fit_file_limit_bytes': fit_limit,
+        'kernel_bytes': len(kernel),
+        'kernel_load_address': '0x80088000',
+        'kernel_reserved_boundary': '0x84000000',
     }
     for name in names:
         data = (out / name).read_bytes()

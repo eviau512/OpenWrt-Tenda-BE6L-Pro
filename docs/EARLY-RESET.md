@@ -23,7 +23,10 @@ The new offline-tested [capture helper](../tools/arm64/boot_capture_v1.py)
 records per-chunk receive time bounds, offsets and hashes. It distinguishes
 an interrupt attempt, completed serial writes and a wholly new stopped-ECNT
 prompt. Timeout alone never qualifies reset containment or a successful boot.
-Its integration is prepared but has not been exercised on the router.
+Its checked integration has now been exercised on the known gzip baseline.
+The outgoing ARM32 stop callback reported enable-bit readback zero before
+the incoming AArch64 boot, with no observed reset. Independent runtime checks
+passed; see [the actual handoff and its limits](WATCHDOG-HANDOFF.md).
 
 Before a new boot experiment, review the outgoing ARM32 watchdog shutdown and
 readback, qualify instrumentation with the known gzip baseline, and verify
