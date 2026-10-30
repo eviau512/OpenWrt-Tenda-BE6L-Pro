@@ -1,3 +1,15 @@
+<!-- n1-live-20261030 -->
+## Latest N1 milestone
+
+- [x] Matched build,actual loader fixture,checked RAM entry and startup.
+- [x] Real wired-WAN CT producer/tuple/action observation.
+- [ ] Precise RX/TX refusal diagnostics,UNB/egress correlation and lifetimes.
+- [ ] Routed BIND gates,daily NAT/IPv6/wireless routing and real per-flow stats.
+
+The sampler failed; partial evidence is not N1 acceptance. See
+[the result and next step](docs/N1-LIVE.md). Historical items follow.
+<!-- end-n1-live-20261030 -->
+
 # Development TODO
 
 This is RAM-only experimental work. Preserve all MTD/BMT write, erase and

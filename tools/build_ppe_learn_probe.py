@@ -1,5 +1,6 @@
 """Build a typed bounded-learning lab fixture only; never deploy or run it."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import os
@@ -10,6 +11,13 @@ import time
 from audit_module_layout import elf_sections
 
 BASE = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--artifact-name', choices=('legacy', 'arm64-n1-diag-v2'), default='legacy')
+args = parser.parse_args()
+candidate = None
+if args.artifact_name == 'arm64-n1-diag-v2':
+    from n1_candidate_admission import admit
+    candidate = admit(BASE/'artifacts'/args.artifact_name)
 SDK = Path('/root/be6l-openwrt/arm64-source')
 K = SDK / 'build_dir/target-aarch64_cortex-a53_musl/linux-airoha_an7563a64/linux-6.18.55'
 NAME = 'be6l_ppe_learn_probe'
@@ -45,7 +53,13 @@ shutil.copyfile(source, ROOT / source.name)
     'obj-m += ' + NAME + '.o\nccflags-y += -I' + str(K / 'drivers/net/ethernet/airoha') + '\n')
 gcc, = SDK.glob('staging_dir/toolchain-aarch64_*/bin/aarch64-openwrt-linux-musl-gcc')
 config = hashlib.sha256((K / '.config').read_bytes()).hexdigest()
-assert config == '60ecf68b251cc7193d7332a3d7b2eaff0b84423bf5bbb2ea77b2b4ea67b21078'
+if candidate:
+    assert config == candidate['kernel_config_sha256']
+    for name, digest in candidate['image_exit_abi']['kernel_inputs'].items():
+        assert hashlib.sha256((K/name).read_bytes()).hexdigest() == digest, name
+    assert (K/'arch/arm64/boot/Image').read_bytes() == (BASE/'artifacts'/args.artifact_name/'ramboot/Image').read_bytes()
+else:
+    assert config == '60ecf68b251cc7193d7332a3d7b2eaff0b84423bf5bbb2ea77b2b4ea67b21078'
 protected = [K / 'arch/arm64/boot/Image', *sorted(K.rglob('*.ko'))]
 protected_before = {str(p.relative_to(K)): hashlib.sha256(p.read_bytes()).hexdigest()
                     for p in protected}
@@ -65,7 +79,7 @@ assert hashlib.sha256((K / '.config').read_bytes()).hexdigest() == config
 assert {str(p.relative_to(K)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in protected} == protected_before
 assert b'vermagic=6.18.55 ' in module.read_bytes()
-ART = BASE / 'artifacts/ppe-learn-probe'
+ART = BASE / ('artifacts/ppe-learn-probe-n1-v2' if candidate else 'artifacts/ppe-learn-probe')
 ART.mkdir(exist_ok=True)
 if (ART / 'manifest.json').exists():
     shutil.copyfile(ART / 'manifest.json', OUT / 'previous-artifact-manifest.json')
@@ -92,6 +106,10 @@ report = dict(module_sha256=hashlib.sha256(module.read_bytes()).hexdigest(),
               classifier_or_register_written_during_build=False, sram_commands=False,
               hardware_access=False, loaded_on_hardware=False, deployed=False,
               image_built=False, root=str(ROOT), log=str(OUT / 'compile.txt'))
+if candidate:
+    report.update(candidate_image_sha256=candidate['image_sha256'],
+                  candidate_source_lock_sha256=candidate['source_abi_build_lock']['source_lock_sha256'],
+                  candidate_exact_cached_image_verified=True, n1_matching_compile=True)
 (OUT / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
 (ART / 'manifest.json').write_text(json.dumps(report, indent=2) + '\n')
 (BASE / 'logs/ppe-learn-probe-latest.json').write_text(json.dumps(dict(directory=str(OUT))) + '\n')

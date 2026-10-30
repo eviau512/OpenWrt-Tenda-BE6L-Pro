@@ -1,3 +1,10 @@
+# N1 current target status
+
+Startup and real CT observation have now occurred; correlation remains incomplete.
+See [live evidence and limits](N1-LIVE.md).
+
+## Earlier offline phase
+
 # N1 identity and real driver integration, 2026-10-30
 
 The latest isolated implementation passes 58 actual-code ASan/UBSan cases.
