@@ -1,3 +1,10 @@
+## Recorded checkpoint
+
+Execution is paused pending owner instruction. The qualified RAM image is
+fd30e389; the packet carrier remains unarmed, unwired, source-only work.
+Next: driver lifetime/consumer integration, actual skb lifecycle tests and
+a complete matched rebuild. Routed NAT/IPv6 and native-service TODOs remain.
+
 ## Offline identity-carrier checkpoint
 
 - [x] Shared CT copier, real flowtable/core/skb types and identity boundaries.
