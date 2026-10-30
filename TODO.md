@@ -1,3 +1,10 @@
+## Offline identity-carrier checkpoint
+
+- [x] Shared CT copier, real flowtable/core/skb types and identity boundaries.
+- [ ] Driver arming/consumer hookup, real skb lifetimes and a full matched build.
+
+This is unarmed source-only work; see [the limits](docs/N1-PACKET-CARRIER-WIP.md).
+
 ## Current v3 milestone
 
 - [x] Matched v3 kernel/modules/packages, actual loader fixture and RAM startup.
