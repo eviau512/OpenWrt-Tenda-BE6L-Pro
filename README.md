@@ -14,6 +14,10 @@ X-Wrt SRAM-only policy port and signed native soft64 netifd/recovery component
 integration. These are offline results awaiting a matching image and target
 acceptance; they do not qualify routed NPU offload.
 
+See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
+for the current project overview. Standard Cortex-A53 binary-package compatibility
+remains a separate goal from the existing custom soft-ABI C components.
+
 - A dual-core AArch64 Linux kernel runs native AAPCS64-soft init/procd and
   selected C components alongside ARM32 applications through COMPAT. A complete
   native userspace and maintainable native SDK remain unfinished.
@@ -73,6 +77,15 @@ passwords, private signing/SSH keys, factory calibration dumps or firmware
 backups are intentionally distributed here. Do not add them to this repository.
 
 ## Attribution
+
+The AN7563 NPU/PPE port references [X-Wrt](https://github.com/x-wrt/x-wrt), pinned
+to [5ae8e6912e64682fcad54593467e84c80f170656](https://github.com/x-wrt/x-wrt/commit/5ae8e6912e64682fcad54593467e84c80f170656).
+The initial SRAM-only policy derives from X-WRT's `941-06` patch; resource-lifetime
+work also reviews `941-04`. Original authorship and Linux licenses are retained.
+See the [source lock](upstream/xwrt-an7563-20261105.json),
+[port scope and remaining work](docs/XWRT-NPU-PORT.md) and [NOTICE.md](NOTICE.md).
+X-Wrt's selected AN7563 target is AArch32; its driver is a hardware reference
+for this ARM64 port, not proof of standard AArch64 package compatibility.
 
 `tools/build_split_loader.py` is adapted from
 [YangZJ781/Tenda-BE6L-Pro-Telnet-only-ramboot](https://github.com/YangZJ781/Tenda-BE6L-Pro-Telnet-only-ramboot).

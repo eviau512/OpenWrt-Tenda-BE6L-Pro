@@ -1,9 +1,14 @@
-## Recorded checkpoint
+## Current priorities — 2026-11-05
 
-Execution is paused pending owner instruction. The qualified RAM image is
-fd30e389; the packet carrier remains unarmed, unwired, source-only work.
-Next: driver lifetime/consumer integration, actual skb lifecycle tests and
-a complete matched rebuild. Routed NAT/IPv6 and native-service TODOs remain.
+Development has resumed. See the [architecture, problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
+and [current continuation](docs/CONTINUATION-20261105.md). Prioritize standard
+Cortex-A53 package compatibility, matching native64 image integration and the
+X-Wrt PPE resource-lifetime port. The custom soft-ABI components are partial
+progress, not completion of standard binary compatibility. The original fd30e389
+image remains the last qualified baseline; current component results are offline.
+
+The older identity-carrier milestones and dated TODOs below remain historical
+evidence. They do not supersede the current priorities or qualify routed offload.
 
 ## Offline identity-carrier checkpoint
 
