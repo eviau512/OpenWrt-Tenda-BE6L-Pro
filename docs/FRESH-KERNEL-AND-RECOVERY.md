@@ -114,9 +114,11 @@ Host routes, IP settings, VPN and interface priorities were not changed.
 
 ## Remaining gates
 
-Boot and test the new matched FIT through the checked ARM32 handoff, verify all
-module bytes and package owners, default native services and actual recovery.
+The new matched FIT subsequently passed the checked ARM32 handoff, module/package
+bytes and default native services; see [its startup evidence](CANDIDATE-2F82-TARGET.md).
+Its own actual recovery and forwarding/lifetime tests remain separate gates.
 The current ARM64 configuration has no kexec, so another image needs another
 stock-to-ARM32 transition. X-Wrt941-04 resource lifetime work remains a source
-audit; routed NAT stays closed. The signed QEMU11.1.3 source is prepared for the
-allowed emulation fallback, but no no-FP soft-host emulator has been built.
+audit; routed NAT stays closed. The signed QEMU11.1.3 source now builds as a
+no-FP soft-host emulator and [passes selected standard ABI tests](ARM64-INSTRUCTION-FALLBACK.md).
+Complete package and child-process acceptance remain open.

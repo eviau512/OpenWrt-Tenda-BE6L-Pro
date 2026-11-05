@@ -19,8 +19,9 @@ run with this project's ARM64 kernel and no-FP native runtime.
 The first port keeps routed rejection and the existing firmware, flash guards
 and wired diagnostic taps. It changes CPU SRAM mirror allocation, DRAM table
 programming and entry bounds. A complete matching kernel/modules/FIT now
-[builds](FRESH-KERNEL-AND-RECOVERY.md); changed-driver hardware acceptance remains
-open. Live netifd/recovery tests use the earlier qualified kernel.
+[builds](FRESH-KERNEL-AND-RECOVERY.md) and [starts on the router](CANDIDATE-2F82-TARGET.md)
+with both NPU workers advancing and zero faults. Packet forwarding, resource
+lifetime and changed-driver recovery acceptance remain separate gates.
 
 ## Concrete failure paths to fix together
 

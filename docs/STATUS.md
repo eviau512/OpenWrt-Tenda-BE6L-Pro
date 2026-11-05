@@ -3,6 +3,14 @@
 Updated 2026-11-05. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
+The [integer-host emulation fallback](ARM64-INSTRUCTION-FALLBACK.md) now builds
+and passes actual standard-ABI static/dynamic FP/NEON, C++ and Go runtime tests,
+including threads, atomic64, TLS and signals. The native control confirms SIGILL4.
+A normally signed cached standard A53 btop APK runs its version command. A fresh
+public-builder rebuild passes static admission and the dynamic guest test too.
+Complete execve/execveat containment, interactive package coverage, memory and
+performance qualification remain open; physical FP/SIMD is still unavailable.
+
 The new `2f82bb55` candidate now [passes actual RAM startup](CANDIDATE-2F82-TARGET.md),
 including independent new-kernel build ID,219 exact packages,84 exact module
 files,61 native user ELF files, default native processes/VM modules, NPU workers
@@ -16,7 +24,7 @@ soft64 netifd passes its15-ELF audit and a real isolated ARM64 test with all fiv
 VM modules mapped and ubus network objects registered. Recovery r2 fixes the
 target's missing stat dependency. A60-second ARM32 expiry and a default300-second
 ARM64 expiry after wireless/NPU detach returned to authenticated stock management.
-Default service and heartbeat checks pass. Complete new-image startup, active-NPU
+Default service and heartbeat checks pass. New-image startup is covered above; active-NPU
 recovery, resource-lifetime changes and routed NAT remain open. The earlier
 [component checkpoint](CONTINUATION-20261105.md) is retained as history.
 

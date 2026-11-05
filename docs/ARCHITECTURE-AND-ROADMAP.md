@@ -76,6 +76,12 @@ Linux 的[寄存器定义](https://github.com/torvalds/linux/blob/v6.18/arch/arm
 FP/SIMD 确认不可用，允许研究软件指令模拟作为备用，必须单独标明性能、
 内存和系统调用限制。定制软 ABI 重编译的阶段成果不等于该目标已完成。
 
+本轮已构建 ARM64 纯整数主机模拟器，并在新固件实机上执行标准 ABI 来宾：
+静态/动态 musl、FP/NEON、C++、Go、线程/原子/TLS/信号与 fork 测试通过；
+标准 A53 btop 包的版本命令也通过。原生对照确认为 SIGILL4。详见
+[模拟执行证据与边界](ARM64-INSTRUCTION-FALLBACK.md)。execve/execveat 子进程
+仍可能脱离模拟器，完整软件包兼容未完成；物理 FP/SIMD 能力没有改变。
+
 ## 当前主要问题
 
 1. **标准包能力缺口**：FP/SIMD 与 ABI 是根本约束；原生 Go/C++ 也不能靠修复

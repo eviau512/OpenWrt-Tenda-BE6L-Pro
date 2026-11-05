@@ -4,7 +4,8 @@ Status, 2026-11-05: release r2 passes23 shell/host groups, normal signed APK
 installation and real ARM32/ARM64 procd and heartbeat checks. One temporary
 60-second ARM32 expiry and a default300-second ARM64 expiry after wireless/NPU
 detach returned to authenticated stock management. The new matched ARM64 FIT
-includes r2 but has not been booted. No-heartbeat600-second boot grace, active-NPU
+includes r2 and passes startup/heartbeat checks. Its own expiry/reset,
+no-heartbeat600-second boot grace, active-NPU
 and hard-lock recovery remain unqualified. See the
 [actual results and scope](../../docs/FRESH-KERNEL-AND-RECOVERY.md).
 

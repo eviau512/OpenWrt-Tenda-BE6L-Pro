@@ -20,6 +20,12 @@ See the [architecture, implemented features, open problems and next milestones](
 for the current project overview. Standard Cortex-A53 binary-package compatibility
 remains a separate goal from the existing custom soft-ABI C components.
 
+The optional [integer-host ARM64 emulator](docs/ARM64-INSTRUCTION-FALLBACK.md)
+now passes selected standard-ABI FP/NEON, dynamic musl, C++ and Go tests on the
+router, plus a signed standard A53 btop package's version command. A fresh public
+source rebuild passes too. Complete child execution and normal package admission
+remain open; these are software-emulation results, not native FP support.
+
 - A dual-core AArch64 Linux kernel runs native AAPCS64-soft init/procd and
   selected C components alongside ARM32 applications through COMPAT. A complete
   native userspace and maintainable native SDK remain unfinished.
@@ -68,7 +74,8 @@ Rebooting loses the RAM system. The mixed build remains a two-SDK experiment,
 not an upstream-accepted device port or a general online kernel-upgrade system.
 Existing applications use ARM32 packages even when `uname -m` reports `aarch64`.
 Only explicitly reviewed soft-ABI packages use the private native namespace;
-ordinary Cortex-A53 AArch64 packages remain incompatible with this platform.
+ordinary Cortex-A53 AArch64 packages cannot execute natively in the current
+environment. The instruction-emulation fallback has bounded tests as described above.
 
 Test APs must be configured only after initramfs has booted, using WPA2-PSK with
 CCMP and a fresh cryptographically strong random passphrase. Do not embed or
