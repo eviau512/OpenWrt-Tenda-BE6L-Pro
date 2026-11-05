@@ -343,5 +343,15 @@
     "image_built": false,
     "image_bound_qualified": false,
     "target_executed": false
+  },
+  "root_archive_tamper_controls": {
+    "actual_entrypoint_tamper_controls_passed": [
+      "binary-byte",
+      "directory-mode"
+    ],
+    "refused_before_archive_creation": true,
+    "accepted_composition_unchanged": true,
+    "image_built": false,
+    "target_executed": false
   }
 }

@@ -51,6 +51,8 @@ timeout must not release an SMAC/FOE owner still visible to hardware. A controll
 ACK alone does not establish packet drainage. Keep routed admission closed until
 the native action, withdrawal/lifetime and controlled traffic tests are complete.
 Coherent mailbox support already present in the baseline is not a new port.
+The [source audit](XWRT-NPU-PORT.md) identifies the exact unbind, slot, destroy
+and notifier release paths that must be changed together.
 
 ## Reproduction inputs and order
 
@@ -85,6 +87,9 @@ new name. Required arguments are listed by each helper's `--help`.
    regular/link payload and decompression, and preserves the inputs. The native
    archive is 130,340,864 bytes, compressed to 50,367,937 bytes. Its measured
    75,808-byte compressed growth is not an Image-bound or new-driver acceptance.
+   Actual entry-point negative controls also reject a changed binary byte and
+   changed directory mode before creating archive work; the accepted root is
+   preserved.
 
 These helpers do not automatically apply their output to either SDK. Full image
 integration must preserve all ten MTD/BMT guards, normal gzip initramfs bounds,
