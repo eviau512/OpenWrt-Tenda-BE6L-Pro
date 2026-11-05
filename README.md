@@ -11,7 +11,7 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 The [2026-11-05 fresh kernel and live checkpoint](docs/FRESH-KERNEL-AND-RECOVERY.md)
 includes a matching219-package ARM64 FIT, real isolated native netifd execution
-with five VM modules, and one actual ARM32 heartbeat-expiry return to stock.
+with five VM modules, plus ARM32 and quiesced-NPU ARM64 heartbeat-expiry returns to stock.
 The new FIT has not been booted; default-service startup and changed-driver
 acceptance remain open. These results do not qualify routed NPU offload.
 

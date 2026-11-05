@@ -93,10 +93,17 @@ shutdown marker preceded ARM64 entry on the next handoff. Native ARM64 PID1,
 two NPU workers, ten MTD guards and unchanged critical partition digests passed
 again. Recovery r2 also runs and accepts heartbeats in that ARM64 RAM system.
 
-The60-second ARM32 cycle is one real recovery result. Default600/300 real expiry,
-ARM64 expiry, hard-lock recovery, forced fallback and repeated reset acceptance
-remain open. A user daemon cannot execute during a full kernel lock. Historical
-U-Boot NAND warm-reset stalls remain relevant even after this successful cycle.
+A subsequent ARM64 test retained the default600/300 policy. Wireless was first
+taken down and its NPU detached, with idle engines and zero faults verified.
+The final heartbeat at uptime1435 expired at1736, within the five-second sampling
+interval of the300-second timeout. UART observed U-Boot; automatic DHCP, HTTP200,
+authenticated stock `.67` and Telnet root preflight passed again.
+
+These are two scoped recovery results. The ARM64 default-timeout result has an
+explicitly quiesced-NPU precondition. Initial600-second grace without any heartbeat,
+active wireless/NPU recovery, hard locks, forced fallback and broader repeated
+reset coverage remain open. A user daemon cannot execute during a full kernel
+lock. Historical U-Boot NAND warm-reset stalls remain relevant.
 
 The stock bootstrap uses a new private tmpfs, an unchanged protected ARM32
 kernel and a separately admitted external initramfs containing a normal signed

@@ -8,10 +8,10 @@ complete matching ARM64 FIT with the initial X-Wrt SRAM port,219 packages and
 262,144 bytes of effective Image headroom. It has not been booted. Native
 soft64 netifd passes its15-ELF audit and a real isolated ARM64 test with all five
 VM modules mapped and ubus network objects registered. Recovery r2 fixes the
-target's missing stat dependency; one60-second ARM32 expiry returned to
-authenticated stock management. Default ARM32 startup and ARM64 service/
-heartbeat checks pass. Complete new-image startup, ARM64/default-policy expiry,
-resource-lifetime changes and routed NAT remain open. The earlier
+target's missing stat dependency. A60-second ARM32 expiry and a default300-second
+ARM64 expiry after wireless/NPU detach returned to authenticated stock management.
+Default service and heartbeat checks pass. Complete new-image startup, active-NPU
+recovery, resource-lifetime changes and routed NAT remain open. The earlier
 [component checkpoint](CONTINUATION-20261105.md) is retained as history.
 
 The matched N1 v3 image fd30e389 passed its actual loader fixture, checked

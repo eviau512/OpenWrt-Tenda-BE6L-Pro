@@ -100,9 +100,17 @@
     "independent_post_reset_authenticated_version": "V16.03.60.67_cn",
     "post_reset_telnet_root_preflight_passed": true,
     "stock_boot_id_changed": true,
-    "default_600_300_real_expiry_tested": false,
+    "default_600_300_real_expiry_tested": true,
     "hardlock_recovery_qualified": false,
-    "aarch64_real_expiry_tested": false
+    "aarch64_real_expiry_tested": true,
+    "aarch64_last_heartbeat_uptime": 1435,
+    "aarch64_expiry_uptime": 1736,
+    "aarch64_disconnect_timeout_seconds": 300,
+    "aarch64_authenticated_stock_return": true,
+    "aarch64_npu_explicitly_detached_before_test": true,
+    "default_boot_grace_without_any_heartbeat_tested": false,
+    "active_wireless_npu_recovery_qualified": false,
+    "forced_fallback_observed": false
   },
   "baseline_aarch64": {
     "aarch64": true,
