@@ -1,7 +1,7 @@
 # Fresh kernel and live recovery, 2026-11-05
 
-The new private ARM64 FIT is built and statically admitted. Its complete boot
-has **not** been tested. Live tests below ran on the protected ARM32 handoff
+Subsequent result: [the new candidate passed initial RAM startup](CANDIDATE-2F82-TARGET.md).
+This earlier checkpoint records its construction. Live tests below ran on the protected ARM32 handoff
 and the previously qualified `fd30e389` ARM64 baseline. The
 [selected receipt](evidence/fresh-kernel-live-20261105.json) keeps those scopes
 separate. Images, SSH private identities and raw captures are not published.

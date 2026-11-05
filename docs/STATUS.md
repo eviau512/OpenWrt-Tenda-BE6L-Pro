@@ -3,9 +3,15 @@
 Updated 2026-11-05. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
+The new `2f82bb55` candidate now [passes actual RAM startup](CANDIDATE-2F82-TARGET.md),
+including independent new-kernel build ID,219 exact packages,84 exact module
+files,61 native user ELF files, default native processes/VM modules, NPU workers
+and flash guards. Its own expiry/reset, packet forwarding and resource lifetime
+acceptance remain open. The older checkpoints below retain their original scope.
+
 The [fresh kernel and live checkpoint](FRESH-KERNEL-AND-RECOVERY.md) adds a
 complete matching ARM64 FIT with the initial X-Wrt SRAM port,219 packages and
-262,144 bytes of effective Image headroom. It has not been booted. Native
+262,144 bytes of effective Image headroom. It was subsequently booted as above. Native
 soft64 netifd passes its15-ELF audit and a real isolated ARM64 test with all five
 VM modules mapped and ubus network objects registered. Recovery r2 fixes the
 target's missing stat dependency. A60-second ARM32 expiry and a default300-second

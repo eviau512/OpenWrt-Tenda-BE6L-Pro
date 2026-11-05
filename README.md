@@ -9,11 +9,12 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 ## Current status
 
-The [2026-11-05 fresh kernel and live checkpoint](docs/FRESH-KERNEL-AND-RECOVERY.md)
-includes a matching219-package ARM64 FIT, real isolated native netifd execution
-with five VM modules, plus ARM32 and quiesced-NPU ARM64 heartbeat-expiry returns to stock.
-The new FIT has not been booted; default-service startup and changed-driver
-acceptance remain open. These results do not qualify routed NPU offload.
+The [new ARM64 candidate startup](docs/CANDIDATE-2F82-TARGET.md) passes actual
+RAM-boot checks: new kernel build ID,219 packages,84 module files,61 native
+regular ELF files, default native netifd and five VM modules, Chinese Argon,
+NPU workers and MTD protection. New-kernel packet forwarding/lifetime and
+recovery acceptance remain open. Earlier [build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
+remain separately scoped. These results do not qualify routed NPU offload.
 
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
 for the current project overview. Standard Cortex-A53 binary-package compatibility
