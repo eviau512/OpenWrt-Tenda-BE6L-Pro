@@ -519,5 +519,11 @@
     "hardlock_recovery_qualified": false
   },
   "recovery_qualification_scope": "default300s after explicit wireless/NPU detach only",
-  "new_candidate_scoped_default_recovery_qualified": true
+  "new_candidate_scoped_default_recovery_qualified": true,
+  "negative_corner_probe_build": {
+    "source_sha256": "dd06f2cadd4253e4c87b0af1967ce5aeaf5772f816c195c2ddd7efb42368e9f9",
+    "elf_sha256": "c1135dbd00996787a600a52cc5008eef7c2647a05c297abe953c3f4aa80698ac",
+    "standard_a53_abi": true,
+    "expected_negative_cases": 3
+  }
 }

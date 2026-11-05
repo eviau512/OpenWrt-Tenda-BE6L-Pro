@@ -24,9 +24,12 @@ def replace_once(text, before, after):
     return text.replace(before, after, 1)
 
 
-def prepare(verified_source, work, binfmt_defaults=False, binfmt_fd_paths=False):
+def prepare(verified_source, work, binfmt_defaults=False, binfmt_fd_paths=False,
+            binfmt_proc_stat=False):
     if binfmt_fd_paths and not binfmt_defaults:
         raise ValueError('FD dispatch changes require the explicit binfmt defaults profile')
+    if binfmt_proc_stat and not binfmt_fd_paths:
+        raise ValueError('Following proc-stat changes require the explicit FD-path profile')
     if work.exists():
         raise ValueError('Use a fresh experiment directory')
     archive = verified_source/'source.tar.xz'
@@ -215,6 +218,42 @@ static int be6l_binfmt_execveat(int dirfd, const char *filename,
 #endif
         : safe_execve(exe, argp, envp);''')
         change('linux-user/syscall.c', fd_exec)
+    if binfmt_proc_stat:
+        def following_proc_stat(s):
+            helper = '''#ifdef BE6L_INTEGER_HOST
+/* Match the existing guest open/readlink view for following stat operations.
+ * Keep NOFOLLOW and NULL/empty-path behavior intact. This named-file fix does
+ * not retain a deleted executable inode and does not qualify deleted proc exe.
+ */
+static const char *be6l_following_proc_stat_path(const char *filename, int flags)
+{
+    if (filename && !(flags & AT_SYMLINK_NOFOLLOW) &&
+        is_proc_myself(filename, "exe")) {
+        return real_exec_path;
+    }
+    return filename;
+}
+#endif
+
+'''
+            s = replace_once(s, 'static int do_execv(CPUArchState *cpu_env, int dirfd,\n',
+                             helper+'static int do_execv(CPUArchState *cpu_env, int dirfd,\n')
+            s = replace_once(s,
+                '        ret = get_errno(fstatat(arg1, path(p), &st, arg4));',
+                '''#ifdef BE6L_INTEGER_HOST
+        ret = get_errno(fstatat(arg1, path(be6l_following_proc_stat_path(p, arg4)), &st, arg4));
+#else
+        ret = get_errno(fstatat(arg1, path(p), &st, arg4));
+#endif''')
+            return replace_once(s,
+                '                ret = get_errno(sys_statx(dirfd, p, flags, mask, &host_stx));',
+                '''#ifdef BE6L_INTEGER_HOST
+                ret = get_errno(sys_statx(dirfd, be6l_following_proc_stat_path(p, flags),
+                                         flags, mask, &host_stx));
+#else
+                ret = get_errno(sys_statx(dirfd, p, flags, mask, &host_stx));
+#endif''')
+        change('linux-user/syscall.c', following_proc_stat)
     patch = ''.join(patches)
     (work/'qemu-integer-host.patch').write_text(patch)
     result = dict(version=VERSION, release_archive_sha256=ARCHIVE_SHA,
@@ -226,6 +265,8 @@ static int be6l_binfmt_execveat(int dirfd, const char *filename,
         default_guest_cpu='cortex-a53' if binfmt_defaults else 'upstream ELF-selected',
         default_tb_cache_mib=4 if binfmt_defaults else 0,
         binfmt_fd_paths=binfmt_fd_paths,
+        binfmt_following_proc_stat=binfmt_proc_stat,
+        deleted_executable_inode_retained=False,
         cloexec_retry_scope='readable standard A53 ELF only; scripts excluded' if binfmt_fd_paths else None,
         source_prepared=True, emulator_built=False, generated_code_audited=False,
         target_executed=False, standard_a53_package_compatibility_qualified=False,
@@ -244,5 +285,7 @@ if __name__ == '__main__':
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--binfmt-defaults', action='store_true')
     parser.add_argument('--binfmt-fd-paths', action='store_true')
+    parser.add_argument('--binfmt-proc-stat', action='store_true')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.verified_source, args.work, args.binfmt_defaults, args.binfmt_fd_paths), indent=2))
+    print(json.dumps(prepare(args.verified_source, args.work, args.binfmt_defaults,
+                             args.binfmt_fd_paths, args.binfmt_proc_stat), indent=2))

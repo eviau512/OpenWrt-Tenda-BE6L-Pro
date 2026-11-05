@@ -115,6 +115,16 @@ credential-from-guest flag`C`; dropped credentials passing does not qualify setu
 Selected FP/C++/Go tests and this execution matrix remain bounded evidence.
 Native FP/SIMD remains unavailable; these results use software emulation.
 
+A later opt-in `--binfmt-proc-stat` profile now builds and passes static integer
+ELF admission as signed emulator package11.1.3-r3. It redirects following
+newfstatat/statx proc-exe queries to the same named guest ELF used by open/readlink;
+NOFOLLOW/NULL behavior is retained. It does not retain a deleted inode. The
+new four-case probe includes statx, while the actual failure evidence above used
+the earlier three-case probe. [Offline component evidence](evidence/binfmt-proc-stat-offline-20261106.json)
+is deliberately separate: this package/probe has not run on the router and does
+not close any of the three target failures. The device was already returned to
+authenticated stock before this build.
+
 The build/staging tools never install boot-time rules. Target activation is an
 explicit, bounded RAM experiment with strict SSH trust and boot-qualified
 heartbeats. Reboot discards it; no flash or host network changes are involved.

@@ -40,9 +40,13 @@ def main():
                         help='Use gated cortex-a53/4MiB TCG defaults for option-free binfmt dispatch')
     parser.add_argument('--binfmt-fd-paths', action='store_true',
                         help='Enable the narrow integer-host FD/proc/CLOEXEC dispatch fixes')
+    parser.add_argument('--binfmt-proc-stat', action='store_true',
+                        help='Redirect following guest proc-exe stat/statx to its named ELF; deleted inode retention remains open')
     a = parser.parse_args()
     if a.binfmt_fd_paths and not a.binfmt_defaults:
         parser.error('--binfmt-fd-paths requires --binfmt-defaults')
+    if a.binfmt_proc_stat and not a.binfmt_fd_paths:
+        parser.error('--binfmt-proc-stat requires --binfmt-fd-paths')
     w = a.work.resolve()
     if w.parent != Path('/root') or not w.name.startswith('be6l-qemu-integer-') or w.exists():
         parser.error('Use a fresh /root/be6l-qemu-integer-* work directory')
@@ -150,7 +154,8 @@ def main():
         '-Dnls=disabled', '-Dman-pages=disabled', '-Ddocumentation=false', '-Dlibelf=disabled', '-Dsystemtap=disabled', '-Ddtrace=disabled'])
     run('glib-build', [bin_dir/'ninja', '-C', w/'glib-build', '-j4'])
     run('glib-install', [bin_dir/'meson', 'install', '-C', w/'glib-build', '--no-rebuild'])
-    source_info = prepare(a.verified_qemu, w/'qemu-source', a.binfmt_defaults, a.binfmt_fd_paths)
+    source_info = prepare(a.verified_qemu, w/'qemu-source', a.binfmt_defaults,
+                          a.binfmt_fd_paths, a.binfmt_proc_stat)
     source = w/'qemu-source/qemu-11.1.3'
     build = w/'qemu-build'
     build.mkdir()

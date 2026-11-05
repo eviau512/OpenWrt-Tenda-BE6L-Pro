@@ -68,7 +68,25 @@ static int proc_checks(int deleted)
     close(file);
     printf("PROC_STAT deleted=%d guest_size=%lld proc_size=%lld\n",
            deleted, (long long)expected.st_size, (long long)actual.st_size);
+    fflush(stdout);
     return expected.st_size == actual.st_size && expected.st_ino == actual.st_ino ? 0 : 83;
+}
+
+static int proc_statx_checks(void)
+{
+    struct stat expected;
+    struct statx actual;
+    int fd = open("/proc/self/exe", O_RDONLY);
+    if (fd < 0 || fstat(fd, &expected)) return 89;
+    int result = syscall(SYS_statx, AT_FDCWD, "/proc/self/exe", 0,
+                         STATX_INO|STATX_SIZE, &actual);
+    close(fd);
+    if (result) return 90;
+    printf("PROC_STATX guest_size=%lld proc_size=%llu\n",
+           (long long)expected.st_size, (unsigned long long)actual.stx_size);
+    fflush(stdout);
+    return (unsigned long long)expected.st_size == actual.stx_size &&
+           (unsigned long long)expected.st_ino == actual.stx_ino ? 0 : 91;
 }
 
 int main(int argc, char **argv)
@@ -76,15 +94,17 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--noop")) return 0;
     if (argc == 2 && !strcmp(argv[1], "--deleted")) return proc_checks(1);
     if (argc != 1) return 84;
-    const char *names[] = {"missing-elf-interpreter-errno", "linked-proc-exe-stat", "deleted-proc-exe-open"};
+    const char *names[] = {"missing-elf-interpreter-errno", "linked-proc-exe-stat", "deleted-proc-exe-open",
+        "linked-proc-exe-statx"};
     int failed = 0;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         pid_t pid = fork();
         int status;
         if (pid < 0) return 85;
         if (!pid) {
             if (i == 0) bad_interpreter();
             if (i == 1) _exit(proc_checks(0));
+            if (i == 3) _exit(proc_statx_checks());
             if (i == 2) {
                 const char *name = "/tmp/be6l-exec-corners-deleted";
                 copy_self(name);
@@ -101,6 +121,6 @@ int main(int argc, char **argv)
         fflush(stdout);
         failed += !ok;
     }
-    printf("EXEC_CORNERS cases=3 failures=%d\n", failed);
+    printf("EXEC_CORNERS cases=4 failures=%d\n", failed);
     return failed ? 1 : 0;
 }

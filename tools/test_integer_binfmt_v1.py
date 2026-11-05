@@ -90,6 +90,7 @@ def main():
     cleanup_ok = False
     cases = {}
     corner_cases = {}
+    expected_corners = corner_receipt.get('expected_negative_cases', 3) if a.corner_probe else None
     controls_ok = False
     matrix_exit = None
     error = None
@@ -150,7 +151,9 @@ def main():
         all_exec_cases_passed=matrix_exit == 0 and len(cases) == a.expected_cases and all(item['passed'] for item in cases.values()),
         standard_package_child_chain_passed=controls_ok, interpreter_credentials_from_guest=False,
         negative_exec_corner_cases=corner_cases,
-        all_negative_corners_passed=(len(corner_cases) == 3 and all(item['passed'] for item in corner_cases.values())) if a.corner_probe else None,
+        expected_negative_case_count=expected_corners,
+        source_corner_probe_receipt_sha256=sha(a.corner_probe/'result.json') if a.corner_probe else None,
+        all_negative_corners_passed=(len(corner_cases) == expected_corners and all(item['passed'] for item in corner_cases.values())) if a.corner_probe else None,
         rule_unregistered_and_mount_removed=cleanup_ok, host_payloads_unchanged=True,
         error=error, target_executed=True, flash_operations=False,
         standard_a53_package_compatibility_qualified=False)
