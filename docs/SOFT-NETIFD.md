@@ -1,5 +1,39 @@
 # Native soft-ABI netifd: real Linux backend, isolated acceptance
 
+## 2026-11-05 component integration
+
+The new opt-in source preparation keeps an embedded native ucode VM from loading
+ARM32 binary modules. Five native modules use the private soft64 directory;
+shared ucode text scripts remain in their normal locations. The default upstream
+build is unchanged. Preparation rejects any source other than the pinned
+netifd2026.09.11~06d06c86 bytes.
+
+`prepare_native_netifd_v3.py` and `build_native_netifd_v3.py` build the real Linux
+backend with Clang21's AAPCS64-soft ABI. Fifteen ELFs pass static interpreter,
+per-consumer strong-symbol/dependency and no-FP/SIMD checks. This result does not
+qualify every dynamic script or child process.
+
+`package_native_netifd_v3.py` then replaces netifd through a normal signed APK
+transaction in a fresh root, retaining its scripts and original dependencies.
+Four existing native VM modules retain their original owner and bytes; only
+libnl-tiny and nl80211 are newly installed runtime ELF files. The companion
+package pins the existing soft runtime version. The ordinary Cortex-A53 package
+architecture is rejected by a negative solver control.
+
+The latest diagnostic root changes from 216 to 218 installed packages, adding
+the private dependency package and enabled RAM recovery guard while upgrading
+netifd. Every changed payload has a checked package owner. Simulations and the
+original root remain unchanged. Network repositories and target package scripts
+are disabled during this offline transaction; rc.common only enables recovery.
+
+The root now selects the native netifd binary, but it has not booted. Matching
+kernel/modules, CPIO/Image bounds, loader admission and actual default-service
+DHCP/PPPoE/Wi-Fi/child execution remain open. The older private-namespace result
+below belongs to its exact older binary. See the
+[continuation and reproduction notes](CONTINUATION-20261105.md).
+
+## Earlier isolated result
+
 2026-10-26. Cached libnl-tiny2025.12.02~40493a65 and
 netifd2026.09.11~06d06c86 now build with the corrected AAPCS64-soft C closure.
 `build_a64_soft_netifd.py` clones only the required source components and an
@@ -44,5 +78,6 @@ no operator account/password file was copied into the chroot.
 This qualifies the exercised native static-IP/netlink/ubus lifecycle in a
 private namespace. It does not qualify DHCP, PPPoE, Wi-Fi scripts, the complete
 native networking service, routed NPU offload or cross-zone hardware isolation.
-The running firmware still uses its existing ARM32 system netifd. Normal APK
-integration and a separately qualified image are future work.
+That qualified firmware used its existing ARM32 system netifd. The component
+transaction above advances offline integration; a separately qualified image
+and current device state are still unestablished.

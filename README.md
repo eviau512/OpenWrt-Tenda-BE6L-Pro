@@ -9,6 +9,11 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 ## Current status
 
+The [2026-11-05 continuation](docs/CONTINUATION-20261105.md) includes the initial
+X-Wrt SRAM-only policy port and signed native soft64 netifd/recovery component
+integration. These are offline results awaiting a matching image and target
+acceptance; they do not qualify routed NPU offload.
+
 - A dual-core AArch64 Linux kernel runs native AAPCS64-soft init/procd and
   selected C components alongside ARM32 applications through COMPAT. A complete
   native userspace and maintainable native SDK remain unfinished.

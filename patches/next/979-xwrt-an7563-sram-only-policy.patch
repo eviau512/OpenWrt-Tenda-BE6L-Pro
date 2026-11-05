@@ -1,0 +1,139 @@
+From: BE6L Pro project contributors
+Subject: [PATCH] net: airoha: port X-Wrt AN7563 SRAM-only policy
+
+Based on X-Wrt 5ae8e6912e64682fcad54593467e84c80f170656 941-06, retaining its authorship
+and the existing GPL-2.0-only Airoha driver license. SRAM mirrors
+are ordinary CPU memory; no DRAM table address is published.
+This first port does not enable routed admission.
+
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -10,6 +10,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+ #include <linux/rhashtable.h>
++#include <linux/slab.h>
+ #include <linux/unaligned.h>
+ #include <net/dst_metadata.h>
+ #include <net/ipv6.h>
+@@ -80,7 +81,9 @@
+ {
+ 	u32 sram_num_entries = airoha_ppe_get_total_sram_num_entries(ppe);
+ 
+-	return sram_num_entries + PPE_DRAM_NUM_ENTRIES;
++	/* X-Wrt AN7563 policy: hardware uses SRAM; no DRAM FOE reservation. */
++	return sram_num_entries + (airoha_is_7563(ppe->eth) ? 0 :
++				  PPE_DRAM_NUM_ENTRIES);
+ }
+ 
+ bool airoha_ppe_is_enabled(struct airoha_eth *eth, int index)
+@@ -149,11 +152,13 @@
+ 	u32 sram_ppe_num_data_entries = airoha_ppe_get_sram_num_entries(ppe);
+ 	u32 sram_num_entries, sram_tb_size, dram_num_entries;
+ 	struct airoha_eth *eth = ppe->eth;
++	bool sram_only = airoha_is_7563(eth);
+ 	int i, sram_num_stats_entries;
+ 
+ 	sram_num_entries = airoha_ppe_get_total_sram_num_entries(ppe);
+ 	sram_tb_size = sram_num_entries * sizeof(struct airoha_foe_entry);
+-	dram_num_entries = PPE_RAM_NUM_ENTRIES_SHIFT(PPE_DRAM_NUM_ENTRIES);
++	dram_num_entries = sram_only ? 0 :
++		PPE_RAM_NUM_ENTRIES_SHIFT(PPE_DRAM_NUM_ENTRIES);
+ 
+ 	sram_num_stats_entries = airoha_ppe_get_num_stats_entries(ppe);
+ 	if (sram_num_stats_entries > 0)
+@@ -164,7 +169,7 @@
+ 
+ 	for (i = 0; i < eth->soc->num_ppe; i++) {
+ 		airoha_fe_wr(eth, REG_PPE_TB_BASE(i),
+-			     ppe->foe_dma + sram_tb_size);
++			     sram_only ? 0 : ppe->foe_dma + sram_tb_size);
+ 
+ 		airoha_fe_rmw(eth, REG_PPE_BND_AGE0(i),
+ 			      PPE_BIND_AGE0_DELTA_NON_L4 |
+@@ -188,7 +193,12 @@
+ 			      FIELD_PREP(PPE_SRAM_TABLE_EN_MASK, 1) |
+ 			      FIELD_PREP(PPE_SRAM_HASH1_EN_MASK, 1) |
+ 			      FIELD_PREP(PPE_SRAM_HASH1_MODE_MASK, 1) |
+-			      FIELD_PREP(PPE_DRAM_HASH1_MODE_MASK, 3));
++			      FIELD_PREP(PPE_DRAM_HASH1_MODE_MASK,
++					 sram_only ? 0 : 3));
++		if (sram_only)
++			airoha_fe_clear(eth, REG_PPE_TB_HASH_CFG(i),
++				PPE_DRAM_TABLE_EN_MASK | PPE_DRAM_HASH0_MODE_MASK |
++				PPE_DRAM_HASH1_MODE_MASK | PPE_DRAM_HASH1_EN_MASK);
+ 
+ 		airoha_fe_rmw(eth, REG_PPE_TB_CFG(i),
+ 			      PPE_TB_CFG_SEARCH_MISS_MASK |
+@@ -845,6 +855,9 @@
+ 
+ 	lockdep_assert_held(&ppe_lock);
+ 
++	if (hash >= airoha_ppe_get_total_num_entries(ppe))
++		return NULL;
++
+ 	if (hash < sram_num_entries) {
+ 		u32 *hwe = ppe->foe + hash * sizeof(struct airoha_foe_entry);
+ 		bool ppe2 = hash >= airoha_ppe_get_sram_num_entries(ppe);
+@@ -902,11 +915,15 @@
+ 
+ static int airoha_ppe_foe_commit_sram_entry(struct airoha_ppe *ppe, u32 hash)
+ {
+-	struct airoha_foe_entry *hwe = ppe->foe + hash * sizeof(*hwe);
++	struct airoha_foe_entry *hwe;
+ 	bool ppe2 = hash >= airoha_ppe_get_sram_num_entries(ppe);
+-	u32 *ptr = (u32 *)hwe, val;
++	u32 *ptr, val;
+ 	int i;
+ 
++	if (hash >= airoha_ppe_get_total_sram_num_entries(ppe))
++		return -EINVAL;
++	hwe = ppe->foe + hash * sizeof(*hwe);
++	ptr = (u32 *)hwe;
+ 	for (i = 0; i < sizeof(*hwe) / sizeof(*ptr); i++)
+ 		airoha_fe_wr(ppe->eth, REG_PPE_RAM_ENTRY(ppe2, i), ptr[i]);
+ 
+@@ -926,12 +943,15 @@
+ 				       u32 hash, bool rx_wlan)
+ {
+ 	u32 sram_num_entries = airoha_ppe_get_total_sram_num_entries(ppe);
+-	struct airoha_foe_entry *hwe = ppe->foe + hash * sizeof(*hwe);
++	struct airoha_foe_entry *hwe;
+ 	u32 ts = airoha_ppe_get_timestamp(ppe);
+ 	struct airoha_eth *eth = ppe->eth;
+ 	struct airoha_npu *npu;
+ 	int err = 0;
+ 
++	if (hash >= airoha_ppe_get_total_num_entries(ppe))
++		return -EINVAL;
++	hwe = ppe->foe + hash * sizeof(*hwe);
+ 	memcpy(&hwe->d, &e->d, sizeof(*hwe) - sizeof(hwe->ib1));
+ 	wmb();
+ 
+@@ -2734,6 +2754,16 @@
+ 	airoha_fe_set(eth, REG_PPE_GLO_CFG(0), PPE_GLO_CFG_EN_MASK);
+ }
+ 
++static void *airoha_ppe_alloc_foe(struct airoha_ppe *ppe, size_t size)
++{
++	/* The SRAM mirror is CPU memory and must not become a DMA table. */
++	if (airoha_is_7563(ppe->eth))
++		return devm_kzalloc(ppe->eth->dev, size, GFP_KERNEL);
++
++	return dmam_alloc_coherent(ppe->eth->dev, size, &ppe->foe_dma,
++				   GFP_KERNEL);
++}
++
+ int airoha_ppe_init(struct airoha_eth *eth)
+ {
+ 	int foe_size, err, ppe_num_stats_entries;
+@@ -2756,8 +2786,7 @@
+ 
+ 	ppe_num_entries = airoha_ppe_get_total_num_entries(ppe);
+ 	foe_size = ppe_num_entries * sizeof(struct airoha_foe_entry);
+-	ppe->foe = dmam_alloc_coherent(eth->dev, foe_size, &ppe->foe_dma,
+-				       GFP_KERNEL);
++	ppe->foe = airoha_ppe_alloc_foe(ppe, foe_size);
+ 	if (!ppe->foe)
+ 		return -ENOMEM;
+ 

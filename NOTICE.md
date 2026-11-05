@@ -50,6 +50,20 @@ Source revisions, selected sparse paths and feed links are recorded in
 `sources.json`. Source-built third-party programs are not claimed as original
 work of this project.
 
+## X-Wrt AN7563 reference and initial port
+
+The 2026-11-05 review pins X-Wrt to
+`5ae8e6912e64682fcad54593467e84c80f170656`. Selected source URLs and byte hashes
+are recorded in `upstream/xwrt-an7563-20261105.json`. The first source port is
+`patches/next/979-xwrt-an7563-sram-only-policy.patch`, adapted from X-WRT
+`941-06-net-airoha-use-sram-only-ppe-on-an75xx.patch`, authored by
+X-WRT <dev@x-wrt.com>. Linux driver changes and patch contexts retain their
+upstream authorship and GPL-2.0-only licensing. This repository's independent
+preparation, build and host test helpers carry their own MIT SPDX notices.
+
+X-Wrt's selected AN7563 recipe is AArch32. Its hardware driver policy is a
+reference for this ARM64 port, not a native soft64 toolchain or runtime.
+
 ## Native soft-float experiments
 
 The new diagnostics/build helpers with an MIT SPDX label are independent

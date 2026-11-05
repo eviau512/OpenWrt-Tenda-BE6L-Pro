@@ -1,0 +1,68 @@
+{
+  "repository": "https://github.com/x-wrt/x-wrt",
+  "revision": "5ae8e6912e64682fcad54593467e84c80f170656",
+  "commit_url": "https://github.com/x-wrt/x-wrt/commit/5ae8e6912e64682fcad54593467e84c80f170656",
+  "commit_time": "2026-11-04T16:45:20Z",
+  "files": {
+    "target/linux/airoha/Makefile": {
+      "sha256": "f368e1aa3c03f8641a3565f643097dc7dec612f7996c8782354c4be32e6902fe",
+      "bytes": 333,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/Makefile"
+    },
+    "target/linux/airoha/an7563/target.mk": {
+      "sha256": "0bdfaa9206d090879a0cb3f1d35fa9c6f0fc56db9370b276e61bcc695aadca66",
+      "bytes": 243,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/an7563/target.mk"
+    },
+    "target/linux/airoha/image/an7563.mk": {
+      "sha256": "6de27d37c67c548e74d845e9652bf8899aa1876478ce012d7a9fcb9f63d61bcb",
+      "bytes": 2948,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/image/an7563.mk"
+    },
+    "package/kernel/mt76/Makefile": {
+      "sha256": "31c1a2e7c3526570cd0718946eefea501e6240b62cbdbeb5916f29a1bffeab6e",
+      "bytes": 23450,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/package/kernel/mt76/Makefile"
+    },
+    "target/linux/airoha/patches-6.18/924-net-airoha-npu-use-coherent-mailbox-dma.patch": {
+      "sha256": "8b0d5139616b22c03f43ab4c336cce7747859383dc0fab0ac8208b623385eb8b",
+      "bytes": 5992,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/924-net-airoha-npu-use-coherent-mailbox-dma.patch"
+    },
+    "target/linux/airoha/patches-6.18/940-01-net-airoha-extend-ppe-flow-offload-support.patch": {
+      "sha256": "ca1cb0a10e2d7881f64934a31f7cf4fd163dae4018be027409f329e1d6ac8947",
+      "bytes": 133109,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/940-01-net-airoha-extend-ppe-flow-offload-support.patch"
+    },
+    "target/linux/airoha/patches-6.18/940-02-net-airoha-extend-npu-firmware-support.patch": {
+      "sha256": "38f400176a6606e49f40c1786f4ccd86f42dbdadb1afcf71aa0bd6361b714ccb",
+      "bytes": 57655,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/940-02-net-airoha-extend-npu-firmware-support.patch"
+    },
+    "target/linux/airoha/patches-6.18/941-02-net-airoha-add-an7563-ethernet-support.patch": {
+      "sha256": "e2f33547e407854e25a77931873098f3c3f7335d35b60645a231d78024fcecea",
+      "bytes": 32369,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/941-02-net-airoha-add-an7563-ethernet-support.patch"
+    },
+    "target/linux/airoha/patches-6.18/941-04-net-airoha-preserve-native-ppe-flow-resources.patch": {
+      "sha256": "ac98db182704963e02cfcabead73591ab07836cd2445cbf8668e13661b4e3487",
+      "bytes": 24250,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/941-04-net-airoha-preserve-native-ppe-flow-resources.patch"
+    },
+    "target/linux/airoha/patches-6.18/941-05-dt-bindings-net-airoha-describe-npu-dma-pools.patch": {
+      "sha256": "7724daab03425c2f894b85276ba3386a0ec67739e0c7e4f82d6a90980cb57ef3",
+      "bytes": 2468,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/941-05-dt-bindings-net-airoha-describe-npu-dma-pools.patch"
+    },
+    "target/linux/airoha/patches-6.18/941-06-net-airoha-use-sram-only-ppe-on-an75xx.patch": {
+      "sha256": "8e1f971616f2263d6c9d155dff54f61f9aa427e0db7f97b25a4781dfbbd4244f",
+      "bytes": 7407,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/941-06-net-airoha-use-sram-only-ppe-on-an75xx.patch"
+    },
+    "target/linux/airoha/patches-6.18/994-02-net-airoha-preserve-an758x-pon-ppe-metadata.patch": {
+      "sha256": "ecb101b5dd532fb67c2af0598cefc4e3c33ef48f4cfea53ca97ecc66570a750e",
+      "bytes": 10114,
+      "url": "https://raw.githubusercontent.com/x-wrt/x-wrt/5ae8e6912e64682fcad54593467e84c80f170656/target/linux/airoha/patches-6.18/994-02-net-airoha-preserve-an758x-pon-ppe-metadata.patch"
+    }
+  }
+}

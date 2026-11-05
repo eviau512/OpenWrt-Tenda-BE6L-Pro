@@ -1,0 +1,43 @@
+--- a/ucode.c
++++ b/ucode.c
+@@ -547,9 +547,25 @@
+ 	if (!source)
+ 		return;
+ 
++#ifdef BE6L_AAPCS_SOFT_NETIFD
++#if !defined(__aarch64__) || defined(__ARM_FP) || defined(__ARM_NEON)
++#error "BE6L native netifd requires the admitted AArch64 no-FP/SIMD build"
++#endif
++	/* The COMPAT system retains ARM32 plugins at the normal .so paths.
++	 * Text modules are ABI-neutral; binary plugins are package-owned soft64.
++	 */
++	uc_search_path_add(&config.module_search_path,
++			   "/opt/be6l-a64-soft/lib/ucode/*.so");
++	uc_search_path_add(&config.module_search_path,
++			   "/usr/share/ucode/*.uc");
++	uc_search_path_add(&config.module_search_path,
++			   "/opt/be6l-a64-soft/lib/netifd/*.so");
++	uc_search_path_add(&config.module_search_path, DEFAULT_MAIN_PATH "/*.uc");
++#else
+ 	uc_search_path_init(&config.module_search_path);
+ 	uc_search_path_add(&config.module_search_path, DEFAULT_MAIN_PATH "/*.so");
+ 	uc_search_path_add(&config.module_search_path, DEFAULT_MAIN_PATH "/*.uc");
++#endif
+ 
+ 	uc_vm_init(&vm, &config);
+ 	uc_stdlib_load(uc_vm_scope_get(&vm));
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -85,6 +85,12 @@
+ 
+ TARGET_LINK_LIBRARIES(netifd ${LIBS})
+ 
++OPTION(BE6L_AAPCS_SOFT_NETIFD "Use admitted BE6L native ucode plugins" OFF)
++IF(BE6L_AAPCS_SOFT_NETIFD)
++  TARGET_COMPILE_DEFINITIONS(netifd PRIVATE BE6L_AAPCS_SOFT_NETIFD=1)
++ENDIF()
++
++
+ INSTALL(TARGETS netifd
+ 	RUNTIME DESTINATION sbin
+ )

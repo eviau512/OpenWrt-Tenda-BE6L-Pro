@@ -1,0 +1,313 @@
+{
+  "date": "2026-11-05",
+  "scope": "offline component checks, no new complete kernel/Image or target execution",
+  "native_netifd": {
+    "abi": "AAPCS64-soft",
+    "profile_sha256": "fbe5405f873d14791e3da04f09bb3bc8fdb018f237f71d9ce1aa320b5f0f757f",
+    "source_preparation": {
+      "source_version": "2026.09.11~06d06c86",
+      "source_file_sha256": {
+        "ucode.c": "c42a0ba6d866f38d55ccadb746c14f2dc8ad51bc029f4e303bd0a34c76b03cc6",
+        "CMakeLists.txt": "27f6fc922cd852c5f3118471589108ce63c20bab949e4fc5483f4b05c33592e1"
+      },
+      "modified_file_sha256": {
+        "ucode.c": "61f54e595baf3fc6cde512f128e9cee995f48ab18bcb494679191168b4d69a70",
+        "CMakeLists.txt": "c3c4a9b1a9a2c01c8e2a3c477a7b6037b2a3c6d05c06f8b7d88b25c635dbc01c"
+      },
+      "patch_sha256": "5605e13640125de45fdbeae3206ac5cb4c7d8a92be4810b81481a71e4f211a65",
+      "default_option_enabled": false,
+      "native_binary_modules_private": true,
+      "text_module_paths_preserved": true,
+      "compiler_option": "-DBE6L_AAPCS_SOFT_NETIFD=ON",
+      "required_static_vm_modules": [
+        "fs",
+        "ubus",
+        "uloop",
+        "uci",
+        "nl80211"
+      ],
+      "package_built": false,
+      "sdk_modified": false,
+      "target_executed": false,
+      "complete_execution_closure_qualified": false
+    },
+    "compiler_sha256": "412bbe8c60571a1eb06f48fde89635033621caeb01a9b4ee76d46711bae8e932",
+    "files": {
+      "module:nl80211": {
+        "sha256": "f9b1c879c06f00e86e59159e1a298457162b74c7c5676b87d18cbcc57ad48777",
+        "bytes": 142752,
+        "needed": [
+          "libnl-tiny.so.1",
+          "libubox.so",
+          "libucode.so.0",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libc.so": {
+        "sha256": "aa6a4ec7724a2d54c5e108ea8d82f6f45bc9909c476af7762250f08bb2806710",
+        "bytes": 3360040,
+        "needed": [],
+        "fp_simd_register_uses": 0
+      },
+      "libucode.so.0": {
+        "sha256": "547f20e3bb7d827661f7ff38c25e2edc477b04116566cab999feecc72c821061",
+        "bytes": 308040,
+        "needed": [
+          "libjson-c.so.5",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libjson-c.so.5": {
+        "sha256": "088b392b898d49a74cefea5ac94471d9d47694c765bdef5c6b4adf61244b6a55",
+        "bytes": 88936,
+        "needed": [
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libubox.so": {
+        "sha256": "e1b19a7f78a488fed75ff70e655e67d21d9fb204abc2d0b6e3b1feace8621201",
+        "bytes": 238216,
+        "needed": [
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libnl-tiny.so.1": {
+        "sha256": "c17772f2957dd6d4d97b20ecddabd5936a89a2c1f4275e735525b0512bb087a1",
+        "bytes": 77464,
+        "needed": [
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "module:uci": {
+        "sha256": "57d04e8093fe4832eb15ce959b947a418eb0efb057738cc9131bcbd85435ca88",
+        "bytes": 72800,
+        "needed": [
+          "libuci.so",
+          "libubox.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libuci.so": {
+        "sha256": "b56297a6030e46169ac4e27ea12f474676296e739d0bc9c2e95f9d2c76bbc106",
+        "bytes": 163616,
+        "needed": [
+          "libubox.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "module:uloop": {
+        "sha256": "b11696c0e08221092b5b15884960abc49a5b882c4609fc44aaf62c6dc42f4e64",
+        "bytes": 77528,
+        "needed": [
+          "libubox.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "module:ubus": {
+        "sha256": "a21e4a99aa71f1c93609e5e2e3d662d720db94529d36b538f5d97a171b925feb",
+        "bytes": 78720,
+        "needed": [
+          "libubus.so",
+          "libblobmsg_json.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libblobmsg_json.so": {
+        "sha256": "d2ed6c4288ed0f3052de754873188030832d30012417aa0ca16341289071a69e",
+        "bytes": 87624,
+        "needed": [
+          "libubox.so",
+          "libjson-c.so.5",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libubus.so": {
+        "sha256": "2cbdc979741142b26488aebd2cb50a33b4c6aa4083874863c7de071156f18577",
+        "bytes": 159016,
+        "needed": [
+          "libubox.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "module:fs": {
+        "sha256": "73c7cb37734bd55dbf6c78d20d70db3eb97d123d63ae3b23a41940828bca5f0d",
+        "bytes": 77128,
+        "needed": [
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "netifd": {
+        "sha256": "bc5a59f992c065c56d7dae4750ae586926aac3d8b1284787a1ef652a8272cda6",
+        "bytes": 318616,
+        "needed": [
+          "libubox.so",
+          "libubus.so",
+          "libuci.so",
+          "libjson-c.so.5",
+          "libblobmsg_json.so",
+          "libudebug.so",
+          "libucode.so.0",
+          "libnl-tiny.so.1",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      },
+      "libudebug.so": {
+        "sha256": "2b9acc711dba15ac9b8b7088c849db34a7136dc0a71c1be99b07fef6d030140c",
+        "bytes": 99504,
+        "needed": [
+          "libubox.so",
+          "libubus.so",
+          "libc.so"
+        ],
+        "fp_simd_register_uses": 0
+      }
+    },
+    "native_vm_modules": [
+      "fs",
+      "ubus",
+      "uloop",
+      "uci",
+      "nl80211"
+    ],
+    "real_linux_backend": true,
+    "target_executed": false,
+    "complete_execution_closure_qualified": false,
+    "receipt_sha256": "8cef743b95552a7747841212b445ac07e212c5c71721d325dbdfff6203c44e62"
+  },
+  "signed_component_transaction": {
+    "normal_signed_component_transaction": true,
+    "wrong_ordinary_arch_refused": true,
+    "baseline_packages": 216,
+    "installed_packages": 218,
+    "netifd": {
+      "name": "netifd",
+      "version": "2026.09.11~06d06c86-r100",
+      "description": "BE6L experimental native netifd/RAM recovery",
+      "arch": "aarch64_be6l_soft_experimental",
+      "license": "GPL-2.0",
+      "depends": [
+        "be6l-soft-netifd-deps=1.0.207096242606784-r1",
+        "jshn",
+        "libc",
+        "libnl-tiny1",
+        "libubox20260721",
+        "libubus20260925",
+        "libuci20250120",
+        "libudebug",
+        "ubus",
+        "ubusd",
+        "ucode",
+        "ucode-mod-fs",
+        "ucode-mod-ubus",
+        "ucode-mod-uci",
+        "ucode-mod-uloop"
+      ]
+    },
+    "recovery_enabled_in_offline_root": true,
+    "changed_root_paths": [
+      "etc/apk/world",
+      "etc/config/be6l-recovery",
+      "etc/init.d/be6l-recovery",
+      "etc/rc.d/K01be6l-recovery",
+      "etc/rc.d/S95be6l-recovery",
+      "lib/aarch64-soft/libnl-tiny.so.1",
+      "lib/apk/db/installed",
+      "lib/apk/db/scripts.tar.gz",
+      "opt/be6l-a64-soft/lib/ucode/nl80211.so",
+      "sbin/netifd",
+      "usr/lib/be6l-recovery-guard/state.sh",
+      "usr/sbin/be6l-recovery-guard",
+      "usr/share/licenses/be6l-soft-netifd-deps/libnl-tiny/SOURCE-NOTICES.txt",
+      "usr/share/licenses/be6l-soft-netifd-deps/ucode-extra/SOURCE-NOTICES.txt"
+    ],
+    "existing_native_modules_retained": {
+      "opt/be6l-a64-soft/lib/ucode/fs.so": {
+        "sha256": "73c7cb37734bd55dbf6c78d20d70db3eb97d123d63ae3b23a41940828bca5f0d",
+        "mode": 493
+      },
+      "opt/be6l-a64-soft/lib/ucode/ubus.so": {
+        "sha256": "a21e4a99aa71f1c93609e5e2e3d662d720db94529d36b538f5d97a171b925feb",
+        "mode": 493
+      },
+      "opt/be6l-a64-soft/lib/ucode/uci.so": {
+        "sha256": "57d04e8093fe4832eb15ce959b947a418eb0efb057738cc9131bcbd85435ca88",
+        "mode": 493
+      },
+      "opt/be6l-a64-soft/lib/ucode/uloop.so": {
+        "sha256": "b11696c0e08221092b5b15884960abc49a5b882c4609fc44aaf62c6dc42f4e64",
+        "mode": 493
+      }
+    },
+    "original_root_unchanged": true,
+    "private_key_removed_on_exit": true,
+    "services_executed": false,
+    "image_built": false,
+    "target_executed": false,
+    "full_native_userspace_qualified": false,
+    "receipt_sha256": "92b2aca67a6481c7e6a6dca7a2ad9f83a6447b79ffbda9018c432e8a55d800e6"
+  },
+  "sram_host_checks": {
+    "checks": 129,
+    "actual_functions": [
+      "airoha_ppe_get_sram_num_entries",
+      "airoha_ppe_get_total_sram_num_entries",
+      "airoha_ppe_get_total_num_entries",
+      "airoha_ppe_hw_init",
+      "airoha_ppe_foe_get_entry_locked",
+      "airoha_ppe_foe_commit_sram_entry",
+      "airoha_ppe_alloc_foe"
+    ],
+    "ubsan_passed": true,
+    "source_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+    "host_types_and_registers_substituted": true,
+    "full_kernel_built": false,
+    "target_executed": false,
+    "hardware_qualified": false,
+    "receipt_sha256": "9115fd6b1d8349d8c23bf802d8006e2538ece1fc7f65a5e6838fecb797ef05e5"
+  },
+  "arm64_driver": {
+    "source_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+    "compiler_sha256": "d29d8e0d036a048f2311091d34346c0e9e83b652491e5a11649a278d599ad4ec",
+    "kernel_config_sha256": "6da2430a71f780d28e554810936df142a4427df22f8e31fe07f80e581a36e215",
+    "module_symvers_sha256": "486e9a16990359e9c16115ccb345f4432e1c174eb8f8b0f6548cf702710ca85a",
+    "actual_arm64_translation_units": [
+      "airoha_eth.o",
+      "airoha_ppe.o",
+      "diag.o",
+      "airoha_ppe_debugfs.o"
+    ],
+    "object_sha256": {
+      "airoha_eth.o": "bfb3dedb15128e57eccaa48b70c53b98befb53c4a02679e20e2a2cf809963d6b",
+      "airoha_ppe.o": "e85fa133b70196ac32ad83acd0e7ad22a359b72dc5641540190393074f9bf806",
+      "diag.o": "83cf02bdc299318f357b546d393c88b8e379449178cc9d8b078343beecf23c63",
+      "airoha_ppe_debugfs.o": "bef68e84de48b12565c6637e155bb820e8b92b3ca93adf7a60f5c73ffa3e8cd5"
+    },
+    "composite_sha256": "2229176aa183c77c7cb2f21a96dc4dc2db0be35be62a7dcbf8fc7b4df071ef7b",
+    "configured_driver_composite_linked": true,
+    "full_kernel_built": false,
+    "packages_built": false,
+    "sdk_modified": false,
+    "target_executed": false,
+    "hardware_qualified": false,
+    "receipt_sha256": "a940b4bb73b2fbff7344830bc5173a574fef771ff0c03e0eba118bc44a8454a6"
+  },
+  "source_patches": {
+    "patches/native64/001-netifd-soft64-ucode-paths.patch": "5605e13640125de45fdbeae3206ac5cb4c7d8a92be4810b81481a71e4f211a65",
+    "patches/next/979-xwrt-an7563-sram-only-policy.patch": "b11b332cc4331ca7a1b5f1ca5105e6dc27fc632f3cb5b4ac859e94621d6e93f3"
+  },
+  "routed_admission_enabled": false,
+  "binary_redistribution_admitted": false
+}

@@ -1,0 +1,114 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+. /usr/lib/be6l-recovery-guard/state.sh
+GUARD_DIR=/tmp/be6l-recovery-guard
+
+guard_log() {
+	logger -t be6l-recovery -- "$*"
+}
+
+guard_platform() {
+	[ "$(id -u)" = 0 ] || return 1
+	# Only the target board and a RAM root may arm automatic reboot.
+	tr '\000' '\n' < /proc/device-tree/compatible | grep -qx 'tenda,be6l-pro' || return 1
+	awk '$2 == "/" && ($3 == "rootfs" || $3 == "ramfs" || $3 == "tmpfs") { ok=1 }
+	     END { exit !ok }' /proc/mounts
+}
+
+guard_prepare() {
+	umask 077
+	[ ! -L "$GUARD_DIR" ] || return 1
+	mkdir -m 700 "$GUARD_DIR" 2>/dev/null || :
+	[ -d "$GUARD_DIR" ] && [ "$(stat -c '%u:%a' "$GUARD_DIR")" = '0:700' ] || return 1
+	read -r GUARD_BOOT < /proc/sys/kernel/random/boot_id || return 1
+	[ -n "$GUARD_BOOT" ]
+}
+
+guard_clock() {
+	local uptime rest
+	read -r uptime rest < /proc/uptime || return 1
+	GUARD_NOW=${uptime%%.*}
+	guard_uint "$GUARD_NOW"
+}
+
+guard_heartbeat() {
+	[ -n "$SSH_CONNECTION" ] || { echo 'Authenticated SSH heartbeat required' >&2; return 1; }
+	[ ! -d "$GUARD_DIR/fired" ] || return 1
+	guard_clock || return 1
+	local temporary="$GUARD_DIR/heartbeat.$$"
+	printf '%s %s\n' "$GUARD_BOOT" "$GUARD_NOW" > "$temporary" || return 1
+	mv -f "$temporary" "$GUARD_DIR/heartbeat" || return 1
+	printf 'BE6L_HEARTBEAT %s %s\n' "$GUARD_BOOT" "$GUARD_NOW"
+}
+
+guard_load_heartbeat() {
+	local boot stamp extra
+	[ -f "$GUARD_DIR/heartbeat" ] || return 0
+	read -r boot stamp extra < "$GUARD_DIR/heartbeat" || return 0
+	guard_accept_heartbeat "$boot" "$stamp" "$extra" "$GUARD_BOOT" "$GUARD_NOW" || return 0
+	[ "$stamp" -le "$GUARD_LAST" ] || GUARD_LAST=$stamp
+}
+
+guard_reboot() {
+	/sbin/reboot "$@"
+}
+
+guard_sleep() {
+	sleep "$1"
+}
+
+guard_fire() {
+	# The marker survives daemon respawn. There is one attempt per RAM boot.
+	mkdir "$GUARD_DIR/fired" 2>/dev/null || return 0
+	trap '' TERM INT HUP
+	printf '%s %s\n' "$GUARD_BOOT" "$GUARD_NOW" > "$GUARD_DIR/fired/reason"
+	guard_log "SSH heartbeat expired at uptime=$GUARD_NOW; reboot requested"
+	guard_reboot &
+	guard_sleep "$1"
+	guard_log 'Graceful reboot did not finish; requesting one forced reboot'
+	guard_reboot -f &
+}
+
+guard_run() {
+	[ "$#" = 4 ] && guard_config "$@" || { echo 'Invalid recovery timing' >&2; return 1; }
+	local grace=$1 timeout=$2 interval=$3 force_after=$4
+	GUARD_LAST=-1
+	guard_log "RAM recovery active: boot_grace=$grace disconnect_timeout=$timeout"
+	while :; do
+		if [ ! -d "$GUARD_DIR/fired" ] && [ ! -f "$GUARD_DIR/disarmed" ]; then
+			guard_clock || return 1
+			guard_load_heartbeat
+			guard_step "$GUARD_NOW" "$grace" "$timeout" "$GUARD_LAST" || return 1
+			if [ "$GUARD_ACTION" = reboot ]; then
+				# Re-read an atomic heartbeat immediately before committing expiry.
+				guard_clock || return 1
+				guard_load_heartbeat
+				guard_step "$GUARD_NOW" "$grace" "$timeout" "$GUARD_LAST" || return 1
+				[ "$GUARD_ACTION" != reboot ] || [ -f "$GUARD_DIR/disarmed" ] || guard_fire "$force_after"
+			fi
+		fi
+		guard_sleep "$interval"
+	done
+}
+
+main() {
+	guard_platform && guard_prepare || { echo 'Recovery requires root on BE6L Pro initramfs' >&2; return 1; }
+	local command=$1
+	shift
+	case "$command" in
+		run) guard_run "$@" ;;
+		heartbeat) [ "$#" = 0 ] && [ ! -f "$GUARD_DIR/disarmed" ] && guard_heartbeat ;;
+		arm) [ "$#" = 0 ] && guard_heartbeat && rm -f "$GUARD_DIR/disarmed" ;;
+		disarm) [ "$#" = 0 ] && : > "$GUARD_DIR/disarmed" && guard_log 'Recovery explicitly disarmed by root' ;;
+		status)
+			printf 'boot_id=%s\n' "$GUARD_BOOT"
+			if [ -d "$GUARD_DIR/fired" ]; then echo 'state=fired'
+			elif [ -f "$GUARD_DIR/disarmed" ]; then echo 'state=disarmed'
+			else echo 'state=armed'; fi
+			[ ! -f "$GUARD_DIR/heartbeat" ] || cat "$GUARD_DIR/heartbeat"
+			;;
+		*) echo 'Usage: be6l-recovery-guard {heartbeat|arm|disarm|status|run GRACE TIMEOUT POLL FORCE}' >&2; return 1 ;;
+	esac
+}
+
+main "$@"

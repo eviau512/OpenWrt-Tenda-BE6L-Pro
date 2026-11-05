@@ -1,7 +1,15 @@
 # Hardware qualification status
 
-Updated 2026-10-30. This distinguishes the last qualified image from offline
+Updated 2026-11-05. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
+
+The [2026-11-05 continuation](CONTINUATION-20261105.md) adds an initial X-Wrt
+AN7563 SRAM-only source port, 129 host checks, four real ARM64 driver units and
+a linked composite. Native soft64 netifd passes a 15-ELF static audit and normal
+signed component integration in a new 218-package root with enabled SSH recovery.
+No new complete kernel/Image, loader admission, device execution or routed NAT
+qualification follows from these offline results. The existing qualified image
+and routed rejection remain the reference boundaries.
 
 The matched N1 v3 image fd30e389 passed its actual loader fixture, checked
 watchdog handoff and startup: 84 modules, 216 packages, 58 native soft C paths,
