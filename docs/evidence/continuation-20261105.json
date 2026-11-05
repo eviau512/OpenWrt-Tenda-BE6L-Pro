@@ -255,9 +255,11 @@
     "private_key_removed_on_exit": true,
     "services_executed": false,
     "image_built": false,
+    "original_root_records_sha256": "d569792880c0d7c4f7e4890e48ef8996f997702316ca16fe5522a8dbf52b1547",
+    "installed_root_records_sha256": "37c1844517cd09841e9ed22f95040f9d70089d3cf216bc6e73ae13e2839e6d79",
     "target_executed": false,
     "full_native_userspace_qualified": false,
-    "receipt_sha256": "92b2aca67a6481c7e6a6dca7a2ad9f83a6447b79ffbda9018c432e8a55d800e6"
+    "receipt_sha256": "e311204d33000986f83566fbadc3118c04e6775c362b05706f4096d9f6c63e77"
   },
   "sram_host_checks": {
     "checks": 129,
@@ -309,5 +311,37 @@
     "patches/next/979-xwrt-an7563-sram-only-policy.patch": "b11b332cc4331ca7a1b5f1ca5105e6dc27fc632f3cb5b4ac859e94621d6e93f3"
   },
   "routed_admission_enabled": false,
-  "binary_redistribution_admitted": false
+  "binary_redistribution_admitted": false,
+  "root_archive_measurement": {
+    "roots": {
+      "baseline": {
+        "root_records_sha256": "d569792880c0d7c4f7e4890e48ef8996f997702316ca16fe5522a8dbf52b1547",
+        "cpio_bytes": 129956864,
+        "cpio_sha256": "f51a23d518e4e177d0ed83a7aa60e0c05988ebe7482debe92a92bbccd22fdbc6",
+        "gzip_bytes": 50292129,
+        "gzip_sha256": "f67a18f977de978ee78d85d53281f0ab07f12914e24d61b8c7da43aebf8113a5",
+        "regular_symlink_paths_verified": 1690
+      },
+      "native": {
+        "root_records_sha256": "37c1844517cd09841e9ed22f95040f9d70089d3cf216bc6e73ae13e2839e6d79",
+        "cpio_bytes": 130340864,
+        "cpio_sha256": "62f52331b45db4d8be7145ae65b129578895f94a4814fe94960f86bda3711356",
+        "gzip_bytes": 50367937,
+        "gzip_sha256": "acbe758a18adb80694957e83e89213abd00ac328ddbade6860b41789b34af226",
+        "regular_symlink_paths_verified": 1700
+      }
+    },
+    "gzip_growth_bytes": 75808,
+    "composition_receipt_sha256": "e311204d33000986f83566fbadc3118c04e6775c362b05706f4096d9f6c63e77",
+    "host_tools_sha256": {
+      "cpio": "f45bf02cf195cfa427313bf55a0ca92481470bdab5d31bb7e1df986e83f49082",
+      "gen_init_cpio": "45316da675e61ceda74e25b7f2f96e28e896fc6a116f61509f507b588fe133e7",
+      "gzip": "2ba6fd35db5f0b5561e56b97124a08b067464b795e8e08278367f23dc539d549"
+    },
+    "original_roots_unchanged": true,
+    "sdk_modified": false,
+    "image_built": false,
+    "image_bound_qualified": false,
+    "target_executed": false
+  }
 }

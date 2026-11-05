@@ -14,6 +14,7 @@ signing material are excluded.
 | Signed APK composition | Latest 216-package root becomes 218, owner/bytes/modes checked, wrong ordinary ARM64 architecture refused | Normal SDK integration, matching kernel/modules and Image/loader admission |
 | SSH recovery | 21 shell/host test groups on Windows sh and Ubuntu sh, signed component installed and enabled offline | Actual procd/watchdog/reset and stock return |
 | X-Wrt SRAM policy | Source port, 129 actual-function host checks with UBSan, four real ARM64 units and composite link | Complete kernel/module build and actual hardware acceptance |
+| Root archive | Normal newc/gzip, 1,700 candidate file/link payloads checked, compressed growth 75,808 bytes | Complete Image size and exact embedded CPIO admission |
 
 The netifd composer upgrades the existing package rather than overwriting files
 outside the package manager. Four native VM modules already belong to the base
@@ -78,6 +79,12 @@ new name. Required arguments are listed by each helper's `--help`.
    suite. Its clock, platform and reboot effects are substituted. Read the
    [guard instructions](../packages/be6l-recovery-guard/README.md) before using
    the authenticated heartbeat helper in any new image.
+5. `tools/measure_native_netifd_cpio_v3.py` binds its input to the composer's
+   file/link/directory-mode fingerprints. It builds both baseline and native
+   archives with standard host cpio, Linux gen_init_cpio and gzip, checks every
+   regular/link payload and decompression, and preserves the inputs. The native
+   archive is 130,340,864 bytes, compressed to 50,367,937 bytes. Its measured
+   75,808-byte compressed growth is not an Image-bound or new-driver acceptance.
 
 These helpers do not automatically apply their output to either SDK. Full image
 integration must preserve all ten MTD/BMT guards, normal gzip initramfs bounds,

@@ -31,6 +31,15 @@ def records(root):
     return result
 
 
+def root_digest(root):
+    directories = {p.relative_to(root).as_posix(): p.stat().st_mode & 0o7777
+                   for p in root.rglob("*") if not p.is_symlink() and p.is_dir()}
+    directories["."] = root.stat().st_mode & 0o7777
+    encoded = json.dumps(dict(files=records(root), directories=directories),
+                         sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def copy_path(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     if source.is_symlink():
@@ -56,6 +65,7 @@ def main():
     work.mkdir()
     original = args.base_root.resolve()
     before = records(original)
+    original_root_digest = root_digest(original)
     profile_path = args.profile / "profile-lock.json"
     if sha(profile_path) != "fbe5405f873d14791e3da04f09bb3bc8fdb018f237f71d9ce1aa320b5f0f757f":
         raise ValueError("Wrong source profile")
@@ -232,6 +242,8 @@ def main():
             raise ValueError("Component replacement metadata not admitted")
         if records(original) != before:
             raise ValueError("Original baseline changed")
+        if root_digest(original) != original_root_digest:
+            raise ValueError("Original baseline directory modes changed")
         report = dict(normal_signed_component_transaction=True, wrong_ordinary_arch_refused=True,
             baseline_packages=len(original_packages), installed_packages=len(installed),
             netifd=new_netifd, recovery_enabled_in_offline_root=True,
@@ -239,6 +251,8 @@ def main():
             existing_native_modules_retained=retained_native_payloads,
             packages={path.name: sha(path) for path in approved}, native_build_receipt_sha256=sha(args.native_build / "result.json"),
             original_root_unchanged=True, private_key_removed_on_exit=True,
+            original_root_records_sha256=original_root_digest,
+            installed_root_records_sha256=root_digest(root),
             services_executed=False, image_built=False, target_executed=False,
             full_native_userspace_qualified=False)
         (work / "result.json").write_text(json.dumps(report, indent=2) + "\n")
