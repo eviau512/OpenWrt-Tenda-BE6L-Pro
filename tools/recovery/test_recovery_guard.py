@@ -73,6 +73,25 @@ class StateTests(unittest.TestCase):
 
 
 class DaemonTests(unittest.TestCase):
+    def test_private_directory_without_stat(self):
+        source = (FILES / "be6l-recovery-guard").read_text()
+        source = source.replace('. /usr/lib/be6l-recovery-guard/state.sh',
+                                '. "' + (FILES / "state.sh").as_posix() + '"', 1)
+        source = source.rsplit('\nmain "$@"\n', 1)[0]
+        for metadata, valid in (("drwx------ 2 0 0 40 Jan 1 00:00 /tmp/test", True),
+                                ("drwxr-xr-x 2 0 0 40 Jan 1 00:00 /tmp/test", False),
+                                ("drwx------ 2 1000 0 40 Jan 1 00:00 /tmp/test", False),
+                                ("lrwxrwxrwx 1 0 0 40 Jan 1 00:00 /tmp/test", False),
+                                ("drwx------+ 2 0 0 40 Jan 1 00:00 /tmp/test", False),
+                                ("", False)):
+            result = shell(source + '''
+GUARD_DIR=/tmp/test
+METADATA=$1
+ls() { printf '%s\\n' "$METADATA"; }
+guard_private_directory
+''', metadata)
+            self.assertEqual(result.returncode == 0, valid, result.stderr)
+
     def invoke(self, scenario):
         with tempfile.TemporaryDirectory(prefix="be6l-guard-") as folder:
             root = Path(folder)
@@ -164,6 +183,14 @@ printf '%s' "$GUARD_LAST" > "$GUARD_DIR/observed"
 
 
 class HostTests(unittest.TestCase):
+    def test_explicit_key_keeps_strict_host_check(self):
+        args = SimpleNamespace(ssh="ssh", host="192.0.2.1", port=22, known_hosts="known",
+                               identity_file="private-key")
+        actual = heartbeat.command(args, "heartbeat")
+        self.assertIn("StrictHostKeyChecking=yes", actual)
+        self.assertIn("IdentitiesOnly=yes", actual)
+        self.assertEqual(actual[actual.index("-i") + 1], "private-key")
+
     def test_strict_ssh_command(self):
         args = SimpleNamespace(ssh="ssh", host="192.0.2.1", port=22, known_hosts=None)
         args_list = heartbeat.command(args, "heartbeat")

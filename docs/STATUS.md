@@ -3,13 +3,16 @@
 Updated 2026-11-05. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
-The [2026-11-05 continuation](CONTINUATION-20261105.md) adds an initial X-Wrt
-AN7563 SRAM-only source port, 129 host checks, four real ARM64 driver units and
-a linked composite. Native soft64 netifd passes a 15-ELF static audit and normal
-signed component integration in a new 218-package root with enabled SSH recovery.
-No new complete kernel/Image, loader admission, device execution or routed NAT
-qualification follows from these offline results. The existing qualified image
-and routed rejection remain the reference boundaries.
+The [fresh kernel and live checkpoint](FRESH-KERNEL-AND-RECOVERY.md) adds a
+complete matching ARM64 FIT with the initial X-Wrt SRAM port,219 packages and
+262,144 bytes of effective Image headroom. It has not been booted. Native
+soft64 netifd passes its15-ELF audit and a real isolated ARM64 test with all five
+VM modules mapped and ubus network objects registered. Recovery r2 fixes the
+target's missing stat dependency; one60-second ARM32 expiry returned to
+authenticated stock management. Default ARM32 startup and ARM64 service/
+heartbeat checks pass. Complete new-image startup, ARM64/default-policy expiry,
+resource-lifetime changes and routed NAT remain open. The earlier
+[component checkpoint](CONTINUATION-20261105.md) is retained as history.
 
 The matched N1 v3 image fd30e389 passed its actual loader fixture, checked
 watchdog handoff and startup: 84 modules, 216 packages, 58 native soft C paths,

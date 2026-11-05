@@ -5,10 +5,12 @@ import struct
 
 def verify(kernel, image, cpio):
     obj = (kernel / 'usr/initramfs_data.o').read_bytes()
-    assert obj[:6] == b'\x7fELF\x02\x01'
-    offset = struct.unpack_from('<Q', obj, 40)[0]
-    size, count, names_index = struct.unpack_from('<HHH', obj, 58)
-    sections = [struct.unpack_from('<IIQQQQIIQQ', obj, offset + i * size) for i in range(count)]
+    assert obj[:4] == b'\x7fELF' and obj[4] in (1, 2) and obj[5] == 1
+    is64 = obj[4] == 2
+    offset = struct.unpack_from('<Q' if is64 else '<I', obj, 40 if is64 else 32)[0]
+    size, count, names_index = struct.unpack_from('<HHH', obj, 58 if is64 else 46)
+    sections = [struct.unpack_from('<IIQQQQIIQQ' if is64 else '<IIIIIIIIII',
+                                  obj, offset + i * size) for i in range(count)]
     names = obj[sections[names_index][4]:sections[names_index][4] + sections[names_index][5]]
     selected = [s for s in sections if names[s[0]:names.index(0, s[0])] == b'.init.ramfs']
     assert len(selected) == 1

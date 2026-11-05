@@ -9,10 +9,11 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 ## Current status
 
-The [2026-11-05 continuation](docs/CONTINUATION-20261105.md) includes the initial
-X-Wrt SRAM-only policy port and signed native soft64 netifd/recovery component
-integration. These are offline results awaiting a matching image and target
-acceptance; they do not qualify routed NPU offload.
+The [2026-11-05 fresh kernel and live checkpoint](docs/FRESH-KERNEL-AND-RECOVERY.md)
+includes a matching219-package ARM64 FIT, real isolated native netifd execution
+with five VM modules, and one actual ARM32 heartbeat-expiry return to stock.
+The new FIT has not been booted; default-service startup and changed-driver
+acceptance remain open. These results do not qualify routed NPU offload.
 
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
 for the current project overview. Standard Cortex-A53 binary-package compatibility

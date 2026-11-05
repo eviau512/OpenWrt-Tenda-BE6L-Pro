@@ -32,7 +32,7 @@ def main():
     if work.parent != Path('/root') or not work.name.startswith('be6l-native-cpio-'):
         parser.error('Use a fresh /root/be6l-native-cpio-* directory')
     receipt = json.loads((args.composition / 'result.json').read_text())
-    if not receipt['normal_signed_component_transaction'] or receipt['installed_packages'] != 218:
+    if not receipt['normal_signed_component_transaction'] or receipt['installed_packages'] not in (218, 219):
         raise ValueError('Wrong admitted component composition')
     candidate = args.composition / 'root'
     inputs = [('baseline', args.base_root, receipt['original_root_records_sha256']),

@@ -18,7 +18,9 @@ run with this project's ARM64 kernel and no-FP native runtime.
 
 The first port keeps routed rejection and the existing firmware, flash guards
 and wired diagnostic taps. It changes CPU SRAM mirror allocation, DRAM table
-programming and entry bounds. It has no complete kernel or hardware acceptance.
+programming and entry bounds. A complete matching kernel/modules/FIT now
+[builds](FRESH-KERNEL-AND-RECOVERY.md); changed-driver hardware acceptance remains
+open. Live netifd/recovery tests use the earlier qualified kernel.
 
 ## Concrete failure paths to fix together
 

@@ -29,6 +29,8 @@ def command(args, operation):
               "-o", "ServerAliveCountMax=1", "-p", str(args.port)]
     if args.known_hosts:
         result += ["-o", "UserKnownHostsFile=" + str(args.known_hosts)]
+    if getattr(args, "identity_file", None):
+        result += ["-i", str(args.identity_file), "-o", "IdentitiesOnly=yes"]
     result += ["root@" + args.host, "/usr/sbin/be6l-recovery-guard " + operation]
     return result
 
@@ -77,6 +79,7 @@ def main():
     parser.add_argument("--port", type=int, default=22)
     parser.add_argument("--ssh", default="ssh")
     parser.add_argument("--known-hosts")
+    parser.add_argument("--identity-file", help="Existing private SSH key; never copied or logged")
     parser.add_argument("--expected-boot-id", type=lambda value: str(uuid.UUID(value)))
     parser.add_argument("--duration", type=int, default=3600)
     parser.add_argument("--interval", type=int, default=20)

@@ -1,8 +1,15 @@
 # BE6L Pro initramfs SSH recovery guard
 
-Status, 2026-11-05: source tests and a normal signed component APK transaction
-pass in a new offline root. The service is enabled there. No new kernel image
-contains this package yet, and no router reset has been tested with it.
+Status, 2026-11-05: release r2 passes23 shell/host groups, normal signed APK
+installation and real ARM32/ARM64 procd and heartbeat checks. One temporary
+60-second ARM32 expiry returned to authenticated stock management. The new
+matched ARM64 FIT includes r2 but has not been booted. Default600/300 expiry,
+ARM64 expiry and hard-lock recovery remain unqualified. See the
+[actual results and scope](../../docs/FRESH-KERNEL-AND-RECOVERY.md).
+
+Release r1 exposed an absent BusyBox stat applet on the first target boot.
+Release r2 uses numeric POSIX ls to require UID0 and exact0700 permissions,
+without adding a new runtime utility. The symlink refusal remains in place.
 
 The owner has no on-site person to power-cycle or interrupt UART. Include this
 package in the next protected RAM candidate through the normal signed package
@@ -39,7 +46,8 @@ rootfs, ramfs or tmpfs. It refuses persistent root filesystems. It does not open
 After verifying the candidate's SSH host key and runtime board/root checks:
 
 ```sh
-python3 tools/recovery/ssh_heartbeat.py --host 192.168.1.1 --duration 3600
+python3 tools/recovery/ssh_heartbeat.py --host 192.168.1.1 --duration 3600 \
+  --identity-file /path/to/private-test-key --known-hosts /path/to/verified-hosts
 ```
 
 The helper uses strict host-key verification and noninteractive key/agent

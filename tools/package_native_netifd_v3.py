@@ -175,7 +175,7 @@ def main():
                 ["be6l-soft-runtime=" + profile["base_versions"]["runtime"]], "LicenseRef-BE6L-Source-Notices")
         package(native_package, netifd_files, "netifd", version, ARCH, depends, old["license"])
         package(wrong, netifd_files, "netifd", version, "aarch64_cortex-a53", depends, old["license"])
-        package(guard_package, guard_files, "be6l-recovery-guard", "1.0.0-r1", "noarch",
+        package(guard_package, guard_files, "be6l-recovery-guard", "1.0.0-r2", "noarch",
                 ["busybox", "procd", "uci", "dropbear"], "MIT")
         for package_file in (runtime_package, native_package, guard_package, wrong):
             run("verify-" + package_file.stem, [args.apk, "--keys-dir", trust, "--network=no", "verify", package_file])
@@ -223,7 +223,7 @@ def main():
             owner = run("owner-" + name.replace("/", "_"), readonly + ["info", "--who-owns", "/" + name]).stdout.decode().strip()
             expected_owner = ("netifd-" + version if name in netifd_names else
                               "be6l-soft-netifd-deps-" + runtime_version if name in runtime_names else
-                              "be6l-recovery-guard-1.0.0-r1")
+                              "be6l-recovery-guard-1.0.0-r2")
             if not owner.endswith(" is owned by " + expected_owner):
                 raise ValueError("Wrong installed component owner: " + name)
             owners[name] = owner

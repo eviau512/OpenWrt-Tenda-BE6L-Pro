@@ -37,10 +37,20 @@ def main():
     parser.add_argument('--arch',choices=('arm','arm64'),required=True)
     parser.add_argument('--cross-compile',required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--work-base',type=Path,
+                        default=Path('/root/be6l-openwrt/module-layout-audit'))
+    parser.add_argument('--host-prefix',type=Path)
+    parser.add_argument('--host-cc',type=Path)
+    parser.add_argument('--shell',default='/root/be6l-openwrt/host/bin/bash')
     args=parser.parse_args()
     assert (args.kernel/'vmlinux').is_file() and (args.kernel/'Module.symvers').is_file()
-    work=Path('/root/be6l-openwrt/module-layout-audit');work.mkdir(exist_ok=True)
+    work=args.work_base;work.mkdir(exist_ok=True)
     env=dict(os.environ);env['PATH']='/root/be6l-openwrt/host/bin:'+env['PATH']
+    if args.host_prefix:
+        env.update(PATH=str(args.host_prefix/'usr/bin')+':'+env['PATH'],
+                   LD_LIBRARY_PATH=str(args.host_prefix/'usr/lib/x86_64-linux-gnu'),
+                   BISON_PKGDATADIR=str(args.host_prefix/'usr/share/bison'),
+                   M4=str(args.host_prefix/'usr/bin/m4'))
     with tempfile.TemporaryDirectory(prefix=args.arch+'-',dir=work) as temporary:
         directory=Path(temporary)
         (directory/'Makefile').write_text('obj-m += module_layout_probe.o\n')
@@ -51,7 +61,8 @@ static const unsigned char be6l_expected_module_layout[sizeof(struct module)]
 MODULE_LICENSE("GPL");
 ''')
         command=['make','-C',str(args.kernel),'M='+str(directory),'ARCH='+args.arch,
-                 'CROSS_COMPILE='+args.cross_compile,'SHELL=/root/be6l-openwrt/host/bin/bash','modules']
+                 'CROSS_COMPILE='+args.cross_compile,'SHELL='+args.shell,'modules']
+        if args.host_cc:command.append('HOSTCC='+str(args.host_cc))
         result=subprocess.run(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         if result.returncode:
             raise RuntimeError(result.stdout.decode(errors='replace')[-3000:])

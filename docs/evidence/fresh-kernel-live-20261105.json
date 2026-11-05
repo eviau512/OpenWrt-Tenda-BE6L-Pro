@@ -1,0 +1,129 @@
+{
+  "date": "2026-11-05",
+  "source_preparation": {
+    "openwrt_revision": "30b833ae5b8a6ba94149268c47a8493308a0ee04",
+    "openwrt_git_archive_sha256": "0b6cfb0e8a4dc0c2a72edb6957beecedebf6e3bff4c8b6adff45873337f170bb",
+    "linux_archive_sha256": "f410638061a165c12f42ab871d2f3fcd525515359b5faeee80969cff84524df9",
+    "project_patch_sha256": "3d8ea0036750675d4abe2dd9ca5533b1bc5247f4ee089ae05f6628d2ea69bdfe",
+    "sram_patch_sha256": "b11b332cc4331ca7a1b5f1ca5105e6dc27fc632f3cb5b4ac859e94621d6e93f3",
+    "baseline_driver_sha256": "6bf954bf5eef737a338978ec1af3a8e29538f9815398c06162f3d621a597d1d4",
+    "ported_driver_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+    "overlay_directories": [
+      "target/linux/generic/files",
+      "target/linux/airoha/files"
+    ],
+    "patch_directories": [
+      "target/linux/generic/backport-6.18",
+      "target/linux/generic/pending-6.18",
+      "target/linux/generic/hack-6.18",
+      "target/linux/airoha/patches-6.18"
+    ],
+    "patch_script_sha256": "6ffa12ee1c362aa17d67b010b92089b4b8f4e5ee61eb8696b2592bb4696e1101",
+    "pristine_case_sensitive_source": true,
+    "generated_cache_imported": false,
+    "original_restore_tree_modified": false,
+    "full_sdk_admitted": false,
+    "full_kernel_built": false,
+    "target_executed": false
+  },
+  "fresh_kernel": {
+    "kernel_release": "6.18.55",
+    "baseline_config_sha256": "6da2430a71f780d28e554810936df142a4427df22f8e31fe07f80e581a36e215",
+    "driver_source_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+    "compiler_sha256": "d29d8e0d036a048f2311091d34346c0e9e83b652491e5a11649a278d599ad4ec",
+    "module_symvers_sha256": "486e9a16990359e9c16115ccb345f4432e1c174eb8f8b0f6548cf702710ca85a",
+    "in_tree_module_count": 78,
+    "full_kernel_built": true
+  },
+  "matching_modules": {
+    "kernel_package_version": "6.18.55~ebdb6ef0fb8a643c0a13573c2d8c2337-r100",
+    "package_count_rebuilt": 57,
+    "rebuilt_module_count": 77,
+    "retained_external_module_count": 7,
+    "module_crc_enforcement": false,
+    "unchanged_external_interface_headers": {
+      "drivers/net/ethernet/airoha/airoha_eth.h": "f0ac9e60da51f9a22a515f3a44ccd8d79c4e601df8664a9b43548d32b0571063",
+      "drivers/net/ethernet/airoha/airoha_regs.h": "8671a5e39b7330ec8bbb5226f65e2f7458bc97216915e8ff88bad2d814f44795",
+      "include/linux/soc/airoha/airoha_offload.h": "88b50c68e4c9bb4ce21857513cc515db8da2591d6691d3b43d3020aadc3af79c"
+    }
+  },
+  "final_private_image": {
+    "image_sha256": "2f82bb557a766d399f94f6f217d6e0c6667c38a7cda6b6a4415c2cb6770b4a1e",
+    "image_bytes": 55005896,
+    "kernel_sha256": "0fd8103fff54723cd91d14b6d419b9065b968c723d1ffc213122af05f15a82df",
+    "kernel_bytes": 64356360,
+    "kernel_effective_bytes": 64749568,
+    "kernel_headroom_bytes": 262144,
+    "kernel_config_sha256": "c7a6e907231833964d720e6648d72a43819b8f7bb3b2ef267edc6dcd0aad7c0c",
+    "external_cpio_sha256": "e6e70f56499182680d5dce2d818d88485bb92b8f0acda97fc2bc35c21853bac1",
+    "embedded_cpio_verified": true,
+    "root_records_sha256": "c10de4749faeaf15a6985242e63c10bfa9b74bcdee754d1d8bf77a3a6f82457e",
+    "installed_packages": 219,
+    "dtb_readonly_partitions": 10,
+    "bmt_readonly": true,
+    "static_image_admission": true,
+    "target_executed": false,
+    "standard_a53_package_compatibility_qualified": false,
+    "routed_nat_qualified": false
+  },
+  "native_netifd_runtime": {
+    "actual_aarch64_runtime": true,
+    "separate_network_namespace": true,
+    "host_netns_unchanged": true,
+    "netifd_alive_seconds": 5,
+    "ubus_network_objects_registered": true,
+    "native_vm_modules_mapped": {
+      "fs": true,
+      "ubus": true,
+      "uloop": true,
+      "uci": true,
+      "nl80211": true
+    },
+    "selected_payload_files": 1698,
+    "source_root_records_sha256": "c10de4749faeaf15a6985242e63c10bfa9b74bcdee754d1d8bf77a3a6f82457e",
+    "full_default_service_qualified": false,
+    "new_kernel_candidate_booted": false
+  },
+  "recovery": {
+    "version": "1.0.0-r2",
+    "guard_source_sha256": "86d9fb27d23153706e8aa2e5c2f753c8fbd7420039025b55db3c2885894ffa09",
+    "shell_host_test_groups": 23,
+    "stat_applet_absent_on_target": true,
+    "numeric_ls_uid_mode_check": true,
+    "arm32_default_policy_boot_and_heartbeat": true,
+    "aarch64_service_running": true,
+    "one_arm32_real_expiry_seconds": 60,
+    "reset_banner_observed": true,
+    "stock_version_marker_in_uart_observed": false,
+    "independent_post_reset_http_200": true,
+    "independent_post_reset_authenticated_model": "BE6LProV1.0",
+    "independent_post_reset_authenticated_version": "V16.03.60.67_cn",
+    "post_reset_telnet_root_preflight_passed": true,
+    "stock_boot_id_changed": true,
+    "default_600_300_real_expiry_tested": false,
+    "hardlock_recovery_qualified": false,
+    "aarch64_real_expiry_tested": false
+  },
+  "baseline_aarch64": {
+    "aarch64": true,
+    "kernel": "6.18.55",
+    "ram_root": true,
+    "ten_mtd_guards": true,
+    "critical_mtd_unchanged": true,
+    "baseline_fit_sha256": "fd30e3894dfda619b1cd27e1575adb7388a58376a8fdb5c8b4ed88cbbea60835"
+  },
+  "restoration": {
+    "regular_files_copied": 1588255,
+    "regular_bytes_copied": 45279397371,
+    "symlinks_recreated": 16222,
+    "mode_and_link_restoration_done": true,
+    "generated_cache_rebuild_required": true,
+    "critical_files_verified": 410,
+    "destination_materialized": true,
+    "destination_restored": false,
+    "build_or_device_qualified": false
+  },
+  "host_network_configuration_changed": false,
+  "flash_operations": false,
+  "binaries_and_ssh_private_identities_published": false
+}

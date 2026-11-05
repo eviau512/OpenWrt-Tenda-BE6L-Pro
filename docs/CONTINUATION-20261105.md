@@ -1,5 +1,8 @@
 # Native64 and X-Wrt continuation, 2026-11-05
 
+Later results: [fresh matching FIT, live native netifd and recovery r2](FRESH-KERNEL-AND-RECOVERY.md).
+The component-only checkpoint below is retained as its earlier evidence stage.
+
 This checkpoint contains source and offline component results. The last
 qualified RAM image is unchanged. No new image has been booted or flashed.
 Selected source hashes and scoped results are in the

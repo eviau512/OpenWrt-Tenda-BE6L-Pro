@@ -15,11 +15,21 @@ guard_platform() {
 	     END { exit !ok }' /proc/mounts
 }
 
+guard_private_directory() {
+	# The baseline BusyBox omits stat. POSIX numeric ls still verifies both
+	# the exact private directory permissions and UID; no filename is parsed.
+	local mode links owner remainder
+	read -r mode links owner remainder <<EOF
+$(LC_ALL=C ls -ldn "$GUARD_DIR")
+EOF
+	[ "$mode:$owner" = 'drwx------:0' ]
+}
+
 guard_prepare() {
 	umask 077
 	[ ! -L "$GUARD_DIR" ] || return 1
 	mkdir -m 700 "$GUARD_DIR" 2>/dev/null || :
-	[ -d "$GUARD_DIR" ] && [ "$(stat -c '%u:%a' "$GUARD_DIR")" = '0:700' ] || return 1
+	[ -d "$GUARD_DIR" ] && guard_private_directory || return 1
 	read -r GUARD_BOOT < /proc/sys/kernel/random/boot_id || return 1
 	[ -n "$GUARD_BOOT" ]
 }
