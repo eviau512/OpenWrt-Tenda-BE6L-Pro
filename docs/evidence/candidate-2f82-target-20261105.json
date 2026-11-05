@@ -28,7 +28,7 @@
   "required_application_selection_preserved": true,
   "original_offline_root_unchanged": true,
   "startup_acceptance_passed": true,
-  "new_candidate_recovery_tested": false,
+  "new_candidate_recovery_tested": true,
   "routed_nat_qualified": false,
   "standard_a53_package_compatibility_qualified": false,
   "flash_operations": false,
@@ -51,5 +51,25 @@
   },
   "wan_dhcp_up": false,
   "routed_traffic_tested": false,
-  "private_binary_or_key_published": false
+  "private_binary_or_key_published": false,
+  "recovery": {
+    "default_policy_boot_grace_seconds": 600,
+    "disconnect_timeout_seconds": 300,
+    "last_authenticated_heartbeat_uptime": 7161,
+    "expiry_uptime": 7465,
+    "observed_expiry_delay_seconds": 304,
+    "explicit_wireless_and_npu_detach": true,
+    "pre_reset_npu_faults": 0,
+    "pre_reset_ppe_tdma_idle": true,
+    "uart_reset_observed": true,
+    "uart_sha256": "15843e1f0b808e1e10ec9124dafe684b41c3456ca3478d169aaf3595404fe2cc",
+    "autoboot_interrupt_sent": false,
+    "authenticated_stock_return": true,
+    "returned_stock_version": "V16.03.60.67_cn",
+    "no_heartbeat_boot_grace_tested": false,
+    "active_npu_traffic_recovery_qualified": false,
+    "forced_fallback_observed": false,
+    "hard_lock_recovery_qualified": false,
+    "flash_operations": false
+  }
 }

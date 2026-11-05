@@ -12,8 +12,9 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 The [new ARM64 candidate startup](docs/CANDIDATE-2F82-TARGET.md) passes actual
 RAM-boot checks: new kernel build ID,219 packages,84 module files,61 native
 regular ELF files, default native netifd and five VM modules, Chinese Argon,
-NPU workers and MTD protection. New-kernel packet forwarding/lifetime and
-recovery acceptance remain open. Earlier [build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
+NPU workers and MTD protection. Its default expiry after explicit wireless/NPU
+detach also returns to authenticated stock. New-kernel packet forwarding/lifetime
+and broader recovery acceptance remain open. Earlier [build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
 remain separately scoped. These results do not qualify routed NPU offload.
 
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)

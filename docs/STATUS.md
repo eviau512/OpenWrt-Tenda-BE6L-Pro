@@ -14,8 +14,10 @@ performance qualification remain open; physical FP/SIMD is still unavailable.
 The new `2f82bb55` candidate now [passes actual RAM startup](CANDIDATE-2F82-TARGET.md),
 including independent new-kernel build ID,219 exact packages,84 exact module
 files,61 native user ELF files, default native processes/VM modules, NPU workers
-and flash guards. Its own expiry/reset, packet forwarding and resource lifetime
-acceptance remain open. The older checkpoints below retain their original scope.
+and flash guards. Its default300-second expiry after explicit wireless/NPU detach
+now returns to authenticated stock `.67` (last heartbeat7161, expiry7465).
+Packet forwarding, resource lifetime and broader recovery acceptance remain open.
+The older checkpoints below retain their original scope.
 
 The [fresh kernel and live checkpoint](FRESH-KERNEL-AND-RECOVERY.md) adds a
 complete matching ARM64 FIT with the initial X-Wrt SRAM port,219 packages and

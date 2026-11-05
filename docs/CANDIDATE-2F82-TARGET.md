@@ -1,4 +1,4 @@
-# New ARM64 candidate startup, 2026-11-05
+# New ARM64 candidate startup and scoped recovery, 2026-11-05
 
 The matched `2f82bb55` initramfs was loaded through the protected ARM32
 intermediate and started on the actual router. Initial startup acceptance
@@ -19,7 +19,7 @@ no image or private key is published. Selected evidence is in
 | NPU | Both ABI5 workers advance, zero reported faults |
 | Flash protection | Ten MTD flags remain read-only; critical bootloader/environment/Factory digests unchanged |
 | Management | Chinese Argon login form renders with the dispatcher's expected unauthenticated403 response |
-| Recovery | New candidate accepts authenticated heartbeat; its own expiry/reset test remains open |
+| Recovery | Authenticated heartbeat and default300-second expiry after explicit wireless/NPU detach return to authenticated stock `.67` |
 
 This completes compilation, RAM loading and initial on-device testing of the
 new initramfs. It does not establish release readiness or normal Cortex-A53
@@ -54,6 +54,22 @@ dispatcher deliberately returns403 and `X-LuCI-Login-Required: yes`. The final
 check requires that exact header, login fields, Chinese language and Argon
 resources, rather than accepting an arbitrary forbidden response.
 
+## Default expiry after explicit NPU detach
+
+The same new candidate subsequently completed its own recovery test with the
+baked-in r2 guard and unchanged600/300 defaults. Normal `wifi down` and
+`rmmod mt7996e` first left NPU running0/attached0, PPE/TDMA0 and faults0.
+The last authenticated heartbeat at uptime7161 expired at7465:304 seconds,
+within the configured five-second polling interval. UART recorded a fresh
+U-Boot banner without any autoboot interruption. Automatic host DHCP return,
+authenticated stock `V16.03.60.67_cn` web/Telnet root preflight and a changed
+stock boot identity were independently verified. No image was uploaded after reset.
+
+All host heartbeat/capture jobs were stopped or terminal and the device was
+left in stock. This is a scoped new-kernel result: the guard does not itself
+perform the explicit wireless/NPU detach. Active-NPU traffic, initial600-second
+grace without any heartbeat, forced fallback and hard locks remain unqualified.
+
 ## Remaining scope
 
 WAN DHCP is currently down and the PPE bind table is empty. Advancing NPU
@@ -62,11 +78,10 @@ ported SRAM policy. No routed BIND, NAT, IPv6 offload, throughput or withdrawal
 test follows from these startup checks. The941-04 SMAC/FOE lifetime port is
 still required. Existing routed rejection remains unchanged.
 
-The two earlier real recovery cycles belong to the ARM32 intermediate and old
-ARM64 kernel, with the latter explicitly quiescing wireless/NPU first. They do
-not replace expiry/reset testing of this new kernel. Active-NPU recovery,
-forced fallback, no-heartbeat boot grace and hard-lock behavior remain open.
+The two earlier recovery cycles belong to the ARM32 intermediate and old ARM64
+kernel. They retain their own scope; the new-kernel result is documented above.
 
 The native runtime still uses the private AAPCS64-soft ABI. ARM32 applications
-remain through COMPAT. Standard A53 FP/SIMD software and the allowed emulation
-fallback remain separate implementation work.
+remain through COMPAT. The allowed emulation fallback now [passes selected
+standard ABI tests](ARM64-INSTRUCTION-FALLBACK.md); complete package and child
+execution acceptance remain separate work.

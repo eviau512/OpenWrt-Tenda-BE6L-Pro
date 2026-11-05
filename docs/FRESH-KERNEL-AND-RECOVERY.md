@@ -116,7 +116,8 @@ Host routes, IP settings, VPN and interface priorities were not changed.
 
 The new matched FIT subsequently passed the checked ARM32 handoff, module/package
 bytes and default native services; see [its startup evidence](CANDIDATE-2F82-TARGET.md).
-Its own actual recovery and forwarding/lifetime tests remain separate gates.
+Its own default expiry after explicit wireless/NPU detach now returns to stock;
+active-NPU traffic, forced fallback, hard locks and forwarding/lifetime remain gates.
 The current ARM64 configuration has no kexec, so another image needs another
 stock-to-ARM32 transition. X-Wrt941-04 resource lifetime work remains a source
 audit; routed NAT stays closed. The signed QEMU11.1.3 source now builds as a
