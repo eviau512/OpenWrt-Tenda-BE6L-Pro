@@ -25,6 +25,16 @@ lifetime and changed-driver recovery acceptance remain separate gates.
 
 ## Concrete failure paths to fix together
 
+The Nov6 [executable baseline fixture](../tools/test_ppe_lifetime_baseline_v1.py)
+now extracts seven real functions from this exact ARM64 source. Two normal
+unbind/destroy controls pass; six injected read-failure/timeout paths violate
+retained-owner/reference invariants. [Observations](evidence/ppe-lifetime-baseline-20261106.json)
+cover unbind, L2 child removal, slot replacement, TC destroy and the table-free
+callback. Register accesses, lists, allocation, netdev references and hardware
+transactions are substituted. Parent L2 removal, notifiers, full deinit, locking
+and actual ASIC/DMA withdrawal are explicitly excluded. Recording this known bad
+baseline is not a passing driver test or a completed941-04 port.
+
 The following audit is against `airoha_ppe.c` source SHA256
 `de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1`, produced
 by the initial SRAM port. It is a source finding, not an induced device fault.
@@ -53,6 +63,22 @@ or SRAM timeout must leave the slot unavailable and its referenced resources
 held. Define how normal destruction, retry, driver exit and netdevice teardown
 complete without use-after-free or an unbounded unregister deadlock. Do not
 replace that design with a delay or an assumed register-drain meaning.
+
+The next port must treat a slot reservation, its flow object, L2 parent/children,
+cross-bank SMAC slot and referenced destination as one retained lifetime. A
+possible BIND write owns the slot before it is issued. Failed reads or writes
+keep that ownership and block reuse; they cannot erase the hash, free a child,
+remove a TC cookie or put its netdev references as the current six cases do.
+Successful invalidation and a proven controller-wide withdrawal boundary need
+separate outcomes. Merely clearing enable is only a fail-closed request.
+
+Notifier and deinit behavior must be designed with this ownership protocol.
+Keeping netdev references forever can stall unregister; dropping them while
+hardware can still reference the destination is unsafe. An asynchronous worker
+that needs RTNL while unregister waits under RTNL can also deadlock. Establish
+the actual lock/reset-provider ordering and a bounded, proven withdrawal/reset
+path before selecting retry/quarantine policy. Do not merge a return-type-only
+fix or enable routed admission on the strength of these substituted tests.
 
 Fault tests must cover failed reads, failed BIND/unbind, partial cross-bank SMAC
 writes, slot reuse, replace/destroy, device events and teardown. Then rebuild the

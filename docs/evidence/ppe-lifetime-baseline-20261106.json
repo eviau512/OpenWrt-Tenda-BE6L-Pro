@@ -1,0 +1,123 @@
+{
+  "source_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+  "extracted_function_sha256": {
+    "airoha_ppe_foe_write_failed": "5ef6c540d01ad89c6dc477c106ec671dfc3b34d5200ee46c37fbced0acf44fed",
+    "airoha_ppe_foe_unbind_flow": "93d6c04bac0f1c2fc3ed0fe6cc4aed1d40b1a3e082e2ca99c4d3a138d1858260",
+    "airoha_ppe_foe_remove_flow": "da141dd74e4277c4a6d35037a0d953ef5ff8303ba25ee840e3023028bd343c84",
+    "airoha_ppe_foe_release_slot": "b37e7141468519461146d49d776c2b28a1e089975d6ef86845f5397a51a60a28",
+    "airoha_ppe_foe_flow_remove_entry": "d85b490470465ae3571efe2ba4d48bfcb7746c53f276cdd6d8b63f4de851536e",
+    "airoha_ppe_flow_offload_destroy": "0f8d309adc37a3a8fb32eae287c15c9a8764432763c6f54a9f81d9cccfc1e1fd",
+    "airoha_ppe_free_flow": "bd90270d1695a83bc11ad80d750662d67017c5eca23884b15ffff2283bde491d"
+  },
+  "actual_function_bodies_used": true,
+  "substituted_operations": [
+    "register access",
+    "list bookkeeping",
+    "allocator",
+    "netdev references",
+    "hardware transaction",
+    "cookie table"
+  ],
+  "excluded_paths": [
+    "L2 parent removal",
+    "netdevice notifier",
+    "full driver deinit",
+    "real IRQ/locking",
+    "ASIC/DMA drainage"
+  ],
+  "observations": [
+    {
+      "scenario": "normal-unbind-control",
+      "safety_invariant_passed": true,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 0,
+      "netdev_refs_put": 0,
+      "cookie_removals": 0,
+      "enable_clear_writes": 0,
+      "returned_error": 0
+    },
+    {
+      "scenario": "normal-destroy-control",
+      "safety_invariant_passed": true,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 1,
+      "netdev_refs_put": 2,
+      "cookie_removals": 1,
+      "enable_clear_writes": 0,
+      "returned_error": 0
+    },
+    {
+      "scenario": "read-failure-unbind",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 0,
+      "netdev_refs_put": 0,
+      "cookie_removals": 0,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    },
+    {
+      "scenario": "timeout-unbind",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 0,
+      "netdev_refs_put": 0,
+      "cookie_removals": 0,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    },
+    {
+      "scenario": "timeout-remove-l2-child",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 1,
+      "netdev_refs_put": 0,
+      "cookie_removals": 0,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    },
+    {
+      "scenario": "timeout-slot-replacement",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 1,
+      "netdev_refs_put": 0,
+      "cookie_removals": 0,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    },
+    {
+      "scenario": "timeout-tc-destroy",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 1,
+      "netdev_refs_put": 2,
+      "cookie_removals": 1,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    },
+    {
+      "scenario": "timeout-table-free-callback",
+      "safety_invariant_passed": false,
+      "owner_retained": false,
+      "hash": 65535,
+      "free_calls": 1,
+      "netdev_refs_put": 2,
+      "cookie_removals": 0,
+      "enable_clear_writes": 2,
+      "returned_error": 0
+    }
+  ],
+  "known_unsafe_baseline_reproduced": true,
+  "xwrt_941_04_port_implemented": false,
+  "safety_invariants_passed": false,
+  "hardware_qualified": false,
+  "target_executed": false
+}

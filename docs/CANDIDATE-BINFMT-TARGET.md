@@ -6,7 +6,9 @@ Its actual running kernel GNU build ID is
 `3369afd1e7ba3353d80f255f98a9824a0c334ec3`. The
 [sanitized evidence](evidence/binfmt-target-20261106.json) records both construction
 and target results. This is an experimental execution profile; general standard
-A53 package compatibility, routed offload and this candidate's recovery remain open.
+A53 package compatibility and routed offload remain open. This candidate's default
+disconnect expiry now passes after explicit wireless/NPU detach; broader recovery
+remains open.
 
 ## Matching kernel, modules, packages and loader
 
@@ -71,16 +73,44 @@ supplementary groups. The high CLOEXEC descriptor is actually closed in the chil
 The CLOEXEC script still returns the required ENOENT. A standard shell also
 executes standard ucode floating-point arithmetic and btop's version command.
 
-Both test runs unregister their rule and remove the binfmt mount. All62 host ELF
+The later negative-semantics run confirms three failures: a missing ELF interpreter
+exits the new process with255 instead of returning ENOENT to the caller, linked
+`/proc/self/exe` stat differs from the guest file, and opening deleted
+`/proc/self/exe` returns ENOENT. The original20 positive cases still pass. These
+observed failures are explicit blockers for a complete execution claim.
+
+The real signed standard btop package also renders its CPU, memory and process
+TUI for12.36 seconds and exits normally on SIGINT. A separate static native ARM32
+PTY fixture supplies a120x40 terminal through the existing non-PTY SSH channel;
+SSH key restrictions are unchanged. This is a bounded workload, not long-duration
+performance or all-feature qualification. Raw terminal contents remain private.
+
+All dispatch test runs unregister their rule and remove the binfmt mount. All62 host ELF
 payload hashes remain unchanged and authenticated recovery heartbeats continue.
 Wireless/NPU were explicitly stopped before software experiments; this does not
 qualify traffic withdrawal, the X-Wrt941-04 lifetime port or routed forwarding.
+
+## New candidate default recovery
+
+After removing guest proc/tmpfs mounts and verifying the ten read-only flags,
+unchanged critical partition digests and stopped NPU/PPE/TDMA, the candidate's
+own baked600/300 policy is tested. Its last authenticated heartbeat is uptime3693;
+the daemon requests reboot at3993, exactly300 seconds later. UART captures the
+U-Boot reset without an autoboot interrupt. Independent web authentication and
+Telnet root CheckOnly then confirm stock `.67`, kernel5.4.55/armv7l and a changed
+boot ID; host DHCP returns automatically. The stock-kernel version string was
+not matched by the UART marker, so the kernel version is established by the
+authenticated stock query. All task helpers end, with no heartbeat remaining.
+
+The guard does not itself perform the explicit NPU detach. Active-NPU traffic,
+initial no-heartbeat600-second grace, forced fallback and hardlock recovery remain
+unqualified. No flash write, host-network change or on-site intervention is involved.
 
 ## Still required
 
 Deleted-file proc open/stat/re-exec, missing/bad ELF interpreter error propagation,
 setuid/setgid/capabilities/secure exec, procfs/readability limitations, broader
-package workloads, RAM/performance and recovery require further work. `POF` omits
+package workloads, RAM/performance and broader recovery require further work. `POF` omits
 credential-from-guest flag`C`; dropped credentials passing does not qualify setuid.
 Selected FP/C++/Go tests and this execution matrix remain bounded evidence.
 Native FP/SIMD remains unavailable; these results use software emulation.

@@ -342,12 +342,182 @@
     "missing/bad ELF interpreter and failed-exec errno propagation",
     "readability/procfs requirements of narrow CLOEXEC retry",
     "broad real package workloads and performance/memory admission",
-    "new e228 candidate own recovery and broader unattended failure modes",
-    "X-Wrt941-04 lifetime and new-kernel routed/L2 withdrawal qualification"
+    "X-Wrt941-04 lifetime and new-kernel routed/L2 withdrawal qualification",
+    "active-NPU traffic, initial no-heartbeat600s grace, forced fallback and hardlock recovery",
+    "active-NPU traffic, initial no-heartbeat600s grace, forced fallback and hardlock recovery"
   ],
   "new_candidate_recovery_qualified": false,
   "standard_a53_package_compatibility_qualified": false,
   "native_fp_simd_enabled": false,
   "routed_nat_qualified": false,
-  "flash_operations": false
+  "flash_operations": false,
+  "negative_execution_semantics": {
+    "boot_id": "b4637d28-2697-4ac4-b5a1-c0a8ed24e3f6",
+    "fit_sha256": "e228c236c959d821249e04ddb2cf28dbc8c8790b9d26ca366ec4650eb4d35d4a",
+    "source_stage_receipt_sha256": "c9cef5d412dbfdc68c03d5a083fa40bb240e525c2cf12b56f8d0f806771e3f29",
+    "flags": "POF",
+    "cases": {
+      "execve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-absolute": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-empty-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fexecve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "unlinked-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "shebang-script": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "relative-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "proc-self-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "missing-file": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "dropped-credentials": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-script-rejected": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "invalid-execveat-flags": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "matrix_exit": 0,
+    "expected_exec_case_count": 20,
+    "all_exec_cases_passed": true,
+    "standard_package_child_chain_passed": true,
+    "interpreter_credentials_from_guest": false,
+    "negative_exec_corner_cases": {
+      "missing-elf-interpreter-errno": {
+        "passed": false,
+        "wait_status": 65280
+      },
+      "linked-proc-exe-stat": {
+        "passed": false,
+        "wait_status": 21248
+      },
+      "deleted-proc-exe-open": {
+        "passed": false,
+        "wait_status": 20480
+      }
+    },
+    "all_negative_corners_passed": false,
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "standard_btop_tui": {
+    "boot_id": "b4637d28-2697-4ac4-b5a1-c0a8ed24e3f6",
+    "source_stage_receipt_sha256": "c9cef5d412dbfdc68c03d5a083fa40bb240e525c2cf12b56f8d0f806771e3f29",
+    "standard_a53_signed_btop": true,
+    "elapsed_seconds": 12.36,
+    "exit": 0,
+    "remote_pty": true,
+    "ssh_pty_requested": false,
+    "native_pty_harness_sha256": "0602363b2c939ddfaa07fb7a6321d6705cbaae94645d1748595ae7bc282d4b4b",
+    "alternate_screen_entered": true,
+    "displayed_labels": {
+      "cpu": true,
+      "mem": true,
+      "pid": true
+    },
+    "output_bytes": 106967,
+    "bounded_tui_workload_passed": true,
+    "software_emulation": true,
+    "native_fp_support": false,
+    "binfmt_registered": false,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "own_default_recovery": {
+    "fit_sha256": "e228c236c959d821249e04ddb2cf28dbc8c8790b9d26ca366ec4650eb4d35d4a",
+    "ram_boot_id": "b4637d28-2697-4ac4-b5a1-c0a8ed24e3f6",
+    "baked_boot_grace_seconds": 600,
+    "baked_disconnect_timeout_seconds": 300,
+    "last_authenticated_heartbeat_uptime": 3693,
+    "expiry_reboot_request_uptime": 3993,
+    "heartbeat_to_request_seconds": 300,
+    "uart_uboot_reset_seen": true,
+    "uart_stock_kernel_version_marker_seen": false,
+    "authenticated_stock_kernel_version": "5.4.55",
+    "authenticated_stock_arch": "armv7l",
+    "authenticated_stock_version": "V16.03.60.67_cn",
+    "stock_boot_id_changed": true,
+    "authenticated_stock_web_telnet_root": true,
+    "wireless_npu_explicitly_detached": true,
+    "host_dhcp_returned_automatically": true,
+    "host_network_configuration_changed": false,
+    "guest_proc_tmpfs_removed_before_test": true,
+    "binfmt_rule_and_mount_removed": true,
+    "no_host_heartbeat_intended_after_return": true,
+    "all_task_helpers_terminal": true,
+    "ttl_autoboot_interrupt_sent": false,
+    "flash_operations": false,
+    "scoped_default_recovery_passed": true,
+    "active_npu_traffic_recovery_qualified": false,
+    "no_heartbeat_boot_grace_qualified": false,
+    "forced_reboot_fallback_qualified": false,
+    "hardlock_recovery_qualified": false
+  },
+  "recovery_qualification_scope": "default300s after explicit wireless/NPU detach only",
+  "new_candidate_scoped_default_recovery_qualified": true
 }

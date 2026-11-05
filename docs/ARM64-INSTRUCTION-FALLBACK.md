@@ -100,9 +100,20 @@ See [exact evidence and limitations](CANDIDATE-BINFMT-TARGET.md).
 
 Complete semantics remain open: deleted-file proc open/stat/re-exec, bad/missing
 ELF interpreter errno, setuid/capabilities/secure exec, procfs/readability,
-broader package workloads, RAM/performance and new-candidate recovery. `POF` has
+broader package workloads, RAM/performance and broader recovery. The missing-ELF
+interpreter errno, linked proc stat and deleted proc open failures are now
+reproduced on the target. Signed standard btop also passes a bounded real TUI
+workload, and the new candidate's own default300s recovery after explicit NPU
+detach returns to authenticated stock. `POF` has
 no credential-from-guest flag`C`. This does not qualify standard A53 packages in
 general. The planner itself still performs no registration or root modification.
+
+The [Linux6.18 binfmt documentation](https://docs.kernel.org/6.18/admin-guide/binfmt-misc.html)
+describes the credential distinction and the pre-opened interpreter used for
+chroots. [QEMU issue2825](https://gitlab.com/qemu-project/qemu/-/work_items/2825)
+also reports CLOEXEC empty-path execveat returning ENOENT with misc dispatch and
+contrasts proc-fd execution. Our narrow retry has its own tests/limits above;
+the report is not an upstream endorsement or a solution to all three new failures.
 
 The older ARM32-QEMU shortcut is excluded: upstream documents broken atomicity for
 64-bit linux-user guests on32-bit hosts and disabled that combination in10.0;

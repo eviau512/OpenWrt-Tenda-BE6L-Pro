@@ -15,6 +15,7 @@ import subprocess
 import uuid
 from package_native_netifd_v3 import root_digest, sha
 from plan_integer_binfmt_v1 import rule_bytes
+from plan_integer_binfmt_v1 import matches
 from recovery.ssh_heartbeat import target
 
 
@@ -25,6 +26,7 @@ def main():
     p.add_argument('--host', type=target, required=True)
     p.add_argument('--expected-boot-id', type=lambda s: str(uuid.UUID(s)), required=True)
     p.add_argument('--expected-cases', type=int, default=14)
+    p.add_argument('--corner-probe', type=Path, help='Optional admitted standard ELF negative-semantics probe directory')
     a = p.parse_args()
     w = a.work.resolve()
     if w.parent != Path('/root') or not re.fullmatch('be6l-binfmt-test-[a-z0-9-]+', w.name) or w.exists():
@@ -57,6 +59,17 @@ def main():
             raise RuntimeError(label+' failed; inspect private log')
         return r
 
+    if a.corner_probe:
+        corner = a.corner_probe/'be6l-exec-corners'
+        corner_receipt = json.loads((a.corner_probe/'result.json').read_text())
+        if (not corner_receipt['standard_a53_abi'] or sha(corner) != corner_receipt['elf_sha256'] or
+                not matches(corner.read_bytes()[:64])):
+            raise ValueError('Wrong standard negative-semantics probe')
+        run('upload-corner-probe', 'cat >'+guest+'/bin/be6l-exec-corners', corner.read_bytes())
+        run('verify-corner-probe', 'md5sum -c -',
+            (hashlib.md5(corner.read_bytes()).hexdigest()+'  '+guest+'/bin/be6l-exec-corners\n').encode())
+        run('corner-probe-mode', 'chmod 755 '+guest+'/bin/be6l-exec-corners')
+
     # Recheck complete immutable host payloads immediately before activation.
     digests = {}
     for name in staged['native_host_elf_paths']:
@@ -73,8 +86,10 @@ def main():
         raise ValueError('Target or existing binfmt state differs')
     mounted = False
     registered = False
+    registration_attempted = False
     cleanup_ok = False
     cases = {}
+    corner_cases = {}
     controls_ok = False
     matrix_exit = None
     error = None
@@ -89,6 +104,7 @@ def main():
             return ''.join('\\x%02x' % byte for byte in value).encode()
         rule = b':be6l-a53:M::'+escaped(magic)+b':'+escaped(mask)+b':'+staged['interpreter'].encode()+b':POF\n'
         (w/'registration.txt').write_bytes(rule)
+        registration_attempted = True
         run('register', 'cat >/proc/sys/fs/binfmt_misc/register', rule)
         registered = True
         entry = run('registered-entry', 'cat /proc/sys/fs/binfmt_misc/be6l-a53').stdout.decode()
@@ -108,12 +124,18 @@ def main():
         control = run('standard-package-child-chain', 'timeout -s KILL 45 chroot '+guest+' /bin/sh -c '+shlex.quote(script), require_success=False)
         value = control.stdout.decode()
         controls_ok = control.returncode == 0 and all(text in value for text in ('3.75', '1.4.7', 'STANDARD_SHELL_CHILD_CHAIN_OK'))
+        if a.corner_probe:
+            result = run('negative-corners', 'timeout -s KILL 45 chroot '+guest+' /bin/be6l-exec-corners', require_success=False)
+            corner_cases = {name: dict(passed=state == 'PASS', wait_status=int(status))
+                for name, state, status in re.findall(r'^EXEC_CORNER (\S+) (PASS|FAIL) status=(\d+)$', result.stdout.decode(), re.M)}
     except Exception as failure:
         error = type(failure).__name__+': '+str(failure)
     finally:
         # Only our own rule/mount; never remove another owner's registry entries.
-        if registered:
-            run('unregister', 'echo -1 >/proc/sys/fs/binfmt_misc/be6l-a53')
+        if registration_attempted:
+            # A lost SSH exit status does not prove the write had no effect.
+            run('unregister', 'if test -e /proc/sys/fs/binfmt_misc/be6l-a53; then '
+                'echo -1 >/proc/sys/fs/binfmt_misc/be6l-a53; fi')
         if mounted:
             remaining = run('registry-after', 'ls /proc/sys/fs/binfmt_misc').stdout.decode().splitlines()
             cleanup_ok = sorted(remaining) == ['register', 'status']
@@ -127,12 +149,14 @@ def main():
         matrix_exit=matrix_exit, expected_exec_case_count=a.expected_cases,
         all_exec_cases_passed=matrix_exit == 0 and len(cases) == a.expected_cases and all(item['passed'] for item in cases.values()),
         standard_package_child_chain_passed=controls_ok, interpreter_credentials_from_guest=False,
+        negative_exec_corner_cases=corner_cases,
+        all_negative_corners_passed=(len(corner_cases) == 3 and all(item['passed'] for item in corner_cases.values())) if a.corner_probe else None,
         rule_unregistered_and_mount_removed=cleanup_ok, host_payloads_unchanged=True,
         error=error, target_executed=True, flash_operations=False,
         standard_a53_package_compatibility_qualified=False)
     (w/'result.json').write_text(json.dumps(report, indent=2)+'\n')
     print('BINFMT_EXECUTION_MATRIX_RECORDED', json.dumps(report), flush=True)
-    if error or not report['all_exec_cases_passed'] or not controls_ok or not cleanup_ok:
+    if error or not report['all_exec_cases_passed'] or not controls_ok or not cleanup_ok or (a.corner_probe and not report['all_negative_corners_passed']):
         raise SystemExit(1)
 
 

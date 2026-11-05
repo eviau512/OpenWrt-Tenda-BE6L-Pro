@@ -15,8 +15,9 @@ ELFs, default native services, Chinese Argon, NPU workers and MTD protection.
 A separately staged integer-host emulator passes a20-case standard A53 child
 execution matrix and a normal standard-package shell/ucode/btop chain. Its
 temporary dispatch rule is removed after testing. General package compatibility,
-credential/failed-exec corners, packet forwarding/lifetime and new-candidate
-recovery remain open. The [earlier2f82 candidate](docs/CANDIDATE-2F82-TARGET.md)
+credential/failed-exec corners and packet forwarding/lifetime remain open. Its
+own default300-second recovery after explicit NPU detach also passes, returning
+to authenticated stock. Broader recovery remains open. The [earlier2f82 candidate](docs/CANDIDATE-2F82-TARGET.md)
 separately passed default expiry after explicit wireless/NPU detach and returned
 to authenticated stock. [Build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
 retain their scope. These results do not qualify routed NPU offload.
