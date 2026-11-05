@@ -10,12 +10,14 @@ import argparse
 import hashlib
 import json
 import lzma
+import re
 import shutil
 import stat
 import struct
 import subprocess
 import tarfile
-from package_native_netifd_v3 import root_digest, sha
+from package_native_netifd_v3 import root_digest, records, sha
+from plan_integer_binfmt_v1 import ADMITTED_ROOT, tag_private
 from prepare_ramboot import tree, image, text
 from prepare_unattended_intermediate_v1 import encode_dtb
 from verify_embedded_compat_cpio import verify
@@ -55,6 +57,10 @@ def main():
     for name in ('candidate', 'composition', 'archive', 'kernel', 'runtime-test',
                  'baseline-payload', 'prior-loader-fixture', 'cross-compile', 'work'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--private-marker-composition', type=Path,
+                        help='Signed marker composition for a derived prior-runtime binding')
+    parser.add_argument('--prior-runtime-root', type=Path,
+                        help='Sealed root used by the prior real runtime test; requires marker composition')
     a = parser.parse_args()
     work = a.work.resolve()
     if work.parent != Path('/root') or not work.name.startswith('be6l-candidate-ramboot-'):
@@ -66,14 +72,65 @@ def main():
     root_pin = root_digest(root)
     if root_pin != report['root_records_sha256'] or root_pin != composition['installed_root_records_sha256']:
         raise ValueError('Candidate root seal changed')
-    if tested['source_root_records_sha256'] != root_pin or not all(tested['native_vm_modules_mapped'].values()):
+    marker_transition = None
+    if bool(a.private_marker_composition) != bool(a.prior_runtime_root):
+        raise ValueError('Both marker provenance inputs are required together')
+    if a.private_marker_composition:
+        marker_path = a.private_marker_composition / 'result.json'
+        marker = json.loads(marker_path.read_text())
+        if (not report.get('integer_binfmt_builtin') or not marker['normal_signed_component_transaction'] or
+                marker['private_soft_abi_provenance_root'] != ADMITTED_ROOT or
+                marker['private_native_files_marked'] != 61 or marker['standard_guests_modified'] or
+                not marker['original_root_unchanged'] or marker['binfmt_registered'] or
+                root_digest(a.prior_runtime_root) != ADMITTED_ROOT or
+                tested['source_root_records_sha256'] != ADMITTED_ROOT or
+                composition['original_root_records_sha256'] != marker['installed_root_records_sha256'] or
+                root_digest(a.private_marker_composition / 'root') != marker['installed_root_records_sha256']):
+            raise ValueError('Incomplete signed private-marker provenance chain')
+        before, after = records(a.prior_runtime_root), records(root)
+        if before.keys() != after.keys():
+            raise ValueError('Unexpected file set change in marker/kernel transition')
+        marked = set(marker['native_owners'])
+        if len(marked) != 61:
+            raise ValueError('Incomplete admitted private-native owner inventory')
+        for name in before:
+            if name in marked:
+                if ('sha256' not in before[name] or before[name]['mode'] != after[name].get('mode') or
+                        tag_private((a.prior_runtime_root / name).read_bytes()) != (root / name).read_bytes()):
+                    raise ValueError('Private runtime differs beyond the ELF marker: ' + name)
+            elif before[name] != after[name]:
+                replacement = composition['replacements'].get(name)
+                if replacement:
+                    if (before[name].get('sha256') != replacement['before'] or
+                            after[name].get('sha256') != replacement['after'] or
+                            before[name].get('mode') != after[name].get('mode')):
+                        raise ValueError('Unbound matching-module payload: ' + name)
+                elif name == 'lib/modules/6.18.55/modules.builtin':
+                    expected = ''.join(Path(line).name + '\n' for line in
+                                       (a.kernel / 'modules.builtin').read_text().splitlines())
+                    if (root / name).read_text() != expected:
+                        raise ValueError('Builtin module list differs from the matching kernel')
+                elif name == 'lib/modules/6.18.55/modules.builtin.modinfo':
+                    strings = subprocess.check_output(['strings', a.kernel / 'modules.builtin.modinfo']).splitlines()
+                    expected = b'\0'.join(line for line in strings if not re.search(rb'\.(file|parmtype)=', line)) + b'\0'
+                    if (root / name).read_bytes() != expected:
+                        raise ValueError('Builtin module info differs from the matching kernel')
+                elif name not in ('lib/apk/db/installed', 'etc/apk/world'):
+                    raise ValueError('Unqualified runtime payload change: ' + name)
+        marker_transition = dict(prior_runtime_root_records_sha256=ADMITTED_ROOT,
+            marker_receipt_sha256=sha(marker_path), all_61_native_elf_marker_only_delta=True,
+            other_runtime_payloads_unchanged=True, current_candidate_runtime_tested=False)
+    elif tested['source_root_records_sha256'] != root_pin:
         raise ValueError('Wrong real native netifd runtime fixture')
+    if not all(tested['native_vm_modules_mapped'].values()):
+        raise ValueError('Incomplete native VM runtime fixture')
     if not all(tested[k] for k in ('actual_aarch64_runtime', 'separate_network_namespace',
                                   'host_netns_unchanged', 'ubus_network_objects_registered')):
         raise ValueError('Incomplete real runtime evidence')
     if sha(a.prior_loader_fixture) != FIXTURE_SHA:
         raise ValueError('Wrong previously qualified loader fixture')
     prior_paths = 0
+    marker_only_paths = []
     with tarfile.open(a.prior_loader_fixture) as stream:
         for member in stream:
             if member.name == 'opt/be6l-curl-init-probe':
@@ -89,7 +146,11 @@ def main():
                     raise ValueError('Changed prior loader symlink')
             elif member.isfile():
                 if sha(actual) != hashlib.sha256(stream.extractfile(member).read()).hexdigest():
-                    raise ValueError('Changed qualified loader bytes: ' + member.name)
+                    if not marker_transition or member.name not in marked:
+                        raise ValueError('Changed qualified loader bytes: ' + member.name)
+                    if actual.read_bytes() != tag_private(stream.extractfile(member).read()):
+                        raise ValueError('Loader changed beyond its qualified private marker')
+                    marker_only_paths.append(member.name)
             else:
                 raise ValueError('Unexpected fixture node')
             prior_paths += 1
@@ -152,8 +213,11 @@ def main():
     names = ['Image', 'board.dtb', 'entry.bin', 'linux64-kexec-loader', 'arm32-fallback', 'kexec', 'ld-musl-arm.so.1']
     output = dict(board='tenda,be6l-pro', flash='read-only', fit_sha256=report['image_sha256'],
         kernel_header=header, entry='0x87f00000', linux_entry='0x80200000', segments=segments,
-        root_records_sha256=root_pin, prior_loader_paths_unchanged=prior_paths,
-        native_netifd_real_isolated_runtime=True, full_default_service_qualified=False,
+        root_records_sha256=root_pin, prior_loader_paths_unchanged=prior_paths-len(marker_only_paths),
+        prior_loader_paths_bound=prior_paths, prior_loader_marker_only_paths=marker_only_paths,
+        native_netifd_real_isolated_runtime=not bool(marker_transition),
+        prior_native_runtime_marker_transition=marker_transition,
+        full_default_service_qualified=False,
         embedded_cpio=embedded, dtb_changed_properties=['/chosen/' + key for key in changed],
         loader_source_sha256=sha(source), candidate_receipt_sha256=sha(a.candidate / 'result.json'),
         runtime_test_receipt_sha256=sha(a.runtime_test / 'result.json'),

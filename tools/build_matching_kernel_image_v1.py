@@ -3,8 +3,9 @@
 
 This updates only the explicitly supplied fresh build directory. Its earlier
 receipt is preserved as a predecessor; the final receipt describes the updated
-Image. External wireless modules are retained, not described as freshly built.
-No target connection or boot operation is performed.
+Image. The opt-in binfmt profile requires all external modules to be freshly
+built and every admitted private host ELF to carry its private marker.
+No target connection, binfmt registration or boot operation is performed.
 """
 from pathlib import Path
 from datetime import datetime, timezone
@@ -19,6 +20,7 @@ from build_fresh_arm64_kernel_v1 import config_values, sha, TOOLCHAIN, EPOCH
 from package_native_netifd_v3 import root_digest
 from prepare_ramboot import tree, text, image
 from verify_embedded_compat_cpio import verify
+from plan_integer_binfmt_v1 import PRIVATE_SOFT_EFLAGS, matches
 
 
 def main():
@@ -57,6 +59,32 @@ def main():
         raise ValueError('Root changed since signed composition')
     if sha(cpio) != archive['roots']['native']['cpio_sha256']:
         raise ValueError('Final CPIO changed')
+    integer_binfmt = prior.get('integer_binfmt_builtin', False)
+    private_elf = []
+    if integer_binfmt:
+        if (not component.get('integer_binfmt_builtin') or
+                component.get('retained_external_module_count') != 0 or
+                component.get('rebuilt_external_module_count') != 7 or
+                component.get('total_rebuilt_module_count') != 84 or
+                component['installed_packages'] != 219 or
+                config_values((build / '.config').read_text()).get('CONFIG_BINFMT_MISC') != 'y'):
+            raise ValueError('The binfmt profile requires its complete matching module/root composition')
+        for path in sorted(root.rglob('*')):
+            if path.is_symlink() or not path.is_file():
+                continue
+            with path.open('rb') as incoming:
+                header = incoming.read(64)
+            if (len(header) >= 64 and header[:7] == b'\x7fELF\x02\x01\x01' and
+                    header[18:20] == b'\xb7\0' and struct.unpack_from('<H', header, 16)[0] in (2, 3)):
+                if struct.unpack_from('<I', header, 48)[0] != PRIVATE_SOFT_EFLAGS or matches(header):
+                    raise ValueError('Unmarked or dispatch-matching private host ELF: ' + str(path))
+                private_elf.append(path.relative_to(root).as_posix())
+        if len(private_elf) != 61:
+            raise ValueError('Unexpected private host ELF inventory')
+        # Dispatch is an explicit, later RAM-only action after target inventory admission.
+        registrations = root / 'etc/binfmt.d'
+        if registrations.exists() and any(registrations.iterdir()):
+            raise ValueError('Automatic binfmt registration is not admitted in this candidate')
     for name in ('dtc', 'mkimage', 'lzma'):
         path = getattr(args, name)
         if not path.is_file() or not os.access(path, os.X_OK):
@@ -151,7 +179,10 @@ def main():
         composition_receipt_sha256=sha(args.composition / 'result.json'),
         root_records_sha256=root_pin, installed_packages=component['installed_packages'],
         rebuilt_in_tree_modules=component['rebuilt_module_count'],
+        rebuilt_external_modules=component.get('rebuilt_external_module_count', 0),
         retained_external_modules=component['retained_external_module_count'],
+        integer_binfmt_builtin=integer_binfmt, marked_private_host_elf_paths=private_elf,
+        binfmt_registration_enabled=False,
         unchanged_compiled_module_objects=True, module_layout_audit=layout,
         image_tool_sha256={name: sha(getattr(args, name)) for name in ('dtc', 'mkimage', 'lzma')},
         dtb_sha256=sha(dtb), dtb_readonly_partitions=10, bmt_readonly=True,

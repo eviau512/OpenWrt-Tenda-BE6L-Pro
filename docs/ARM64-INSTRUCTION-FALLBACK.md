@@ -63,7 +63,7 @@ uploaded only into an owned RAM directory. They are not embedded in the FIT or
 installed over current system packages. Existing Image headroom is262144 bytes;
 the emulator cannot simply be appended without a new admission measurement.
 
-## Complete child execution remains open
+## Standard dispatch and the remaining execution boundary
 
 Baseline QEMU hands `execve/execveat` to the host. On this same-ISA machine,
 standard child programs can consequently escape emulation and hit SIGILL.
@@ -73,27 +73,36 @@ and its new argument list does not carry our CPU, runtime-prefix and cache optio
 Error/permission/script and failed-exec cleanup semantics also need independent
 review. A working parent process does not close this gap.
 
-The next candidate is kernel `binfmt_misc` dispatch, which can preserve kernel
-execution handling and QEMU's existing AT_EXECFD/AT_FLAGS support. The current
-kernel has CONFIG_BINFMT_MISC disabled. Enabling it changes `struct user_namespace`,
-so force-loading a newly compiled module into this kernel is not admitted.
+The [new matched candidate](CANDIDATE-BINFMT-TARGET.md) uses kernel `binfmt_misc`
+dispatch with QEMU's AT_EXECFD/AT_FLAGS support. Earlier2f82 had this option
+disabled. Enabling it changes `struct user_namespace`, so the new candidate
+rebuilds the full kernel and all external/in-tree modules; none are force-loaded
+into an old kernel.
 
-The [offline planner](../tools/plan_integer_binfmt_v1.py) checks all61 admitted
-private native ELFs and six standard guests. All61 currently share e_flags0
-with standard guests and would wrongly recurse through an indiscriminate rule.
-The proposed private host marker `0xbe6a0001` separates them. It is an experimental
+The [offline planner](../tools/plan_integer_binfmt_v1.py) showed all61 earlier
+private native ELFs shared e_flags0 with standard guests and would recurse through
+an indiscriminate rule. Normal signed provider transactions now mark all61 with
+private host marker `0xbe6a0001`. It is an experimental
 project convention in a reserved ELF field, **not a standard Arm feature flag**.
 Only an already proven private soft-ABI provider may receive it; no instruction
-scan alone establishes ABI provenance. A separately marked copy of the admitted
-emulator runs natively on this kernel; the other61 files have not been changed.
+scan alone establishes ABI provenance. A separately signed marked emulator brings
+the actual host inventory to62; a full target scan and exact hashes verify them
+before temporary registration. Standard guest bytes remain unchanged.
 
-Before activation: build a matching kernel and all modules, normally package/sign
-every marked private provider, validate the complete host inventory, supply an
-immutable marked interpreter and matched standard runtime, settle CPU/cache defaults
-and runtime-root behavior, and measure the full CPIO/Image/loader. Then test plain
-and fd-based exec, scripts, argv0/env, permissions, unlink, credentials, signals and
-recovery. The planner does not register a rule or modify any root. Standard packages
-must remain byte-for-byte standard. No general package capability is claimed yet.
+The matching CPIO/Image/loader, normal signed private providers, eight signed
+standard runtime packages, Cortex-A53/4MiB emulator defaults and actual startup
+now pass. A gated FD/proc fix resolves failed `/dev/fd` executable names through
+AT_EXECFD. A narrow CLOEXEC retry keeps descriptor flags/closure and kernel
+permission checks, applies only to readable standard A53 ELF, and excludes scripts.
+All20 target exec/FD/script/argv/env/permission/credential-drop/signal cases pass,
+as does the standard shell child chain. The rule is unregistered afterwards.
+See [exact evidence and limitations](CANDIDATE-BINFMT-TARGET.md).
+
+Complete semantics remain open: deleted-file proc open/stat/re-exec, bad/missing
+ELF interpreter errno, setuid/capabilities/secure exec, procfs/readability,
+broader package workloads, RAM/performance and new-candidate recovery. `POF` has
+no credential-from-guest flag`C`. This does not qualify standard A53 packages in
+general. The planner itself still performs no registration or root modification.
 
 The older ARM32-QEMU shortcut is excluded: upstream documents broken atomicity for
 64-bit linux-user guests on32-bit hosts and disabled that combination in10.0;

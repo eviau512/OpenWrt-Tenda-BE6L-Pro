@@ -9,13 +9,17 @@ prototypes. It does not contain a complete OpenWrt checkout or router backups.
 
 ## Current status
 
-The [new ARM64 candidate startup](docs/CANDIDATE-2F82-TARGET.md) passes actual
-RAM-boot checks: new kernel build ID,219 packages,84 module files,61 native
-regular ELF files, default native netifd and five VM modules, Chinese Argon,
-NPU workers and MTD protection. Its default expiry after explicit wireless/NPU
-detach also returns to authenticated stock. New-kernel packet forwarding/lifetime
-and broader recovery acceptance remain open. Earlier [build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
-remain separately scoped. These results do not qualify routed NPU offload.
+The [matched ARM64 binfmt candidate](docs/CANDIDATE-BINFMT-TARGET.md) passes actual
+RAM startup with219 packages,84 freshly rebuilt modules,61 marked private-native
+ELFs, default native services, Chinese Argon, NPU workers and MTD protection.
+A separately staged integer-host emulator passes a20-case standard A53 child
+execution matrix and a normal standard-package shell/ucode/btop chain. Its
+temporary dispatch rule is removed after testing. General package compatibility,
+credential/failed-exec corners, packet forwarding/lifetime and new-candidate
+recovery remain open. The [earlier2f82 candidate](docs/CANDIDATE-2F82-TARGET.md)
+separately passed default expiry after explicit wireless/NPU detach and returned
+to authenticated stock. [Build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
+retain their scope. These results do not qualify routed NPU offload.
 
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
 for the current project overview. Standard Cortex-A53 binary-package compatibility
@@ -24,8 +28,9 @@ remains a separate goal from the existing custom soft-ABI C components.
 The optional [integer-host ARM64 emulator](docs/ARM64-INSTRUCTION-FALLBACK.md)
 now passes selected standard-ABI FP/NEON, dynamic musl, C++ and Go tests on the
 router, plus a signed standard A53 btop package's version command. A fresh public
-source rebuild passes too. Complete child execution and normal package admission
-remain open; these are software-emulation results, not native FP support.
+source rebuild passes too. Normal signed standard runtime packages and bounded
+child execution now pass; broader execution semantics and package workloads
+remain open. These are software-emulation results, not native FP support.
 
 - A dual-core AArch64 Linux kernel runs native AAPCS64-soft init/procd and
   selected C components alongside ARM32 applications through COMPAT. A complete

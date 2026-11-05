@@ -45,6 +45,8 @@ def main():
     parser.add_argument('--host-prefix', type=Path, required=True)
     parser.add_argument('--cpio', type=Path, required=True)
     parser.add_argument('--work', type=Path, required=True)
+    parser.add_argument('--integer-binfmt', action='store_true',
+                        help='Build in binfmt_misc for a separately admitted instruction-emulation candidate')
     args = parser.parse_args()
     work = args.work.resolve()
     if work.parent != Path('/root') or not work.name.startswith('be6l-kernel-build-'):
@@ -67,6 +69,10 @@ def main():
     values = config_values(old_config)
     changed = old_config.replace('CONFIG_INITRAMFS_SOURCE=' + values['CONFIG_INITRAMFS_SOURCE'],
                                 'CONFIG_INITRAMFS_SOURCE="' + str(args.cpio.resolve()) + '"')
+    if args.integer_binfmt:
+        if changed.count('# CONFIG_BINFMT_MISC is not set') != 1:
+            raise ValueError('Unexpected baseline binfmt configuration')
+        changed = changed.replace('# CONFIG_BINFMT_MISC is not set', 'CONFIG_BINFMT_MISC=y')
     (build / '.config').write_text(changed)
     toolchain = args.bootstrap / TOOLCHAIN
     compiler_prefix = str(toolchain / 'bin/aarch64-openwrt-linux-musl-')
@@ -104,9 +110,14 @@ def main():
     delta = {key: dict(before=values.get(key), after=actual.get(key))
              for key in values.keys() | actual.keys() if values.get(key) != actual.get(key)}
     (work / 'config-delta.json').write_text(json.dumps(delta, indent=2) + '\n')
-    if set(delta) != {'CONFIG_INITRAMFS_SOURCE'}:
+    allowed = {'CONFIG_INITRAMFS_SOURCE'}
+    if args.integer_binfmt:
+        allowed.add('CONFIG_BINFMT_MISC')
+        if delta.get('CONFIG_BINFMT_MISC') != dict(before='n', after='y'):
+            raise ValueError('Requested built-in binfmt configuration differs')
+    if set(delta) != allowed:
         raise ValueError('Unexpected configuration drift; do not build or admit')
-    print('FRESH_CONFIGURATION_SAME_EXCEPT_OWNED_CPIO_PATH', flush=True)
+    print('FRESH_CONFIGURATION_ADMITTED', json.dumps(delta), flush=True)
     run('compile', make + ['-j4', 'vmlinux', 'modules'])
     vmlinux = build / 'vmlinux'
     header = vmlinux.read_bytes()[:20]
@@ -126,6 +137,8 @@ def main():
         matching_module_packages_built=False, matching_root_composed=False,
         final_image_admitted=False, target_executed=False,
         standard_a53_package_compatibility_qualified=False)
+    report['integer_binfmt_builtin'] = args.integer_binfmt
+    report['external_modules_require_fresh_build'] = args.integer_binfmt
     (work / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     print('FRESH_ARM64_KERNEL_AND_IN_TREE_MODULES_BUILT', len(modules), flush=True)
 

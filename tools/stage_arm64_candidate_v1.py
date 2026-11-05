@@ -30,7 +30,18 @@ def main():
     manifest = json.loads(manifest_path.read_text())
     if manifest['board'] != 'tenda,be6l-pro' or manifest['flash'] != 'read-only' or manifest['executed']:
         raise ValueError('Wrong RAM payload')
-    if manifest['prior_loader_paths_unchanged'] != 110 or not manifest['native_netifd_real_isolated_runtime']:
+    transition = manifest.get('prior_native_runtime_marker_transition')
+    if transition:
+        marked_paths = manifest.get('prior_loader_marker_only_paths', [])
+        if (manifest.get('prior_loader_paths_bound') != 110 or
+                manifest['prior_loader_paths_unchanged'] + len(marked_paths) != 110 or
+                len(marked_paths) != len(set(marked_paths)) or
+                not transition.get('all_61_native_elf_marker_only_delta') or
+                not transition.get('other_runtime_payloads_unchanged') or
+                transition.get('current_candidate_runtime_tested') is not False or
+                manifest['native_netifd_real_isolated_runtime']):
+            raise ValueError('Incomplete derived prior runtime/loader marker binding')
+    elif manifest['prior_loader_paths_unchanged'] != 110 or not manifest['native_netifd_real_isolated_runtime']:
         raise ValueError('Missing candidate loader/runtime binding')
     names = {f['name'] for f in manifest['files']}
     expected = {'Image', 'board.dtb', 'entry.bin', 'linux64-kexec-loader', 'arm32-fallback', 'kexec', 'ld-musl-arm.so.1'}

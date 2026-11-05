@@ -1,0 +1,353 @@
+{
+  "scope": "matched RAM-kernel startup and bounded standard A53 execution-chain experiment",
+  "date_local": "2026-11-06",
+  "image": {
+    "image_sha256": "e228c236c959d821249e04ddb2cf28dbc8c8790b9d26ca366ec4650eb4d35d4a",
+    "kernel_sha256": "a54fc907b4172b55eb8f11bd1271690f568efdf033a8cbcb3bb82a2f722bda0e",
+    "kernel_bytes": 64356360,
+    "kernel_effective_bytes": 64749568,
+    "kernel_headroom_bytes": 262144,
+    "kernel_config_sha256": "7c8a7beb0dbf014457f96090dcf825ab8e8d29865e2a97e649e8b69183fca9c8",
+    "external_cpio_sha256": "1dde6711cc5475d2fe0eed6520556918451c542d12eb015b3842b199be5c5634",
+    "embedded_cpio_verified": true,
+    "rebuilt_in_tree_modules": 77,
+    "rebuilt_external_modules": 7,
+    "retained_external_modules": 0,
+    "integer_binfmt_builtin": true,
+    "binfmt_registration_enabled": false,
+    "dtb_readonly_partitions": 10,
+    "bmt_readonly": true
+  },
+  "qualification": {
+    "fit_sha256": "e228c236c959d821249e04ddb2cf28dbc8c8790b9d26ca366ec4650eb4d35d4a",
+    "actual_kernel_build_id": "3369afd1e7ba3353d80f255f98a9824a0c334ec3",
+    "expected_kernel_build_id": "3369afd1e7ba3353d80f255f98a9824a0c334ec3",
+    "boot_id": "b4637d28-2697-4ac4-b5a1-c0a8ed24e3f6",
+    "dual_cpu_aarch64": true,
+    "ram_root": true,
+    "ten_mtd_guards": true,
+    "critical_partition_digests_unchanged": true,
+    "exact_installed_packages": 219,
+    "exact_modules": 84,
+    "exact_native_regular_elf_files": 61,
+    "default_native_pid1": true,
+    "default_native_netifd": true,
+    "default_native_vm_modules_mapped": {
+      "fs": true,
+      "ubus": true,
+      "uloop": true,
+      "uci": true,
+      "nl80211": true
+    },
+    "required_services_running_without_respawn": true,
+    "recovery_heartbeat_accepted": true,
+    "npu_workers_advancing": true,
+    "npu_faults": 0,
+    "luci_http_status": 403,
+    "luci_login_form_rendered": true,
+    "luci_argon_chinese": true,
+    "required_application_selection_preserved": true,
+    "original_offline_root_unchanged": true,
+    "startup_acceptance_passed": true,
+    "new_candidate_recovery_tested": false,
+    "routed_nat_qualified": false,
+    "standard_a53_package_compatibility_qualified": false,
+    "flash_operations": false
+  },
+  "module_layout": true,
+  "kernel_package": "6.18.55~7b648602069fdc1d228ca9bad74de7f2-r101",
+  "normal_signed_private_markers": {
+    "installed_packages": 219,
+    "private_soft_abi_provenance_root": "c10de4749faeaf15a6985242e63c10bfa9b74bcdee754d1d8bf77a3a6f82457e",
+    "private_marker": "0xbe6a0001",
+    "marker_is_standard_arm_feature_flag": false,
+    "private_native_files_marked": 61,
+    "repackaged_versions": {
+      "be6l-soft-netifd-deps": "1.0.207096242606784-r2",
+      "procd": "2026.10.26.157004332030651-r2",
+      "be6l-soft-runtime": "0.2.157004332030651-r2",
+      "be6l-soft-tools": "0.2.157004332030651-r2",
+      "netifd": "2026.09.11~06d06c86-r101"
+    },
+    "standard_guests_modified": false,
+    "original_root_unchanged": true,
+    "private_signing_key_removed": true
+  },
+  "normal_signed_standard_runtime": {
+    "architecture": "aarch64_cortex-a53",
+    "installed_packages": 8,
+    "packages": [
+      {
+        "name": "libc",
+        "version": "1.2.6-r5",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "243e2c5aa12994b892a21cae79b4231eb7dba5913c173dbbf85b95f5905362c0"
+      },
+      {
+        "name": "libgcc1",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "e9bd2a1a4ed6f5612a8818b9e4782c495aa2927bedefdc7b04caa3a85c468f73"
+      },
+      {
+        "name": "libstdcpp6",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "475061ca6a9d598c0a58059be1aba82a2590e55810a67f580c73bee80bd10c6d"
+      },
+      {
+        "name": "busybox",
+        "version": "1.38.0-r3",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "4504f3bd62eaaae7e437f30b5a4b678612907fd3f2f0583a1d542606991fbc36"
+      },
+      {
+        "name": "ucode",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "b99590a7f7ec8e5eecb4b8ead51a05ffc841b951735e929c44732bb6fd4372c7"
+      },
+      {
+        "name": "libucode20261009",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "e2c72e89d5b439d34ac27c174c774f49a095019df013c05783e029f1f1a9fb88"
+      },
+      {
+        "name": "libjson-c5",
+        "version": "0.19-r2",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "afa69201d4eaa01cf4ec051975aab5459d9c3e020b8ef47461a840363d34d17e"
+      },
+      {
+        "name": "btop",
+        "version": "1.4.7-r1",
+        "arch": "aarch64_cortex-a53",
+        "apk_sha256": "8944cd4092c7bdac1a4f3b0368de998b82a17937ae82e5dc9b6894931ea5c7fe"
+      }
+    ],
+    "package_payload_paths_verified": 197,
+    "standard_elf_sha256": {
+      "bin/busybox": "f212763f5d100fbe9fdfaac568f07c1b350e141048da69fcff3369086815d98e",
+      "lib/libc.so": "4f0426cfdd7dee617a2cd6290556c794653289999fe31754df3335be6e378042",
+      "lib/libgcc_s.so.1": "2667ec4f063bdfb6118a135b42cdac0d24fe1b56e1d28a5448ee68140be4b399",
+      "usr/bin/btop": "cbff80078adfade11455ad309233def226c22a31a900537f4ef115dce0b9a1d6",
+      "usr/bin/ucode": "0b09a54feaf7ad9a6e6ea912b53598b8c05c0252e64cce6ee97063125dcc72e2",
+      "usr/bin/udbg": "0934018c407e778461d48cb2acb4a9bbc6590f83e463e2ab4c55ac0f400a8758",
+      "usr/lib/libjson-c.so.5.5.0": "863d669d7f356c474234d8ec736f81130ec5740e27478469813fb788f249be76",
+      "usr/lib/libstdc++.so.6.0.33": "3f8f9881983747398b272cc6d245bb98c9882eaa6a7c1c2765a3c24bec192178",
+      "usr/lib/libucode.so.20261009": "1e527bc07a1ef448cd5262a45a102ce79189bb5c3f4d799f5e2dba5ce9cc92c8"
+    },
+    "standard_payloads_unmodified": true,
+    "target_package_scripts_executed": false
+  },
+  "emulator": {
+    "static_elf_admission": {
+      "qemu-aarch64": {
+        "sha256": "2ffa54b259bf57e71f2fbff5b585c12d8cf2ac450ada06b451abfa4a3048a4f2",
+        "bytes": 7681208,
+        "needed": [],
+        "interpreter": [],
+        "fp_simd_register_uses": 0
+      }
+    },
+    "source_preparation": {
+      "version": "11.1.3",
+      "release_archive_sha256": "5a8289c7940dc77d3873c81a6c29ba3afe1446fc9d36e77fa1658cdbecb84b22",
+      "signing_primary_fingerprint": "CEACC9E15534EBABB82D3FA03353C9CEF108B584",
+      "official_signature_verified": true,
+      "mode": "opt-in BE6L_INTEGER_HOST with AAPCS64-soft compiler and no FP/SIMD",
+      "changes": {
+        "tcg/aarch64/tcg-target-has.h": {
+          "original_sha256": "dca98e880df4f7588fc4e2634a848aade40103311493715e8fe605ad96ce1134",
+          "modified_sha256": "13727e22df2cdccb328ad101e9fe6a1834b06fd42f49138e3d8692d6099226df"
+        },
+        "tcg/aarch64/tcg-target.c.inc": {
+          "original_sha256": "0ac31ce9a950556fb07d8c872fe5a740e72cf4d27076f784a86a51a84967e093",
+          "modified_sha256": "eee61cbda0eb84e855e3e9b7a33bde3e84e455bdb7cc76039f8b65cc4355de66"
+        },
+        "fpu/softfloat.c": {
+          "original_sha256": "dad0efe773ca6b866854f2cd514cb5fa3352269a308fe1e1bdd4e5c94aadd74c",
+          "modified_sha256": "c3bf82810477d298baf0cd80d08ede1c7fcb8be17659b4cab0cbc8dec35a1fd1"
+        },
+        "host/include/aarch64/host/crypto/aes-round.h": {
+          "original_sha256": "7af337f0e43539361480c92f90db9cdd7319b6de23135c6c194b05797bd36aa5",
+          "modified_sha256": "31b8a6212aba8e548f6c568b9d59bf195cfdfa6d0d5b2ae5e9e94bb1374184b4"
+        },
+        "host/include/aarch64/host/crypto/clmul.h": {
+          "original_sha256": "2f88712f1b860c98c33ecba9b2a97db87a43ccb334d9757709c0228f2bceea91",
+          "modified_sha256": "487e608a592c927fb5f8b2c2a08f34d03e505c9ab4a6bce6e3026e5621a869d2"
+        },
+        "linux-user/main.c": {
+          "original_sha256": "e2700a67da9630740d4343bd534c5e81e65a496e495064ed6dfcced540bd283d",
+          "modified_sha256": "dbb7ba92bbac252f1e20918d17864793e7af275d4e6f67532a61cacd90e71de0"
+        },
+        "linux-user/syscall.c": {
+          "original_sha256": "7725956917807848efa5b4e384627cbf4fc7abfef9d5e59dbd6fd0ad8001d16b",
+          "modified_sha256": "3d259bc715cb27db3b7066560e54f9738ad70367a8477afcfaf2907570d115b6"
+        }
+      },
+      "patch_sha256": "2383479a0955bd7c4802a4e0ef0fa5b4849e6dd7efde1da31e8100991dbb6e0f",
+      "native_host_vector_emission_disabled": true,
+      "native_host_hardfloat_disabled": true,
+      "binfmt_defaults": true,
+      "default_guest_cpu": "cortex-a53",
+      "default_tb_cache_mib": 4,
+      "binfmt_fd_paths": true,
+      "cloexec_retry_scope": "readable standard A53 ELF only; scripts excluded",
+      "source_prepared": true,
+      "emulator_built": false,
+      "generated_code_audited": false,
+      "target_executed": false,
+      "standard_a53_package_compatibility_qualified": false,
+      "unresolved": [
+        "complete dependency build and ELF admission",
+        "audit emitted TCG code and all helper call ABIs",
+        "same-ISA execve child containment",
+        "threads, atomics, signals, TLS, IEEE rounding and standard packages",
+        "RAM budget and performance"
+      ]
+    },
+    "signed_package": {
+      "version": "11.1.3-r2",
+      "package_sha256": "6b45905b7766067f4ee8209efff72de922b2518d810a82abb23347d087a9e294",
+      "interpreter_sha256": "a5f44ff0e4acf543dd8210c7ebec0ddd348eb90c425381d0880682ab2849a90f",
+      "source_emulator_sha256": "2ffa54b259bf57e71f2fbff5b585c12d8cf2ac450ada06b451abfa4a3048a4f2",
+      "private_signing_key_removed": true,
+      "marker_is_standard_arm_elf_flag": false
+    }
+  },
+  "dispatch_admission": {
+    "marked_host_elf_count": 62,
+    "complete_host_elf_inventory_verified": true,
+    "guest_payload_digests_verified": true,
+    "normal_signed_emulator_installed": true,
+    "native_interpreter_runs": true,
+    "single_process_standard_package_controls_passed": true
+  },
+  "first_run": {
+    "passed_cases": 9,
+    "total_cases": 14,
+    "failure_cases": [
+      "execveat-dirfd",
+      "execveat-empty-path",
+      "fexecve",
+      "unlinked-fd",
+      "cloexec-fd"
+    ],
+    "rule_unregistered_and_mount_removed": true
+  },
+  "execution": {
+    "boot_id": "b4637d28-2697-4ac4-b5a1-c0a8ed24e3f6",
+    "fit_sha256": "e228c236c959d821249e04ddb2cf28dbc8c8790b9d26ca366ec4650eb4d35d4a",
+    "source_stage_receipt_sha256": "c9cef5d412dbfdc68c03d5a083fa40bb240e525c2cf12b56f8d0f806771e3f29",
+    "flags": "POF",
+    "cases": {
+      "execve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-absolute": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-empty-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fexecve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "unlinked-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "shebang-script": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "relative-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "proc-self-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "missing-file": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "dropped-credentials": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-script-rejected": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "invalid-execveat-flags": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "matrix_exit": 0,
+    "expected_exec_case_count": 20,
+    "all_exec_cases_passed": true,
+    "standard_package_child_chain_passed": true,
+    "interpreter_credentials_from_guest": false,
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "unresolved": [
+    "deleted executable proc open/stat/re-exec semantics beyond readlink",
+    "setuid/setgid/file capability and secure-exec behavior; POF deliberately has no C",
+    "missing/bad ELF interpreter and failed-exec errno propagation",
+    "readability/procfs requirements of narrow CLOEXEC retry",
+    "broad real package workloads and performance/memory admission",
+    "new e228 candidate own recovery and broader unattended failure modes",
+    "X-Wrt941-04 lifetime and new-kernel routed/L2 withdrawal qualification"
+  ],
+  "new_candidate_recovery_qualified": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "native_fp_simd_enabled": false,
+  "routed_nat_qualified": false,
+  "flash_operations": false
+}

@@ -24,7 +24,9 @@ def replace_once(text, before, after):
     return text.replace(before, after, 1)
 
 
-def prepare(verified_source, work):
+def prepare(verified_source, work, binfmt_defaults=False, binfmt_fd_paths=False):
+    if binfmt_fd_paths and not binfmt_defaults:
+        raise ValueError('FD dispatch changes require the explicit binfmt defaults profile')
     if work.exists():
         raise ValueError('Use a fresh experiment directory')
     archive = verified_source/'source.tar.xz'
@@ -61,8 +63,8 @@ def prepare(verified_source, work):
         if old == new:
             raise ValueError('No change: '+name)
         path.write_text(new)
-        changes[name] = {'original_sha256': hashlib.sha256(old.encode()).hexdigest(),
-                         'modified_sha256': hashlib.sha256(new.encode()).hexdigest()}
+        changes.setdefault(name, {'original_sha256': hashlib.sha256(old.encode()).hexdigest()})
+        changes[name]['modified_sha256'] = hashlib.sha256(new.encode()).hexdigest()
         patches.extend(difflib.unified_diff(old.splitlines(True), new.splitlines(True),
                                             fromfile='a/'+name, tofile='b/'+name))
 
@@ -103,6 +105,116 @@ def prepare(verified_source, work):
         change('host/include/aarch64/host/crypto/'+name,
                lambda s, name=name: '#ifdef BE6L_INTEGER_HOST\n'
                '#include "../../../generic/host/crypto/'+name+'"\n#else\n'+s+'\n#endif\n')
+    if binfmt_defaults:
+        # binfmt_misc supplies the interpreter path, without command-line options.
+        # Keep defaults gated to this private host; normal builds retain upstream behavior.
+        def defaults(s):
+            s = replace_once(s, 'static unsigned long opt_tb_size;',
+                '#ifdef BE6L_INTEGER_HOST\nstatic unsigned long opt_tb_size = 4;\n'
+                '#else\nstatic unsigned long opt_tb_size;\n#endif')
+            return replace_once(s, '    cpu_model = NULL;',
+                '#ifdef BE6L_INTEGER_HOST\n    cpu_model = "cortex-a53";\n'
+                '#else\n    cpu_model = NULL;\n#endif')
+        change('linux-user/main.c', defaults)
+    if binfmt_fd_paths:
+        change('linux-user/main.c', lambda s: replace_once(s,
+            '''    if (!realpath(exec_path, real_exec_path)) {
+        printf("Could not resolve %s\\n", exec_path);
+    }''',
+            '''    if (!realpath(exec_path, real_exec_path)) {
+#ifdef BE6L_INTEGER_HOST
+        /* binfmt execveat may name /dev/fd without a guest /dev mount.
+         * The kernel's O descriptor refers to the actual ELF, including an
+         * unlinked inode. Preserve its (deleted) suffix for proc readlink.
+         */
+        char fd_path[64];
+        ssize_t length;
+        snprintf(fd_path, sizeof(fd_path), "/proc/self/fd/%d", execfd);
+        length = readlink(fd_path, real_exec_path, sizeof(real_exec_path) - 1);
+        if (length < 0 || length >= sizeof(real_exec_path) - 1) {
+            error_report("Could not resolve executable descriptor for %s", exec_path);
+            exit(EXIT_FAILURE);
+        }
+        real_exec_path[length] = 0;
+#else
+        printf("Could not resolve %s\\n", exec_path);
+#endif
+    }'''))
+        def fd_exec(s):
+            helper = r'''#ifdef BE6L_INTEGER_HOST
+/* Linux binfmt_misc rejects PATH_INACCESSIBLE before honoring O. For the
+ * project's standard A53 ELF only, retry a CLOEXEC execveat through a newly
+ * opened CLOEXEC /proc fd. Both original and temporary descriptors retain
+ * their close-on-exec semantics; the kernel repeats its execute/credential
+ * checks and provides QEMU a separate O descriptor. Scripts are never retried.
+ * A readable procfs is required; failures retain the original ENOENT.
+ */
+static int be6l_binfmt_execveat(int dirfd, const char *filename,
+                              char **args, char **vars, int flags)
+{
+    int ret = safe_execveat(dirfd, filename, args, vars, flags);
+    int fd_flags, fd, saved;
+    char proc_path[64];
+    unsigned char header[52];
+    ssize_t count;
+
+    if (ret != -1 || errno != ENOENT || dirfd == AT_FDCWD ||
+        filename[0] == '/' || (flags & ~(AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW))) {
+        return ret;
+    }
+    fd_flags = fcntl(dirfd, F_GETFD);
+    if (fd_flags < 0 || !(fd_flags & FD_CLOEXEC)) {
+        errno = ENOENT;
+        return -1;
+    }
+    if (!filename[0]) {
+        if (!(flags & AT_EMPTY_PATH)) {
+            errno = ENOENT;
+            return -1;
+        }
+        snprintf(proc_path, sizeof(proc_path), "/proc/self/fd/%d", dirfd);
+        fd = open(proc_path, O_RDONLY | O_CLOEXEC);
+    } else {
+        fd = openat(dirfd, filename, O_RDONLY | O_CLOEXEC |
+                    ((flags & AT_SYMLINK_NOFOLLOW) ? O_NOFOLLOW : 0));
+    }
+    if (fd < 0) {
+        errno = ENOENT;
+        return -1;
+    }
+    count = pread(fd, header, sizeof(header), 0);
+    if (count != sizeof(header) || memcmp(header, "\177ELF\2\1\1", 7) ||
+        (header[16] != 2 && header[16] != 3) || header[17] ||
+        header[18] != 183 || header[19] ||
+        header[48] || header[49] || header[50] || header[51]) {
+        close(fd);
+        errno = ENOENT;
+        return -1;
+    }
+    snprintf(proc_path, sizeof(proc_path), "/proc/self/fd/%d", fd);
+    ret = safe_execve(proc_path, args, vars);
+    saved = errno;
+    close(fd);
+    errno = saved;
+    return ret;
+}
+#endif
+
+'''
+            s = replace_once(s, 'static int do_execv(CPUArchState *cpu_env, int dirfd,\n',
+                             helper+'static int do_execv(CPUArchState *cpu_env, int dirfd,\n')
+            return replace_once(s,
+                '''    ret = is_execveat
+        ? safe_execveat(dirfd, exe, argp, envp, flags)
+        : safe_execve(exe, argp, envp);''',
+                '''    ret = is_execveat
+#ifdef BE6L_INTEGER_HOST
+        ? be6l_binfmt_execveat(dirfd, exe, argp, envp, flags)
+#else
+        ? safe_execveat(dirfd, exe, argp, envp, flags)
+#endif
+        : safe_execve(exe, argp, envp);''')
+        change('linux-user/syscall.c', fd_exec)
     patch = ''.join(patches)
     (work/'qemu-integer-host.patch').write_text(patch)
     result = dict(version=VERSION, release_archive_sha256=ARCHIVE_SHA,
@@ -110,6 +222,11 @@ def prepare(verified_source, work):
         mode='opt-in BE6L_INTEGER_HOST with AAPCS64-soft compiler and no FP/SIMD',
         changes=changes, patch_sha256=hashlib.sha256(patch.encode()).hexdigest(),
         native_host_vector_emission_disabled=True, native_host_hardfloat_disabled=True,
+        binfmt_defaults=binfmt_defaults,
+        default_guest_cpu='cortex-a53' if binfmt_defaults else 'upstream ELF-selected',
+        default_tb_cache_mib=4 if binfmt_defaults else 0,
+        binfmt_fd_paths=binfmt_fd_paths,
+        cloexec_retry_scope='readable standard A53 ELF only; scripts excluded' if binfmt_fd_paths else None,
         source_prepared=True, emulator_built=False, generated_code_audited=False,
         target_executed=False, standard_a53_package_compatibility_qualified=False,
         unresolved=['complete dependency build and ELF admission',
@@ -125,5 +242,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verified-source', type=Path, required=True)
     parser.add_argument('--work', type=Path, required=True)
+    parser.add_argument('--binfmt-defaults', action='store_true')
+    parser.add_argument('--binfmt-fd-paths', action='store_true')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.verified_source, args.work), indent=2))
+    print(json.dumps(prepare(args.verified_source, args.work, args.binfmt_defaults, args.binfmt_fd_paths), indent=2))
