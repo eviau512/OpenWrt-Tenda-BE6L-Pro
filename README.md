@@ -22,6 +22,12 @@ separately passed default expiry after explicit wireless/NPU detach and returned
 to authenticated stock. [Build and recovery results](docs/FRESH-KERNEL-AND-RECOVERY.md)
 retain their scope. These results do not qualify routed NPU offload.
 
+The newer [original-executable retention experiment](docs/BINFMT-GUEST-EXE-EXPERIMENT.md)
+passes matched368a startup,20 execution cases,9 of11 negative/lifetime cases and
+eight isolated standard-package workloads from28 signed A53 packages. Rename,
+deleted proc-exe and executable write-denial lifetime now pass. Missing-loader
+errno, setuid and full standard-package integration remain open.
+
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
 for the current project overview. Standard Cortex-A53 binary-package compatibility
 remains a separate goal from the existing custom soft-ABI C components.

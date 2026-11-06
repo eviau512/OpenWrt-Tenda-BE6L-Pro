@@ -25,11 +25,13 @@ def replace_once(text, before, after):
 
 
 def prepare(verified_source, work, binfmt_defaults=False, binfmt_fd_paths=False,
-            binfmt_proc_stat=False):
+            binfmt_proc_stat=False, binfmt_guest_exe=False):
     if binfmt_fd_paths and not binfmt_defaults:
         raise ValueError('FD dispatch changes require the explicit binfmt defaults profile')
     if binfmt_proc_stat and not binfmt_fd_paths:
         raise ValueError('Following proc-stat changes require the explicit FD-path profile')
+    if binfmt_guest_exe and not binfmt_proc_stat:
+        raise ValueError('Kernel executable retention requires the complete explicit proc-stat profile')
     if work.exists():
         raise ValueError('Use a fresh experiment directory')
     archive = verified_source/'source.tar.xz'
@@ -254,6 +256,55 @@ static const char *be6l_following_proc_stat_path(const char *filename, int flags
                 ret = get_errno(sys_statx(dirfd, p, flags, mask, &host_stx));
 #endif''')
         change('linux-user/syscall.c', following_proc_stat)
+    if binfmt_guest_exe:
+        change('linux-user/qemu.h', lambda s: replace_once(s,
+            '#define QEMU_H', '''#define QEMU_H
+
+#ifdef BE6L_INTEGER_HOST
+/* Private BE6L X/AT_FLAGS bit16 contract, supplied only by the host kernel. */
+extern bool be6l_kernel_execfd_exe;
+#endif'''))
+        def kernel_exe_main(s):
+            s = replace_once(s, 'char real_exec_path[PATH_MAX];',
+                '''char real_exec_path[PATH_MAX];
+#ifdef BE6L_INTEGER_HOST
+bool be6l_kernel_execfd_exe;
+#define BE6L_AT_FLAGS_EXECFD_EXE (1U << 16)
+#endif''')
+            return replace_once(s,
+                '    preserve_argv0 = !!(qemu_getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0);',
+                '''    preserve_argv0 = !!(qemu_getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0);
+#ifdef BE6L_INTEGER_HOST
+    /* No environment/command-line switch: an O fd and kernel auxv are required.
+     * Guest auxv remains produced by the ordinary ELF loader, without bit16.
+     */
+    errno = 0;
+    (void)qemu_getauxval(AT_EXECFD);
+    be6l_kernel_execfd_exe = !errno &&
+        !!(qemu_getauxval(AT_FLAGS) & BE6L_AT_FLAGS_EXECFD_EXE);
+#endif''')
+        change('linux-user/main.c', kernel_exe_main)
+        def kernel_exe_syscall(s):
+            # Preserve upstream proc emulation in the legacy/CLI profile. Under
+            # X the real kernel owns the original inode, permissions and ETXTBSY.
+            for expression in ('pathname', '(const char *)pathname', 'filename',
+                               'p', '(const char *)p'):
+                s = replace_once(s, 'is_proc_myself(' + expression + ', "exe")',
+                                 'be6l_named_proc_exe(' + expression + ')')
+            return replace_once(s,
+                'static void excp_dump_file(FILE *logfile, CPUArchState *env,',
+                '''static int be6l_named_proc_exe(const char *filename)
+{
+#ifdef BE6L_INTEGER_HOST
+    if (be6l_kernel_execfd_exe) {
+        return 0;
+    }
+#endif
+    return is_proc_myself(filename, "exe");
+}
+
+static void excp_dump_file(FILE *logfile, CPUArchState *env,''')
+        change('linux-user/syscall.c', kernel_exe_syscall)
     patch = ''.join(patches)
     (work/'qemu-integer-host.patch').write_text(patch)
     result = dict(version=VERSION, release_archive_sha256=ARCHIVE_SHA,
@@ -266,6 +317,8 @@ static const char *be6l_following_proc_stat_path(const char *filename, int flags
         default_tb_cache_mib=4 if binfmt_defaults else 0,
         binfmt_fd_paths=binfmt_fd_paths,
         binfmt_following_proc_stat=binfmt_proc_stat,
+        guest_exe_contract='BE6L_X_AT_FLAGS_16_v1' if binfmt_guest_exe else None,
+        kernel_execfd_exe_aware=binfmt_guest_exe,
         deleted_executable_inode_retained=False,
         cloexec_retry_scope='readable standard A53 ELF only; scripts excluded' if binfmt_fd_paths else None,
         source_prepared=True, emulator_built=False, generated_code_audited=False,
@@ -286,6 +339,8 @@ if __name__ == '__main__':
     parser.add_argument('--binfmt-defaults', action='store_true')
     parser.add_argument('--binfmt-fd-paths', action='store_true')
     parser.add_argument('--binfmt-proc-stat', action='store_true')
+    parser.add_argument('--binfmt-guest-exe', action='store_true')
     args = parser.parse_args()
     print(json.dumps(prepare(args.verified_source, args.work, args.binfmt_defaults,
-                             args.binfmt_fd_paths, args.binfmt_proc_stat), indent=2))
+                              args.binfmt_fd_paths, args.binfmt_proc_stat,
+                              args.binfmt_guest_exe), indent=2))

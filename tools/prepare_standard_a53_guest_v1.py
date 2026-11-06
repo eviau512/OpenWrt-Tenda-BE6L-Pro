@@ -7,6 +7,7 @@ claim. Target package scripts are disabled; no host or router root is changed.
 from pathlib import Path
 import argparse
 import json
+import re
 import shutil
 import struct
 import subprocess
@@ -21,7 +22,12 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('cached-packages', 'keys', 'apk', 'work'):
         p.add_argument('--'+name, type=Path, required=True)
+    p.add_argument('--extra-package', action='append', default=[],
+                   help='Additional exact cached package name; its complete signed dependency closure must be supplied')
     a = p.parse_args()
+    if any(not re.fullmatch('[a-z0-9][a-z0-9+.-]*', name) for name in a.extra_package):
+        p.error('Invalid extra package name')
+    names = tuple(dict.fromkeys(NAMES + tuple(a.extra_package)))
     w = a.work.resolve()
     if w.parent != Path('/root') or not w.name.startswith('be6l-standard-a53-guest-') or w.exists():
         p.error('Use a fresh /root/be6l-standard-a53-guest-* directory')
@@ -40,14 +46,14 @@ def main():
 
     candidates = list(a.cached_packages.rglob('*.apk'))
     packages, expected, metadata = [], {}, []
-    for name in NAMES:
+    for name in names:
         found = [path for path in candidates if path.name.startswith(name+'-')
                  and path.name[len(name)+1:len(name)+2].isdigit()]
         if len(found) != 1:
             raise ValueError('Expected one cached package for '+name)
         package = found[0]
         info = json.loads(run('metadata-'+name, [a.apk, 'adbdump', '--format', 'json', package]))['info']
-        if info['name'] != name or info['arch'] != 'aarch64_cortex-a53':
+        if info['name'] != name or info['arch'] not in ('aarch64_cortex-a53', 'all', 'noarch'):
             raise ValueError('Not a standard A53 package: '+name)
         run('verify-'+name, [a.apk, '--network=no', '--keys-dir', trust, 'verify', package])
         unpacked = w/'extracted'/name

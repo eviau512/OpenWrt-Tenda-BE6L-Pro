@@ -60,6 +60,10 @@ def main():
     if sha(cpio) != archive['roots']['native']['cpio_sha256']:
         raise ValueError('Final CPIO changed')
     integer_binfmt = prior.get('integer_binfmt_builtin', False)
+    guest_exe = bool(prior.get('guest_exe_file'))
+    if (guest_exe != bool(component.get('guest_exe_file')) or
+        prior.get('guest_exe_contract') != component.get('guest_exe_contract')):
+        raise ValueError('Kernel/root private executable-retention contracts differ')
     private_elf = []
     if integer_binfmt:
         if (not component.get('integer_binfmt_builtin') or
@@ -182,6 +186,7 @@ def main():
         rebuilt_external_modules=component.get('rebuilt_external_module_count', 0),
         retained_external_modules=component['retained_external_module_count'],
         integer_binfmt_builtin=integer_binfmt, marked_private_host_elf_paths=private_elf,
+        guest_exe_file=guest_exe, guest_exe_contract=prior.get('guest_exe_contract'),
         binfmt_registration_enabled=False,
         unchanged_compiled_module_objects=True, module_layout_audit=layout,
         image_tool_sha256={name: sha(getattr(args, name)) for name in ('dtc', 'mkimage', 'lzma')},

@@ -27,6 +27,8 @@ def main():
     p.add_argument('--expected-boot-id', type=lambda s: str(uuid.UUID(s)), required=True)
     p.add_argument('--expected-cases', type=int, default=14)
     p.add_argument('--corner-probe', type=Path, help='Optional admitted standard ELF negative-semantics probe directory')
+    p.add_argument('--guest-exe-file', action='store_true',
+                   help='Register X only with the matching kernel and aware interpreter receipts')
     a = p.parse_args()
     w = a.work.resolve()
     if w.parent != Path('/root') or not re.fullmatch('be6l-binfmt-test-[a-z0-9-]+', w.name) or w.exists():
@@ -42,6 +44,12 @@ def main():
             root_digest(root) != candidate['root_records_sha256'] or
             staged['source_emulator_receipt_sha256'] != sha(a.emulator_package/'result.json')):
         raise ValueError('Missing exact target/kernel/native-inventory/standard-runtime admission')
+    contract = 'BE6L_X_AT_FLAGS_16_v1'
+    if a.guest_exe_file and (
+            not candidate.get('guest_exe_file') or candidate.get('guest_exe_contract') != contract or
+            not emulator.get('kernel_execfd_exe_aware') or emulator.get('guest_exe_contract') != contract):
+        raise ValueError('X requires both the matched kernel contract and aware signed interpreter')
+    flags = 'POFX' if a.guest_exe_file else 'POF'
     guest = staged['guest_root']
     if not re.fullmatch('/tmp/be6l-binfmt-stage-[a-z0-9-]+/guest', guest) or staged['interpreter'] != '/usr/libexec/be6l/qemu-aarch64':
         raise ValueError('Unexpected staged paths')
@@ -103,13 +111,13 @@ def main():
         magic, mask = rule_bytes()
         def escaped(value):
             return ''.join('\\x%02x' % byte for byte in value).encode()
-        rule = b':be6l-a53:M::'+escaped(magic)+b':'+escaped(mask)+b':'+staged['interpreter'].encode()+b':POF\n'
+        rule = b':be6l-a53:M::'+escaped(magic)+b':'+escaped(mask)+b':'+staged['interpreter'].encode()+b':'+flags.encode()+b'\n'
         (w/'registration.txt').write_bytes(rule)
         registration_attempted = True
         run('register', 'cat >/proc/sys/fs/binfmt_misc/register', rule)
         registered = True
         entry = run('registered-entry', 'cat /proc/sys/fs/binfmt_misc/be6l-a53').stdout.decode()
-        if ('enabled\n' not in entry or 'flags: POF\n' not in entry or
+        if ('enabled\n' not in entry or 'flags: '+flags+'\n' not in entry or
                 'interpreter '+staged['interpreter']+'\n' not in entry or
                 'magic '+magic.hex()+'\n' not in entry or 'mask '+mask.hex()+'\n' not in entry):
             raise ValueError('Kernel registered different dispatch semantics')
@@ -146,7 +154,8 @@ def main():
         run('after', '/usr/sbin/be6l-recovery-guard heartbeat; cat /sys/class/mtd/mtd[0-9]/flags; '
             'cat /sys/kernel/debug/1e900000.npu/status')
     report = dict(boot_id=a.expected_boot_id, fit_sha256=candidate['image_sha256'],
-        source_stage_receipt_sha256=sha(a.stage/'result.json'), flags='POF', cases=cases,
+        source_stage_receipt_sha256=sha(a.stage/'result.json'), flags=flags, cases=cases,
+        guest_exe_contract=contract if a.guest_exe_file else None,
         matrix_exit=matrix_exit, expected_exec_case_count=a.expected_cases,
         all_exec_cases_passed=matrix_exit == 0 and len(cases) == a.expected_cases and all(item['passed'] for item in cases.values()),
         standard_package_child_chain_passed=controls_ok, interpreter_credentials_from_guest=False,

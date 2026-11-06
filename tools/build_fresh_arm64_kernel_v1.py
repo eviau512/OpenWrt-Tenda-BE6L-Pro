@@ -47,13 +47,28 @@ def main():
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--integer-binfmt', action='store_true',
                         help='Build in binfmt_misc for a separately admitted instruction-emulation candidate')
+    parser.add_argument('--guest-exe-file', action='store_true',
+                        help='Explicitly admit the private built-in binfmt X source experiment')
     args = parser.parse_args()
     work = args.work.resolve()
     if work.parent != Path('/root') or not work.name.startswith('be6l-kernel-build-'):
         parser.error('Use a fresh /root/be6l-kernel-build-* directory')
     kernel = args.prepared / 'kernel-source/linux-6.18.55'
     prepared = json.loads((args.prepared / 'result.json').read_text())
-    if not prepared['pristine_case_sensitive_source'] or sha(kernel / 'drivers/net/ethernet/airoha/airoha_ppe.c') != DRIVER_SHA:
+    if args.guest_exe_file:
+        lock = BASE / 'upstream/be6l-guest-exe-source-lock.json'
+        if (not args.integer_binfmt or not prepared.get('guest_exe_file') or
+            prepared.get('guest_exe_contract') != 'BE6L_X_AT_FLAGS_16_v1' or
+            prepared.get('guest_exe_source_lock_sha256') != sha(lock) or
+            prepared.get('base_preparation_sha256') != json.loads(lock.read_text())['base_preparation_sha256'] or
+            set(prepared.get('guest_exe_files', {})) != set(json.loads(lock.read_text())['source_files']) or
+            any(sha(kernel / name) != digest for name, digest in prepared['guest_exe_files'].items()) or
+            sha(args.prepared / 'be6l-binfmt-guest-exe.patch') != prepared['guest_exe_patch_sha256'] or
+            sha(BASE / 'upstream/be6l-binfmt-guest-exe.patch') != prepared['guest_exe_patch_sha256']):
+            raise ValueError('Guest-executable source contract differs')
+    elif prepared.get('guest_exe_file') or not prepared['pristine_case_sensitive_source']:
+        raise ValueError('Modified source requires an explicit guest-executable build profile')
+    if sha(kernel / 'drivers/net/ethernet/airoha/airoha_ppe.c') != DRIVER_SHA:
         raise ValueError('Wrong fresh kernel preparation')
     baseline = args.bootstrap / KERNEL / '.config'
     if sha(baseline) != CONFIG_SHA:
@@ -139,6 +154,8 @@ def main():
         standard_a53_package_compatibility_qualified=False)
     report['integer_binfmt_builtin'] = args.integer_binfmt
     report['external_modules_require_fresh_build'] = args.integer_binfmt
+    report['guest_exe_file'] = args.guest_exe_file
+    report['guest_exe_contract'] = prepared.get('guest_exe_contract') if args.guest_exe_file else None
     (work / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     print('FRESH_ARM64_KERNEL_AND_IN_TREE_MODULES_BUILT', len(modules), flush=True)
 

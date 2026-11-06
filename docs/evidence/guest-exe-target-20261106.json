@@ -1,0 +1,768 @@
+{
+  "source_preparation": {
+    "guest_exe_contract": "BE6L_X_AT_FLAGS_16_v1",
+    "guest_exe_patch_sha256": "9d50f50d44c01b90000df6a882963c8329c89ee4d2ff6428db9c63f9f7fa484c",
+    "base_preparation_sha256": "4e902edf391c545391138a4af87c370c6d4a27b694d00eefada01b5c75f27147",
+    "guest_exe_files": {
+      "fs/exec.c": "d42270d284a2fe4c008b26d3c1279d8bebed3c85ccf532692b02729e64694eba",
+      "fs/binfmt_misc.c": "aa3d2867dbd1f9a1dd05f8a74ee145be4e36590c57865ec95371d70cc44bd37b",
+      "fs/binfmt_elf.c": "dced11ae77253133efcbfe0ed5ae5f271fe2d54718a195bfacd012625007ad3b",
+      "include/linux/binfmts.h": "7f36b9c9046cb5898564fcefdb7f09cf38d11cd01fd166eda1f7f9c32380f317",
+      "include/uapi/linux/binfmts.h": "aed508a83e5c434805edaf4568bc47e8f311f612e5753ffea695594103ac012e",
+      "kernel/fork.c": "c68536fcafcd048d4a504220974f7e5b4e7228644b4b9303715366f8517a73d2",
+      "include/linux/mm_types.h": "9c2ea9e4b4158c2e6e4220de04d6dffb069dc54349e67b491981cd87666a567d"
+    }
+  },
+  "kernel_build": {
+    "full_kernel_built": true,
+    "in_tree_module_count": 78,
+    "module_symvers_sha256": "b9a2dd2ba92f0085637228b6b8416bb99a93c93a7b4937a9bf894dcec1616cda",
+    "guest_exe_file": true,
+    "guest_exe_contract": "BE6L_X_AT_FLAGS_16_v1"
+  },
+  "signed_kernel_composition": {
+    "kernel_package_version": "6.18.55~7b648602069fdc1d228ca9bad74de7f2-r102",
+    "installed_packages": 219,
+    "total_rebuilt_module_count": 84,
+    "retained_external_module_count": 0,
+    "private_signing_key_removed": true,
+    "installed_root_records_sha256": "dd91fb9d1d04c7038589a86385f451c61f42d4577025b5b7238851f53249badd"
+  },
+  "final_image": {
+    "image": "openwrt-airoha-an7563a64-tenda_be6l-pro-initramfs-kernel.bin",
+    "image_sha256": "368a462fc0b864b0028b8d9cf46821d6694d1516942ffd4f546fbc82b7c1e2d5",
+    "image_bytes": 55019988,
+    "kernel_sha256": "73b4000071096f3b1cb5e2cb96159740eaf51ded446ceae7f101f2025a9d15c8",
+    "kernel_bytes": 64356360,
+    "kernel_effective_bytes": 64749568,
+    "vmlinux_sha256": "700064050cf36f680507a89c77469a372e653c149a786f1b3a0c3c69cabe000b",
+    "kernel_headroom_bytes": 262144,
+    "kernel_config_sha256": "d8ca65dbf2fbe011e82ece0d3f2e1ece6728a14c449f2260984ea041a271e359",
+    "configuration_delta": {
+      "CONFIG_INITRAMFS_SOURCE": {
+        "before": "\"/root/be6l-native-cpio-20261105-r1/native.cpio\"",
+        "after": "\"/root/be6l-native-cpio-guest-exe-20261106-r1/native.cpio\""
+      }
+    },
+    "external_cpio_sha256": "2dc4a29d89afe04ee57cebdaeb66087c8ed80205a1e99494d5371bea9d0a7731",
+    "embedded_cpio_sha256": "2dc4a29d89afe04ee57cebdaeb66087c8ed80205a1e99494d5371bea9d0a7731",
+    "embedded_cpio_verified": true,
+    "embedded_cpio_offset": 12641140,
+    "embedded_cpio_compressed_bytes": 50377552,
+    "composition_receipt_sha256": "46697d97d9a8e19aafae929aec7b56f157e66553043677f75269b943b14656b4",
+    "root_records_sha256": "dd91fb9d1d04c7038589a86385f451c61f42d4577025b5b7238851f53249badd",
+    "installed_packages": 219,
+    "rebuilt_in_tree_modules": 77,
+    "rebuilt_external_modules": 7,
+    "retained_external_modules": 0,
+    "integer_binfmt_builtin": true,
+    "marked_private_host_elf_paths": [
+      "lib/aarch64-soft/libblobmsg_json.so",
+      "lib/aarch64-soft/libc.so",
+      "lib/aarch64-soft/libcurl.so",
+      "lib/aarch64-soft/libcurl.so.4",
+      "lib/aarch64-soft/libcurl.so.4.8.0",
+      "lib/aarch64-soft/libjson-c.so",
+      "lib/aarch64-soft/libjson-c.so.5",
+      "lib/aarch64-soft/libjson-c.so.5.5.0",
+      "lib/aarch64-soft/libjson_script.so",
+      "lib/aarch64-soft/liblua.so.5.1.5",
+      "lib/aarch64-soft/libmbedcrypto.so",
+      "lib/aarch64-soft/libmbedcrypto.so.16",
+      "lib/aarch64-soft/libmbedcrypto.so.3.6.7",
+      "lib/aarch64-soft/libmbedtls.so",
+      "lib/aarch64-soft/libmbedtls.so.21",
+      "lib/aarch64-soft/libmbedtls.so.3.6.7",
+      "lib/aarch64-soft/libmbedx509.so",
+      "lib/aarch64-soft/libmbedx509.so.3.6.7",
+      "lib/aarch64-soft/libmbedx509.so.7",
+      "lib/aarch64-soft/libnl-tiny.so.1",
+      "lib/aarch64-soft/libsetlbf.so",
+      "lib/aarch64-soft/libubox.so",
+      "lib/aarch64-soft/libubus.so",
+      "lib/aarch64-soft/libuci.so",
+      "lib/aarch64-soft/libucode.so",
+      "lib/aarch64-soft/libucode.so.0",
+      "lib/aarch64-soft/libudebug.so",
+      "opt/be6l-a64-soft/bin/busybox",
+      "opt/be6l-a64-soft/bin/curl",
+      "opt/be6l-a64-soft/bin/jshn",
+      "opt/be6l-a64-soft/bin/lua",
+      "opt/be6l-a64-soft/bin/luac",
+      "opt/be6l-a64-soft/bin/ubus",
+      "opt/be6l-a64-soft/bin/ubusd",
+      "opt/be6l-a64-soft/bin/uci",
+      "opt/be6l-a64-soft/bin/ucode",
+      "opt/be6l-a64-soft/lib/lua/nixio.so",
+      "opt/be6l-a64-soft/lib/lua/ubus.so",
+      "opt/be6l-a64-soft/lib/lua/uci.so",
+      "opt/be6l-a64-soft/lib/lua/uloop.so",
+      "opt/be6l-a64-soft/lib/ucode/debug.so",
+      "opt/be6l-a64-soft/lib/ucode/fs.so",
+      "opt/be6l-a64-soft/lib/ucode/io.so",
+      "opt/be6l-a64-soft/lib/ucode/log.so",
+      "opt/be6l-a64-soft/lib/ucode/math.so",
+      "opt/be6l-a64-soft/lib/ucode/netaddr.so",
+      "opt/be6l-a64-soft/lib/ucode/nl80211.so",
+      "opt/be6l-a64-soft/lib/ucode/resolv.so",
+      "opt/be6l-a64-soft/lib/ucode/serial.so",
+      "opt/be6l-a64-soft/lib/ucode/socket.so",
+      "opt/be6l-a64-soft/lib/ucode/struct.so",
+      "opt/be6l-a64-soft/lib/ucode/ubus.so",
+      "opt/be6l-a64-soft/lib/ucode/uci.so",
+      "opt/be6l-a64-soft/lib/ucode/udebug.so",
+      "opt/be6l-a64-soft/lib/ucode/uloop.so",
+      "sbin/askfirst",
+      "sbin/init",
+      "sbin/netifd",
+      "sbin/procd",
+      "sbin/udevtrigger",
+      "sbin/upgraded"
+    ],
+    "guest_exe_file": true,
+    "guest_exe_contract": "BE6L_X_AT_FLAGS_16_v1",
+    "binfmt_registration_enabled": false,
+    "unchanged_compiled_module_objects": true,
+    "module_layout_audit": {
+      "kernel_config_sha256": "fde7b22d75dc6080f254c965de05532f9ac5210c3c3e15fef7488b4fc724d66c",
+      "expected_module_struct_bytes": 704,
+      "elf_class": 2,
+      "elf_machine": 183,
+      "module_count": 84,
+      "failures": [],
+      "passed": true,
+      "probe_loaded_on_hardware": false
+    },
+    "image_tool_sha256": {
+      "dtc": "0825a77cd55f527e144dafbe770d5cbfb7a7dc7d9bd366da5fe71055d8c06e61",
+      "mkimage": "b3e2a72798c92af3af05a3530b4a8d4d1edc5ae6e8b67d2dee3eea88664316ed",
+      "lzma": "6ea167ff6c357bac1d2b611e62c10797a881db25f317a73c3fa732ed26544cea"
+    },
+    "dtb_sha256": "a8d9f8cbd86dc25ba3feb43265aa80d7da076ecc56df19fab4bcadd2585b6884",
+    "dtb_readonly_partitions": 10,
+    "bmt_readonly": true,
+    "openwrt_image_recipe_commands": true,
+    "full_sdk_admitted": false,
+    "static_image_admission": true,
+    "candidate_loader_fixture_executed": false,
+    "recovery_daemon_target_qualified": false,
+    "target_executed": false,
+    "standard_a53_package_compatibility_qualified": false,
+    "routed_nat_qualified": false
+  },
+  "startup": {
+    "fit_sha256": "368a462fc0b864b0028b8d9cf46821d6694d1516942ffd4f546fbc82b7c1e2d5",
+    "actual_kernel_build_id": "4faa91ba6742a69322e00838cb74b8002a124cc1",
+    "expected_kernel_build_id": "4faa91ba6742a69322e00838cb74b8002a124cc1",
+    "boot_id": "08b179c7-59bf-4eaa-901a-e6cc1c6ea926",
+    "dual_cpu_aarch64": true,
+    "ram_root": true,
+    "ten_mtd_guards": true,
+    "critical_partition_digests_unchanged": true,
+    "exact_installed_packages": 219,
+    "exact_modules": 84,
+    "exact_native_regular_elf_files": 61,
+    "default_native_pid1": true,
+    "default_native_netifd": true,
+    "default_native_vm_modules_mapped": {
+      "fs": true,
+      "ubus": true,
+      "uloop": true,
+      "uci": true,
+      "nl80211": true
+    },
+    "required_services_running_without_respawn": true,
+    "recovery_heartbeat_accepted": true,
+    "npu_workers_advancing": true,
+    "npu_faults": 0,
+    "luci_http_status": 403,
+    "luci_login_form_rendered": true,
+    "luci_argon_chinese": true,
+    "required_application_selection_preserved": true,
+    "original_offline_root_unchanged": true,
+    "startup_acceptance_passed": true,
+    "new_candidate_recovery_tested": false,
+    "routed_nat_qualified": false,
+    "standard_a53_package_compatibility_qualified": false,
+    "flash_operations": false
+  },
+  "emulator_package": {
+    "normal_signed_emulator_package": true,
+    "package": "be6l-integer-emulator-11.1.3-r4.apk",
+    "version": "11.1.3-r4",
+    "package_sha256": "7d8362fe01480254916614a7425c8ee975122251b98a48bcc6ef0659405cf01d",
+    "relative_interpreter_path": "usr/libexec/be6l/qemu-aarch64",
+    "interpreter_sha256": "05ffb551d72b61e77917b60c8f14354f21eed022fcec6a34c4344bf2ada1341f",
+    "source_emulator_sha256": "f22783d5d568de045d08bf4d86d0a1124d3a637a9daff5ff0a6478759abcce07",
+    "source_build_receipt_sha256": "c7ef3d319db3ce682b43cc283ac7533e3399c9e93f2b7e00f753b07f5ab683c6",
+    "private_signing_key_removed": true,
+    "guest_exe_contract": "BE6L_X_AT_FLAGS_16_v1",
+    "kernel_execfd_exe_aware": true,
+    "marker_is_standard_arm_elf_flag": false,
+    "target_installed": false,
+    "binfmt_registered": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "standard_guest": {
+    "installed_packages": 28,
+    "elf_count": 30,
+    "standard_payloads_unmodified": true,
+    "target_package_scripts_executed": false,
+    "packages": [
+      {
+        "name": "libc",
+        "version": "1.2.6-r5",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "243e2c5aa12994b892a21cae79b4231eb7dba5913c173dbbf85b95f5905362c0"
+      },
+      {
+        "name": "libgcc1",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "e9bd2a1a4ed6f5612a8818b9e4782c495aa2927bedefdc7b04caa3a85c468f73"
+      },
+      {
+        "name": "libstdcpp6",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "475061ca6a9d598c0a58059be1aba82a2590e55810a67f580c73bee80bd10c6d"
+      },
+      {
+        "name": "busybox",
+        "version": "1.38.0-r3",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "4504f3bd62eaaae7e437f30b5a4b678612907fd3f2f0583a1d542606991fbc36"
+      },
+      {
+        "name": "ucode",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "b99590a7f7ec8e5eecb4b8ead51a05ffc841b951735e929c44732bb6fd4372c7"
+      },
+      {
+        "name": "libucode20261009",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "e2c72e89d5b439d34ac27c174c774f49a095019df013c05783e029f1f1a9fb88"
+      },
+      {
+        "name": "libjson-c5",
+        "version": "0.19-r2",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "afa69201d4eaa01cf4ec051975aab5459d9c3e020b8ef47461a840363d34d17e"
+      },
+      {
+        "name": "btop",
+        "version": "1.4.7-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "8944cd4092c7bdac1a4f3b0368de998b82a17937ae82e5dc9b6894931ea5c7fe"
+      },
+      {
+        "name": "liblua5.1.5",
+        "version": "5.1.5-r11",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "415465ca434a3e52dbccb31dd6c3484d642b27577613ab3c7d32b687aa5d0d59"
+      },
+      {
+        "name": "lua",
+        "version": "5.1.5-r11",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "032532bd54fdefd4e7fe870f83b484796d687c9f18a40eb898c4b482ba9e098d"
+      },
+      {
+        "name": "luci-lib-nixio",
+        "version": "26.296.27218~1c67452",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "ff5bb6e00067b534012808740355e6cbba51bef8d56df01df8c591535f1eb98d"
+      },
+      {
+        "name": "curl",
+        "version": "8.23.0-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "2bb179c5b31d49943e0c35db91b2b33a54abee2777de568ec41b5862635a5244"
+      },
+      {
+        "name": "libcurl4",
+        "version": "8.23.0-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "d32a3628f6fd0a32c66c30161288b4040b75fb5363e8e43a2dc4f997993ceedd"
+      },
+      {
+        "name": "libmbedtls21",
+        "version": "3.6.7-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "36dfeec285135ee9b530ac56811d0f90fede92e897e29875267ad908c0705ef5"
+      },
+      {
+        "name": "libnghttp2-14",
+        "version": "1.70.0-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "e0512cbce59ef45d0c9ac996f08dbec45b8aad447f00d6062ddf5e9977529e88"
+      },
+      {
+        "name": "zlib",
+        "version": "2.3.3-r2",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "5d4e987000255b940956be36804a66e02fd82b6c5ddb0b929080d565dade74d0"
+      },
+      {
+        "name": "ca-bundle",
+        "version": "20260816-r1",
+        "arch": "noarch",
+        "sha256": "5efaad6252d28e2a4bd7f1a0fd624d702ceb99aa1a04397bbbb748ca54ed1ecc"
+      },
+      {
+        "name": "libubox20260721",
+        "version": "2026.07.21~e7608b69-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "c12e7640359b3203c8fbe79d4445e692374cd502a38e178a2c60d03e42c6a90b"
+      },
+      {
+        "name": "libblobmsg-json20260721",
+        "version": "2026.07.21~e7608b69-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "9c87c9ce83b02c72a8c05203eb7bd9fab2056b5a9ff392b582a9433e670ad5a3"
+      },
+      {
+        "name": "libubus20260925",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "1c235bf2e0a3a396b727835ca74935df9b27ff525614f7f4ed499ac3349cf933"
+      },
+      {
+        "name": "ubusd",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "5371c725548061d2e3bc1ecb2667f63c1b27d6ab7679eecaeb529cba8195ba39"
+      },
+      {
+        "name": "ubus",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "c177b062d28bbf1b084a2dd98b54b2fd4d1aecfa156014b7b830c8291535f1c3"
+      },
+      {
+        "name": "libuci20250120",
+        "version": "2025.12.02~66127cd7-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "5428b76ca0c2e50be96a6de272748bdc846fa956e23d3f270cbb4e1942664143"
+      },
+      {
+        "name": "uci",
+        "version": "2025.12.02~66127cd7-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "5826990db24e0a317c0881b782dcf1d41014780c51097fc8fed447a90aef2250"
+      },
+      {
+        "name": "jsonfilter",
+        "version": "2026.03.16~b9034210-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "c4a1f5a845cd19387733bb2fad2e4a2d7817dd51243d487e587d89fcbb0429aa"
+      },
+      {
+        "name": "ucode-mod-fs",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "dbf2dce9b387bd54d84e4a392020f58db8f0425ca1eef909244be4672f712f47"
+      },
+      {
+        "name": "ucode-mod-uci",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "b31808f33cdc7ff164ed60faa571ae4a3dd3282609d5eb3ca565d4d78b3a4326"
+      },
+      {
+        "name": "ucode-mod-ubus",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53",
+        "sha256": "df588e63e0dd4f926e3124d7b052dec943ee36cb2e5c9f652d61fc4d8e99d603"
+      }
+    ]
+  },
+  "control": {
+    "boot_id": "08b179c7-59bf-4eaa-901a-e6cc1c6ea926",
+    "fit_sha256": "368a462fc0b864b0028b8d9cf46821d6694d1516942ffd4f546fbc82b7c1e2d5",
+    "source_stage_receipt_sha256": "b32cd5fe91b592c6249edf83ef6cfc24be0f74e41cdd4517c10841549d3dde4b",
+    "flags": "POF",
+    "cases": {
+      "execve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-absolute": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-empty-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fexecve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "unlinked-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "shebang-script": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "relative-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "proc-self-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "missing-file": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "dropped-credentials": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-script-rejected": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "invalid-execveat-flags": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "guest_exe_contract": null,
+    "matrix_exit": 0,
+    "expected_exec_case_count": 20,
+    "all_exec_cases_passed": true,
+    "standard_package_child_chain_passed": true,
+    "interpreter_credentials_from_guest": false,
+    "negative_exec_corner_cases": {
+      "missing-elf-interpreter-errno": {
+        "passed": false,
+        "wait_status": 65280
+      },
+      "linked-proc-exe-stat": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "deleted-proc-exe-open": {
+        "passed": false,
+        "wait_status": 20480
+      },
+      "linked-proc-exe-statx": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "renamed-proc-exe": {
+        "passed": false,
+        "wait_status": 24320
+      },
+      "deleted-proc-exe-statx": {
+        "passed": false,
+        "wait_status": 22784
+      },
+      "guest-executable-write-denial": {
+        "passed": false,
+        "wait_status": 23552
+      },
+      "exit-releases-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fork-inherits-write-denial": {
+        "passed": false,
+        "wait_status": 23552
+      },
+      "setuid-guest-credentials": {
+        "passed": false,
+        "wait_status": 28672
+      },
+      "no-new-privileges": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "expected_negative_case_count": 11,
+    "source_corner_probe_receipt_sha256": "6b7f46e790c081b1d6a9c987e0024e15eb9d1595b662b2fca3d40dfbccee3d89",
+    "all_negative_corners_passed": false,
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "experiment": {
+    "boot_id": "08b179c7-59bf-4eaa-901a-e6cc1c6ea926",
+    "fit_sha256": "368a462fc0b864b0028b8d9cf46821d6694d1516942ffd4f546fbc82b7c1e2d5",
+    "source_stage_receipt_sha256": "b32cd5fe91b592c6249edf83ef6cfc24be0f74e41cdd4517c10841549d3dde4b",
+    "flags": "POFX",
+    "cases": {
+      "execve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-absolute": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-empty-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fexecve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "unlinked-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "shebang-script": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "relative-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "proc-self-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "missing-file": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "dropped-credentials": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-script-rejected": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "invalid-execveat-flags": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "guest_exe_contract": "BE6L_X_AT_FLAGS_16_v1",
+    "matrix_exit": 0,
+    "expected_exec_case_count": 20,
+    "all_exec_cases_passed": true,
+    "standard_package_child_chain_passed": true,
+    "interpreter_credentials_from_guest": false,
+    "negative_exec_corner_cases": {
+      "missing-elf-interpreter-errno": {
+        "passed": false,
+        "wait_status": 65280
+      },
+      "linked-proc-exe-stat": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "deleted-proc-exe-open": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "linked-proc-exe-statx": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "renamed-proc-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "deleted-proc-exe-statx": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "guest-executable-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "exit-releases-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fork-inherits-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "setuid-guest-credentials": {
+        "passed": false,
+        "wait_status": 28672
+      },
+      "no-new-privileges": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "expected_negative_case_count": 11,
+    "source_corner_probe_receipt_sha256": "6b7f46e790c081b1d6a9c987e0024e15eb9d1595b662b2fca3d40dfbccee3d89",
+    "all_negative_corners_passed": false,
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "standard_package_workloads": {
+    "boot_id": "08b179c7-59bf-4eaa-901a-e6cc1c6ea926",
+    "fit_sha256": "368a462fc0b864b0028b8d9cf46821d6694d1516942ffd4f546fbc82b7c1e2d5",
+    "flags": "POFX",
+    "source_stage_receipt_sha256": "b32cd5fe91b592c6249edf83ef6cfc24be0f74e41cdd4517c10841549d3dde4b",
+    "source_exec_test_sha256": "8303487e10a86b0aa9d68f65e61e8f91ab04f134bc75b4cf97a44370113a1df7",
+    "source_native_probe_receipt_sha256": "7af2effc60563ee10ae7743a1aec68c564e775488f0128bfbca53f65bb031c47",
+    "source_script_sha256": {
+      "standard-package-nixio.lua": "bbce4c26a58b9b3575c323fe9ab6b2405dd7796f7f2a12ab1c18698a20b6083c",
+      "standard-package-workloads.sh": "fa81062a433a65d7e1e8547f62fcef384328d4c30d374f6a241b6140a1b2dc91"
+    },
+    "cases": {
+      "busybox-pipeline": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "lua-nixio-fp-file-fork": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "curl-version": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "curl-file-transfer": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "jsonfilter": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "uci-transaction": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "ucode-fs-module": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "ubus-private-socket": {
+        "passed": true,
+        "exit_code": 0
+      }
+    },
+    "expected_package_case_count": 8,
+    "all_package_cases_passed": true,
+    "interpreter_lifetime": {
+      "workload_exit": 0,
+      "rule_removed_while_guest_alive": true,
+      "interpreter_denied_after_unregister": true,
+      "guest_hold_exit": 0,
+      "interpreter_writable_after_last_guest_exit": true
+    },
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "target_package_scripts_executed": false,
+    "isolated_standard_runtime_only": true,
+    "isolated_character_devices": {
+      "null": {
+        "major": 1,
+        "minor": 3,
+        "mode": "0666"
+      },
+      "zero": {
+        "major": 1,
+        "minor": 5,
+        "mode": "0666"
+      },
+      "random": {
+        "major": 1,
+        "minor": 8,
+        "mode": "0666"
+      },
+      "urandom": {
+        "major": 1,
+        "minor": 9,
+        "mode": "0666"
+      }
+    },
+    "isolated_locked_uid_gid_fixture": true,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "whole_goal_complete": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "routed_nat_qualified": false
+}

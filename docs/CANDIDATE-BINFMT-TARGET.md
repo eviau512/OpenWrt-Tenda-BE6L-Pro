@@ -119,11 +119,15 @@ A later opt-in `--binfmt-proc-stat` profile now builds and passes static integer
 ELF admission as signed emulator package11.1.3-r3. It redirects following
 newfstatat/statx proc-exe queries to the same named guest ELF used by open/readlink;
 NOFOLLOW/NULL behavior is retained. It does not retain a deleted inode. The
-new four-case probe includes statx, while the actual failure evidence above used
-the earlier three-case probe. [Offline component evidence](evidence/binfmt-proc-stat-offline-20261106.json)
-is deliberately separate: this package/probe has not run on the router and does
-not close any of the three target failures. The device was already returned to
-authenticated stock before this build.
+new four-case probe includes statx. In the next actual e228 run, this signed r3
+package passes both linked proc-exe stat and statx, all20 positive cases and the
+standard child chain. Missing-loader errno and deleted proc-exe open still fail.
+The POF rule/mount are removed and62 private host ELF hashes remain unchanged.
+[Earlier offline component evidence](evidence/binfmt-proc-stat-offline-20261106.json)
+retains its historical scope. The [private executable retention experiment](BINFMT-GUEST-EXE-EXPERIMENT.md)
+is a separate new368a kernel/r4 experiment. It now passes startup,20 positive
+cases,9 of11 corners and eight isolated standard-package workloads; its own
+evidence retains the two failures and the incomplete compatibility scope.
 
 The build/staging tools never install boot-time rules. Target activation is an
 explicit, bounded RAM experiment with strict SSH trust and boot-qualified

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/auxv.h>
+#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
@@ -89,15 +91,129 @@ static int proc_statx_checks(void)
            (unsigned long long)expected.st_ino == actual.stx_ino ? 0 : 91;
 }
 
+static int write_denied(const char *name)
+{
+    int fd = open(name, O_WRONLY); /* Never truncate or write a byte. */
+    int saved = errno;
+    if (fd >= 0) close(fd);
+    return fd < 0 && saved == ETXTBSY ? 0 : 92;
+}
+
+static int renamed_exe(void)
+{
+    const char *from = "/tmp/be6l-corners-named", *to = "/tmp/be6l-corners-renamed";
+    char name[256];
+    if (rename(from, to)) return 93;
+    ssize_t count = readlink("/proc/self/exe", name, sizeof(name)-1);
+    if (count < 0 || count >= (ssize_t)sizeof(name)-1) return 94;
+    name[count] = 0;
+    int result = strcmp(name, to) ? 95 : proc_checks(0);
+    if (!result) result = proc_statx_checks();
+    if (!result) result = write_denied(to);
+    unlink(to);
+    return result;
+}
+
+static void exec_copy(const char *mode, const char *extra)
+{
+    const char *name = "/tmp/be6l-corners-named";
+    copy_self(name);
+    char *args[] = {"be6l-corners", (char *)mode, (char *)extra, NULL};
+    execve(name, args, vars);
+    _exit(96);
+}
+
+static int exit_releases_pin(void)
+{
+    pid_t child = fork();
+    int status;
+    if (child < 0) return 97;
+    if (!child) exec_copy("--noop", NULL);
+    if (waitpid(child, &status, 0) != child || status) return 98;
+    int fd = open("/tmp/be6l-corners-named", O_WRONLY);
+    if (fd < 0) return 99;
+    close(fd);
+    unlink("/tmp/be6l-corners-named");
+    return 0;
+}
+
+static int fork_pin_owner(int fd)
+{
+    pid_t parent = getpid(), child = fork();
+    if (child < 0) return 100;
+    if (child) { close(fd); return 0; }
+    /* The exec parent's mm must have gone away; keep only the forked mm. */
+    for (int i = 0; i < 5000 && getppid() == parent; i++) usleep(1000);
+    int result = getppid() == parent ? 101 : proc_checks(0);
+    if (!result) result = write_denied("/tmp/be6l-corners-named");
+    unsigned char value = result;
+    if (write(fd, &value, 1) != 1) _exit(102);
+    close(fd);
+    _exit(result);
+}
+
+static int fork_inherits_pin(void)
+{
+    int pipefd[2], status;
+    if (pipe(pipefd)) return 103;
+    pid_t child = fork();
+    if (child < 0) return 104;
+    if (!child) {
+        close(pipefd[0]);
+        char descriptor[32];
+        snprintf(descriptor, sizeof(descriptor), "%d", pipefd[1]);
+        exec_copy("--fork-pin", descriptor);
+    }
+    close(pipefd[1]);
+    if (waitpid(child, &status, 0) != child || status) return 105;
+    unsigned char value = 255;
+    alarm(8);
+    ssize_t count = read(pipefd[0], &value, 1);
+    alarm(0);
+    close(pipefd[0]);
+    unlink("/tmp/be6l-corners-named");
+    return count == 1 ? value : 106;
+}
+
+static void setuid_exec(int no_new_privs)
+{
+    const char *name = "/tmp/be6l-corners-setuid";
+    copy_self(name);
+    if (chmod(name, 04755)) _exit(107);
+    if (no_new_privs && prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) _exit(108);
+    if (setgid(65534) || setuid(65534)) _exit(109);
+    char *args[] = {"be6l-corners", no_new_privs ? "--ids-nnp" : "--ids-setuid", NULL};
+    execve(name, args, vars);
+    _exit(110);
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 2 && !strcmp(argv[1], "--noop")) return 0;
     if (argc == 2 && !strcmp(argv[1], "--deleted")) return proc_checks(1);
+    if (argc == 2 && !strcmp(argv[1], "--deleted-statx")) return proc_statx_checks();
+    if (argc == 2 && !strcmp(argv[1], "--renamed")) return renamed_exe();
+    if (argc == 2 && !strcmp(argv[1], "--write-denial")) {
+        if (getauxval(AT_FLAGS) & (1U << 16)) return 111;
+        return write_denied("/proc/self/exe");
+    }
+    if (argc == 3 && !strcmp(argv[1], "--fork-pin")) return fork_pin_owner(atoi(argv[2]));
+    if (argc == 2 && (!strcmp(argv[1], "--ids-nnp") || !strcmp(argv[1], "--ids-setuid"))) {
+        int nnp = !strcmp(argv[1], "--ids-nnp");
+        printf("GUEST_IDS uid=%u euid=%u secure=%lu nnp=%d\n", (unsigned)getuid(),
+               (unsigned)geteuid(), getauxval(AT_SECURE), prctl(PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0));
+        fflush(stdout);
+        return getuid() == 65534 && geteuid() == (nnp ? 65534 : 0) &&
+               getauxval(AT_SECURE) == (unsigned long)!nnp ? 0 : 112;
+    }
     if (argc != 1) return 84;
     const char *names[] = {"missing-elf-interpreter-errno", "linked-proc-exe-stat", "deleted-proc-exe-open",
-        "linked-proc-exe-statx"};
+        "linked-proc-exe-statx", "renamed-proc-exe", "deleted-proc-exe-statx",
+        "guest-executable-write-denial", "exit-releases-write-denial", "fork-inherits-write-denial",
+        "setuid-guest-credentials", "no-new-privileges"};
+    const int count = sizeof(names)/sizeof(names[0]);
     int failed = 0;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < count; i++) {
         pid_t pid = fork();
         int status;
         if (pid < 0) return 85;
@@ -105,12 +221,17 @@ int main(int argc, char **argv)
             if (i == 0) bad_interpreter();
             if (i == 1) _exit(proc_checks(0));
             if (i == 3) _exit(proc_statx_checks());
-            if (i == 2) {
+            if (i == 4) exec_copy("--renamed", NULL);
+            if (i == 6) exec_copy("--write-denial", NULL);
+            if (i == 7) _exit(exit_releases_pin());
+            if (i == 8) _exit(fork_inherits_pin());
+            if (i == 9 || i == 10) setuid_exec(i == 10);
+            if (i == 2 || i == 5) {
                 const char *name = "/tmp/be6l-exec-corners-deleted";
                 copy_self(name);
                 int fd = open(name, O_RDONLY);
                 if (fd < 0 || unlink(name)) _exit(86);
-                char *args[] = {"be6l-corners", "--deleted", NULL};
+                char *args[] = {"be6l-corners", i == 2 ? "--deleted" : "--deleted-statx", NULL};
                 syscall(SYS_execveat, fd, "", args, vars, AT_EMPTY_PATH);
                 _exit(87);
             }
@@ -120,7 +241,11 @@ int main(int argc, char **argv)
         printf("EXEC_CORNER %s %s status=%d\n", names[i], ok ? "PASS" : "FAIL", status);
         fflush(stdout);
         failed += !ok;
+        unlink("/tmp/be6l-corners-named");
+        unlink("/tmp/be6l-corners-renamed");
+        unlink("/tmp/be6l-corners-setuid");
+        unlink("/tmp/be6l-exec-bad-interpreter");
     }
-    printf("EXEC_CORNERS cases=4 failures=%d\n", failed);
+    printf("EXEC_CORNERS cases=%d failures=%d\n", count, failed);
     return failed ? 1 : 0;
 }

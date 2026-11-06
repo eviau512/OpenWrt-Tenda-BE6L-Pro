@@ -1,0 +1,218 @@
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1116,6 +1116,13 @@
+ 	struct task_struct *me = current;
+ 	int retval;
+ 
++	/* Validate the private retention contract before committing exec. */
++	if (bprm->be6l_execfd_exe &&
++	    (!bprm->have_execfd || !bprm->executable ||
++	     rcu_access_pointer(bprm->mm->exe_file) != bprm->executable ||
++	     bprm->mm->be6l_binfmt_interpreter != bprm->file))
++		return -ENOEXEC;
++
+ 	/* Once we are committed compute the creds */
+ 	retval = bprm_creds_from_file(bprm);
+ 	if (retval)
+@@ -1179,9 +1186,12 @@
+ 	 * not visible until then. Doing it here also ensures
+ 	 * we don't race against replace_mm_exe_file().
+ 	 */
+-	retval = set_mm_exe_file(bprm->mm, bprm->file);
+-	if (retval)
+-		goto out;
++	/* X already pinned the original before exec_binprm drops its deny. */
++	if (!bprm->be6l_execfd_exe) {
++		retval = set_mm_exe_file(bprm->mm, bprm->file);
++		if (retval)
++			goto out;
++	}
+ 
+ 	/* If the binary is not readable then enforce mm->dumpable=0 */
+ 	would_dump(bprm, bprm->file);
+--- a/fs/binfmt_misc.c
++++ b/fs/binfmt_misc.c
+@@ -14,6 +14,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/sched/mm.h>
++#include <linux/mm.h>
+ #include <linux/magic.h>
+ #include <linux/binfmts.h>
+ #include <linux/slab.h>
+@@ -45,6 +46,7 @@
+ #define MISC_FMT_OPEN_BINARY (1UL << 30)
+ #define MISC_FMT_CREDENTIALS (1UL << 29)
+ #define MISC_FMT_OPEN_FILE (1UL << 28)
++#define MISC_FMT_BE6L_EXECFD_EXE (1UL << 27)
+ 
+ typedef struct {
+ 	struct list_head list;
+@@ -218,7 +220,8 @@
+ 
+ 	/* Need to be able to load the file after exec */
+ 	retval = -ENOENT;
+-	if (bprm->interp_flags & BINPRM_FLAGS_PATH_INACCESSIBLE)
++	if ((bprm->interp_flags & BINPRM_FLAGS_PATH_INACCESSIBLE) &&
++	    !(fmt->flags & MISC_FMT_BE6L_EXECFD_EXE))
+ 		goto ret;
+ 
+ 	if (fmt->flags & MISC_FMT_PRESERVE_ARGV0) {
+@@ -263,6 +266,28 @@
+ 	if (IS_ERR(interp_file))
+ 		goto ret;
+ 
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++	if (fmt->flags & MISC_FMT_BE6L_EXECFD_EXE) {
++		/* Pin before exec_binprm releases the original write denial.
++		 * mmput/free_bprm owns cleanup on every later failure path.
++		 * Do not support nested O dispatch or credential inheritance.
++		 */
++		retval = -ENOEXEC;
++		if (!bprm->mm || bprm->have_execfd || bprm->executable ||
++		    bprm->be6l_execfd_exe || bprm->execfd_creds)
++			goto release_interp;
++		retval = set_mm_exe_file(bprm->mm, bprm->file);
++		if (retval)
++			goto release_interp;
++		/* Retain the native interpreter denial as well as the guest. */
++		retval = exe_file_deny_write_access(interp_file);
++		if (retval)
++			goto release_interp;
++		bprm->mm->be6l_binfmt_interpreter = get_file(interp_file);
++		bprm->be6l_execfd_exe = 1;
++	}
++#endif
++
+ 	bprm->interpreter = interp_file;
+ 	if (fmt->flags & MISC_FMT_OPEN_BINARY)
+ 		bprm->have_execfd = 1;
+@@ -270,6 +295,12 @@
+ 		bprm->execfd_creds = 1;
+ 
+ 	retval = 0;
++	goto ret;
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++release_interp:
++	exe_file_allow_write_access(interp_file);
++	fput(interp_file);
++#endif
+ ret:
+ 
+ 	/*
+@@ -335,6 +366,12 @@
+ 			e->flags |= (MISC_FMT_CREDENTIALS |
+ 					MISC_FMT_OPEN_BINARY);
+ 			break;
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++		case 'X':
++			p++;
++			e->flags |= MISC_FMT_BE6L_EXECFD_EXE | MISC_FMT_OPEN_BINARY;
++			break;
++#endif
+ 		case 'F':
+ 			pr_debug("register: flag: F: open interpreter file now\n");
+ 			p++;
+@@ -540,6 +577,10 @@
+ 
+ 	/* Parse the 'flags' field. */
+ 	p = check_special_flags(p, e);
++	/* Secure credential inheritance needs a separate qualification. */
++	if ((e->flags & MISC_FMT_BE6L_EXECFD_EXE) &&
++	    (e->flags & MISC_FMT_CREDENTIALS))
++		goto einval;
+ 	if (*p == '\n')
+ 		p++;
+ 	if (p != buf + count)
+@@ -610,6 +651,8 @@
+ 		*dp++ = 'C';
+ 	if (e->flags & MISC_FMT_OPEN_FILE)
+ 		*dp++ = 'F';
++	if (e->flags & MISC_FMT_BE6L_EXECFD_EXE)
++		*dp++ = 'X';
+ 	*dp++ = '\n';
+ 
+ 	if (!test_bit(Magic, &e->flags)) {
+--- a/fs/binfmt_elf.c
++++ b/fs/binfmt_elf.c
+@@ -255,6 +255,8 @@
+ 	NEW_AUX_ENT(AT_BASE, interp_load_addr);
+ 	if (bprm->interp_flags & BINPRM_FLAGS_PRESERVE_ARGV0)
+ 		flags |= AT_FLAGS_PRESERVE_ARGV0;
++	if (bprm->be6l_execfd_exe)
++		flags |= AT_FLAGS_BE6L_EXECFD_EXE;
+ 	NEW_AUX_ENT(AT_FLAGS, flags);
+ 	NEW_AUX_ENT(AT_ENTRY, e_entry);
+ 	NEW_AUX_ENT(AT_UID, from_kuid_munged(cred->user_ns, cred->uid));
+--- a/include/linux/binfmts.h
++++ b/include/linux/binfmts.h
+@@ -29,6 +29,9 @@
+ 	unsigned int
+ 		/* Should an execfd be passed to userspace? */
+ 		have_execfd:1,
++
++		/* Private built-in binfmt X experiment; never implies C. */
++		be6l_execfd_exe:1,
+ 
+ 		/* Use the creds of a script (see binfmt_misc) */
+ 		execfd_creds:1,
+--- a/include/uapi/linux/binfmts.h
++++ b/include/uapi/linux/binfmts.h
+@@ -22,4 +22,7 @@
+ #define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+ #define AT_FLAGS_PRESERVE_ARGV0 (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+ 
++/* BE6L private experiment: mm->exe_file retains the binfmt O file. */
++#define AT_FLAGS_BE6L_EXECFD_EXE (1U << 16)
++
+ #endif /* _UAPI_LINUX_BINFMTS_H */
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -518,6 +518,16 @@
+ {
+ 	struct file *exe_file;
+ 
++	/* oldmm is live; the private interpreter pin is immutable.
++	 * As for exe_file below, its existing write denial must hold.
++	 */
++	if (oldmm->be6l_binfmt_interpreter) {
++		mm->be6l_binfmt_interpreter =
++			get_file(oldmm->be6l_binfmt_interpreter);
++		if (exe_file_deny_write_access(mm->be6l_binfmt_interpreter))
++			pr_warn_once("BE6L interpreter deny failed in %s\n", __func__);
++	}
++
+ 	exe_file = get_mm_exe_file(oldmm);
+ 	RCU_INIT_POINTER(mm->exe_file, exe_file);
+ 	/*
+@@ -1055,6 +1065,7 @@
+ 	mm_init_owner(mm, p);
+ 	mm_pasid_init(mm);
+ 	RCU_INIT_POINTER(mm->exe_file, NULL);
++	mm->be6l_binfmt_interpreter = NULL;
+ 	mmu_notifier_subscriptions_init(mm);
+ 	init_tlb_flush_pending(mm);
+ #if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !defined(CONFIG_SPLIT_PMD_PTLOCKS)
+@@ -1139,6 +1150,11 @@
+ 	exit_mmap(mm);
+ 	mm_put_huge_zero_folio(mm);
+ 	set_mm_exe_file(mm, NULL);
++	if (mm->be6l_binfmt_interpreter) {
++		exe_file_allow_write_access(mm->be6l_binfmt_interpreter);
++		fput(mm->be6l_binfmt_interpreter);
++		mm->be6l_binfmt_interpreter = NULL;
++	}
+ 	if (!list_empty(&mm->mmlist)) {
+ 		spin_lock(&mmlist_lock);
+ 		list_del(&mm->mmlist);
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -1151,6 +1151,8 @@
+ 
+ 		/* store ref to file /proc/<pid>/exe symlink points to */
+ 		struct file __rcu *exe_file;
++		/* Private X interpreter pin; immutable until final mmput. */
++		struct file *be6l_binfmt_interpreter;
+ #ifdef CONFIG_MMU_NOTIFIER
+ 		struct mmu_notifier_subscriptions *notifier_subscriptions;
+ #endif

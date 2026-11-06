@@ -218,6 +218,8 @@ def main():
         native_netifd_real_isolated_runtime=not bool(marker_transition),
         prior_native_runtime_marker_transition=marker_transition,
         full_default_service_qualified=False,
+        guest_exe_file=bool(report.get('guest_exe_file')),
+        guest_exe_contract=report.get('guest_exe_contract'),
         embedded_cpio=embedded, dtb_changed_properties=['/chosen/' + key for key in changed],
         loader_source_sha256=sha(source), candidate_receipt_sha256=sha(a.candidate / 'result.json'),
         runtime_test_receipt_sha256=sha(a.runtime_test / 'result.json'),
