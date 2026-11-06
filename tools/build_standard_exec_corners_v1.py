@@ -26,7 +26,7 @@ def main():
     if result.returncode or not matches(elf.read_bytes()[:64]):
         raise ValueError('Standard A53 probe compilation/admission failed')
     report = dict(source_sha256=sha(source), command=command, elf_sha256=sha(elf),
-                  standard_a53_abi=True, expected_negative_cases=11, target_executed=False)
+                  standard_a53_abi=True, expected_negative_cases=12, target_executed=False)
     (w/'result.json').write_text(json.dumps(report, indent=2)+'\n')
     print('STANDARD_A53_EXEC_CORNERS_BUILT', report['elf_sha256'], flush=True)
 

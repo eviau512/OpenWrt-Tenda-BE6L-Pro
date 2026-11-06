@@ -77,6 +77,7 @@ def main():
         source_build_receipt_sha256=sha(receipt_path), private_signing_key_removed=not key.exists(),
         guest_exe_contract=defaults.get('guest_exe_contract'),
         kernel_execfd_exe_aware=bool(defaults.get('kernel_execfd_exe_aware')),
+        kernel_guest_interp_aware=bool(defaults.get('kernel_guest_interp_aware')),
         marker_is_standard_arm_elf_flag=False, target_installed=False, binfmt_registered=False,
         standard_a53_package_compatibility_qualified=False)
     (w/'result.json').write_text(json.dumps(report, indent=2)+'\n')

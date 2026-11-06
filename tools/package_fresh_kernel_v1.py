@@ -43,8 +43,12 @@ def main():
     built = json.loads((args.kernel_build / 'result.json').read_text())
     binfmt = bool(built.get('integer_binfmt_builtin'))
     guest_exe = bool(built.get('guest_exe_file'))
-    if guest_exe and (not binfmt or built.get('guest_exe_contract') != 'BE6L_X_AT_FLAGS_16_v1'):
+    guest_interp = bool(built.get('guest_interp_fd'))
+    contract = 'BE6L_X_EXECFD_EXE_INTERPFD_V2' if guest_interp else 'BE6L_X_AT_FLAGS_16_v1'
+    if guest_exe and (not binfmt or built.get('guest_exe_contract') != contract):
         raise ValueError('Unsupported private guest-executable kernel contract')
+    if guest_interp and not guest_exe:
+        raise ValueError('Loader fd handoff requires the explicit executable profile')
     base_count = 219 if binfmt else 218
     if binfmt and (not args.external_build or prior.get('private_native_files_marked') != 61 or prior['installed_packages'] != 219):
         raise ValueError('Binfmt composition requires the admitted signed private-marker root and fresh external modules')
@@ -108,7 +112,7 @@ def main():
     old_kernel, = [p for p in packages if p['name'] == 'kernel']
     if old_kernel['version'] != '6.18.55~' + old_abi + ('-r100' if binfmt else '-r1'):
         raise ValueError('Installed kernel ABI pin differs')
-    new_kernel_version = '6.18.55~' + abi + ('-r102' if guest_exe else '-r101' if binfmt else '-r100')
+    new_kernel_version = '6.18.55~' + abi + ('-r103' if guest_interp else '-r102' if guest_exe else '-r101' if binfmt else '-r100')
     new_kernel_pin = 'kernel=' + new_kernel_version
     cross = str(args.bootstrap / TOOLCHAIN / 'bin/aarch64-openwrt-linux-musl-')
     env = dict(os.environ, CROSS=cross, NO_RENAME='1', SOURCE_DATE_EPOCH='1792420077')
@@ -196,7 +200,7 @@ def main():
         for package in packages:
             name = package['name']
             old_base, old_release = package['version'].rsplit('-r', 1)
-            version = new_kernel_version if name == 'kernel' else old_base + '-r' + (str(int(old_release)+(2 if guest_exe else 1)) if binfmt else '100')
+            version = new_kernel_version if name == 'kernel' else old_base + '-r' + (str(int(old_release)+(3 if guest_interp else 2 if guest_exe else 1)) if binfmt else '100')
             versions[name] = version
             depends = [new_kernel_pin if item.startswith('kernel=') else item for item in package.get('depends', [])]
             command = [args.apk, 'mkpkg', '--sign-key', key, '--files', stage[name],
@@ -250,6 +254,7 @@ def main():
         unchanged_external_interface_headers=header_hashes,
         external_build_receipt_sha256=external_receipt_sha, integer_binfmt_builtin=binfmt,
         guest_exe_file=guest_exe, guest_exe_contract=built.get('guest_exe_contract'),
+        guest_interp_fd=guest_interp,
         preinitramfs_config_set_sha256=sha(work / 'kernel-preinitramfs.config.set'),
         target_package_scripts_executed=False,
         matching_root_composed=True, image_built=False, target_executed=False)

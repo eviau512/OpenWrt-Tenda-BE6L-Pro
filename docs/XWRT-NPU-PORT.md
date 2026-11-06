@@ -5,6 +5,24 @@ URLs and hashes are in [the source lock](../upstream/xwrt-an7563-20261105.json).
 X-Wrt's AN7563 recipe is AArch32. These hardware changes must still build and
 run with this project's ARM64 kernel and no-FP native runtime.
 
+The pinned X-Wrt commit actually locks Linux6.18.60, while the BE6L candidate
+uses6.18.55. The [reference preparation tool](../tools/prepare_xwrt_ppe_reference_v1.py)
+now verifies all12 selected source pins, the immutable Git object and the
+6.18.60 archive hash from that Git recipe. Normal generic overlays/patches and
+185 platform patches reconstruct snapshots immediately before/after941-04.
+An earlier6.18.55 attempt stopped on a generic patch mismatch; it was not forced
+through. The reconstructed tree is a source reference, not a BE6L build or a
+firmware replacement. [Reference evidence](evidence/xwrt-ppe-reference-20261106.json)
+keeps this distinction explicit.
+
+Three actual reference SMAC functions now pass16 substituted host cases,
+including sharing/release, exhaustion, each of four partial bank/word failures,
+latched rejection of new programming and reuse of an already valid cached MAC
+after that latch. The test substitutes symbolic fields, register transactions
+and locks; it does not prove concurrent or physical DMA behavior. The local
+BE6L driver still has the six known unsafe baseline paths. No941-04 local port
+or routed admission is inferred from these reference results.
+
 | Reference patch | Current local status |
 | --- | --- |
 | 924 coherent mailbox DMA | Equivalent mailbox support already present in the baseline; not newly ported |
@@ -56,6 +74,14 @@ by the initial SRAM port. It is a source finding, not an induced device fault.
 * The wired netdevice event path unbinds and then drops matching netdev
   references on unregister. Its currently closed routed gate does not justify
   silently carrying that release order into a future enabled path.
+* The reference publishes the TC cookie before an RX-visible flow can bind.
+  The current local replacement path commits the flow and only then inserts
+  its cookie, with a void rollback followed by freeing on insert failure.
+  Port publication/rollback ordering together with SMAC and physical owners.
+* AN7563 skips the generic `eth->npu` offload setup. Its native
+  `an7552_npu` stop/drain path is distinct from generic mailbox `ppe_deinit`.
+  An ACK from that generic callback cannot establish withdrawal for this
+  native backend. A complete port needs the real provider/RTNL/IRQ ordering.
 
 Port 941-04's cross-bank SMAC references and physical FOE reservation with these
 callers, preserving existing L2 VLAN/DSA/WDMA behavior. A partial-bank SMAC write

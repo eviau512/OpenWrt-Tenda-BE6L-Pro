@@ -70,9 +70,24 @@ and package scripts stay disabled. This does not qualify direct installation
 of arbitrary A53 packages into the mixed native root, WAN/TLS traffic, all package
 scripts, performance or the full package ecosystem.
 
+After explicitly detaching wireless/NPU and removing guest proc/tmpfs and the
+temporary rule/mount,368a's own baked600/300 policy returns it to authenticated
+stock `.67` without an autoboot interrupt. The last heartbeat is uptime1862;
+the reboot request is2163, an observed301 seconds within the baked5-second
+poll interval. UART confirms reset; independent web/Telnet root readback
+establishes5.4.55/armv7l and a changed stock boot ID. No task heartbeat or build
+helper remains. This qualifies default expiry after explicit detach only;
+active-NPU traffic, initial no-heartbeat grace, forced fallback and hardlock
+recovery remain unqualified.
+
 In particular, X does not solve missing-loader errno or qualify setuid, setgid,
 file capabilities, secure environment handling or package scripts.
 Rejecting C is a deliberate temporary admission limit, not setuid compatibility.
+
+The next [V2 loader-fd experiment](EXEC-LOADER-FD-EXPERIMENT.md) compiles offline
+and attempts to return loader errors before exec commits, with a retained inode
+and descriptor handoff. It has no target execution evidence and does not close
+the measured V1 errno or credential failures.
 
 Routed NPU admission remains closed. The separate941-04 lifetime port and real
 hardware drain proof remain incomplete. All candidate experiments use RAM,

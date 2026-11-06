@@ -1,0 +1,403 @@
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1116,6 +1116,13 @@
+ 	struct task_struct *me = current;
+ 	int retval;
+ 
++	/* Validate the private retention contract before committing exec. */
++	if (bprm->be6l_execfd_exe &&
++	    (!bprm->have_execfd || !bprm->executable ||
++	     rcu_access_pointer(bprm->mm->exe_file) != bprm->executable ||
++	     bprm->mm->be6l_binfmt_interpreter != bprm->file))
++		return -ENOEXEC;
++
+ 	/* Once we are committed compute the creds */
+ 	retval = bprm_creds_from_file(bprm);
+ 	if (retval)
+@@ -1179,9 +1186,12 @@
+ 	 * not visible until then. Doing it here also ensures
+ 	 * we don't race against replace_mm_exe_file().
+ 	 */
+-	retval = set_mm_exe_file(bprm->mm, bprm->file);
+-	if (retval)
+-		goto out;
++	/* X already pinned the original before exec_binprm drops its deny. */
++	if (!bprm->be6l_execfd_exe) {
++		retval = set_mm_exe_file(bprm->mm, bprm->file);
++		if (retval)
++			goto out;
++	}
+ 
+ 	/* If the binary is not readable then enforce mm->dumpable=0 */
+ 	would_dump(bprm, bprm->file);
+@@ -1310,6 +1320,13 @@
+ 		bprm->executable = NULL;
+ 		bprm->execfd = retval;
+ 	}
++	if (bprm->be6l_execfd_exe && me->mm->be6l_guest_loader) {
++		retval = get_unused_fd_flags(O_CLOEXEC);
++		if (retval < 0)
++			goto out_unlock;
++		fd_install(retval, get_file(me->mm->be6l_guest_loader));
++		bprm->be6l_interpfd = retval;
++	}
+ 	return 0;
+ 
+ out_unlock:
+--- a/fs/binfmt_misc.c
++++ b/fs/binfmt_misc.c
+@@ -14,6 +14,8 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/sched/mm.h>
++#include <linux/mm.h>
++#include <linux/elf.h>
+ #include <linux/magic.h>
+ #include <linux/binfmts.h>
+ #include <linux/slab.h>
+@@ -45,6 +47,7 @@
+ #define MISC_FMT_OPEN_BINARY (1UL << 30)
+ #define MISC_FMT_CREDENTIALS (1UL << 29)
+ #define MISC_FMT_OPEN_FILE (1UL << 28)
++#define MISC_FMT_BE6L_EXECFD_EXE (1UL << 27)
+ 
+ typedef struct {
+ 	struct list_head list;
+@@ -201,6 +204,113 @@
+ /*
+  * the loader itself
+  */
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Injected in built-in binfmt_misc only by the explicit BE6L V2 profile.
++ * This checks the ELF/PT_INTERP boundary before committing native exec, and
++ * returns an open_exec reference to the exact loader inode. It does not claim
++ * complete ELF property, mapping, credential or standard-package qualification.
++ */
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++static int be6l_elf_read(struct file *file, void *buffer, size_t size, loff_t pos)
++{
++	ssize_t result = kernel_read(file, buffer, size, &pos);
++
++	return result < 0 ? result : result != size ? -EIO : 0;
++}
++
++static Elf64_Phdr *be6l_elf_phdrs(struct file *file, const Elf64_Ehdr *header)
++{
++	unsigned int size = sizeof(Elf64_Phdr) * header->e_phnum;
++	Elf64_Phdr *data;
++
++	/* Match load_elf_phdrs' size limits and failure boundary. */
++	if (header->e_phentsize != sizeof(Elf64_Phdr) || !size || size > 65536)
++		return NULL;
++	data = kmalloc(size, GFP_KERNEL);
++	if (data && be6l_elf_read(file, data, size, header->e_phoff)) {
++		kfree(data);
++		data = NULL;
++	}
++	return data;
++}
++
++static bool be6l_a53_elf(const Elf64_Ehdr *header)
++{
++	return !memcmp(header->e_ident, ELFMAG, SELFMAG) &&
++		header->e_ident[EI_CLASS] == ELFCLASS64 &&
++		header->e_ident[EI_DATA] == ELFDATA2LSB &&
++		header->e_machine == EM_AARCH64;
++}
++
++static int be6l_prepare_guest_interp(struct linux_binprm *bprm)
++{
++	Elf64_Ehdr header, interp_header;
++	Elf64_Phdr *phdrs, *interp_phdrs;
++	struct file *interpreter = NULL;
++	char *name = NULL;
++	int err = -ENOEXEC;
++	unsigned int i;
++
++	memcpy(&header, bprm->buf, sizeof(header));
++	if (!be6l_a53_elf(&header) || header.e_flags ||
++	    (header.e_type != ET_EXEC && header.e_type != ET_DYN) ||
++	    !can_mmap_file(bprm->file))
++		return -ENOEXEC;
++	phdrs = be6l_elf_phdrs(bprm->file, &header);
++	if (!phdrs)
++		return -ENOEXEC;
++	for (i = 0; i < header.e_phnum; i++) {
++		if (phdrs[i].p_type != PT_INTERP)
++			continue;
++		if (phdrs[i].p_filesz < 2 || phdrs[i].p_filesz > PATH_MAX)
++			goto out;
++		err = -ENOMEM;
++		name = kmalloc(phdrs[i].p_filesz, GFP_KERNEL);
++		if (!name)
++			goto out;
++		err = be6l_elf_read(bprm->file, name, phdrs[i].p_filesz, phdrs[i].p_offset);
++		if (err)
++			goto out;
++		err = -ENOEXEC;
++		if (name[phdrs[i].p_filesz - 1])
++			goto out;
++		interpreter = open_exec(name);
++		if (IS_ERR(interpreter)) {
++			err = PTR_ERR(interpreter);
++			interpreter = NULL;
++			goto out;
++		}
++		would_dump(bprm, interpreter);
++		err = be6l_elf_read(interpreter, &interp_header, sizeof(interp_header), 0);
++		if (err)
++			goto out;
++		err = -ELIBBAD;
++		if (!be6l_a53_elf(&interp_header) || !can_mmap_file(interpreter))
++			goto out;
++		interp_phdrs = be6l_elf_phdrs(interpreter, &interp_header);
++		if (!interp_phdrs)
++			goto out;
++		kfree(interp_phdrs);
++		/* open_exec owns both a ref and write denial. No close/reopen gap:
++		 * mmput releases them, fork duplicates them, and a separate CLOEXEC
++		 * fd lets the aware emulator map this same loader inode.
++		 */
++		bprm->mm->be6l_guest_loader = interpreter;
++		interpreter = NULL;
++		break;
++	}
++	err = 0;
++out:
++	if (interpreter) {
++		exe_file_allow_write_access(interpreter);
++		fput(interpreter);
++	}
++	kfree(name);
++	kfree(phdrs);
++	return err;
++}
++#endif
++
+ static int load_misc_binary(struct linux_binprm *bprm)
+ {
+ 	Node *fmt;
+@@ -218,7 +328,8 @@
+ 
+ 	/* Need to be able to load the file after exec */
+ 	retval = -ENOENT;
+-	if (bprm->interp_flags & BINPRM_FLAGS_PATH_INACCESSIBLE)
++	if ((bprm->interp_flags & BINPRM_FLAGS_PATH_INACCESSIBLE) &&
++	    !(fmt->flags & MISC_FMT_BE6L_EXECFD_EXE))
+ 		goto ret;
+ 
+ 	if (fmt->flags & MISC_FMT_PRESERVE_ARGV0) {
+@@ -263,6 +374,31 @@
+ 	if (IS_ERR(interp_file))
+ 		goto ret;
+ 
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++	if (fmt->flags & MISC_FMT_BE6L_EXECFD_EXE) {
++		/* Pin before exec_binprm releases the original write denial.
++		 * mmput/free_bprm owns cleanup on every later failure path.
++		 * Do not support nested O dispatch or credential inheritance.
++		 */
++		retval = -ENOEXEC;
++		if (!bprm->mm || bprm->have_execfd || bprm->executable ||
++		    bprm->be6l_execfd_exe || bprm->execfd_creds)
++			goto release_interp;
++		retval = be6l_prepare_guest_interp(bprm);
++		if (retval)
++			goto release_interp;
++		retval = set_mm_exe_file(bprm->mm, bprm->file);
++		if (retval)
++			goto release_interp;
++		/* Retain the native interpreter denial as well as the guest. */
++		retval = exe_file_deny_write_access(interp_file);
++		if (retval)
++			goto release_interp;
++		bprm->mm->be6l_binfmt_interpreter = get_file(interp_file);
++		bprm->be6l_execfd_exe = 1;
++	}
++#endif
++
+ 	bprm->interpreter = interp_file;
+ 	if (fmt->flags & MISC_FMT_OPEN_BINARY)
+ 		bprm->have_execfd = 1;
+@@ -270,6 +406,12 @@
+ 		bprm->execfd_creds = 1;
+ 
+ 	retval = 0;
++	goto ret;
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++release_interp:
++	exe_file_allow_write_access(interp_file);
++	fput(interp_file);
++#endif
+ ret:
+ 
+ 	/*
+@@ -335,6 +477,12 @@
+ 			e->flags |= (MISC_FMT_CREDENTIALS |
+ 					MISC_FMT_OPEN_BINARY);
+ 			break;
++#if IS_BUILTIN(CONFIG_BINFMT_MISC)
++		case 'X':
++			p++;
++			e->flags |= MISC_FMT_BE6L_EXECFD_EXE | MISC_FMT_OPEN_BINARY;
++			break;
++#endif
+ 		case 'F':
+ 			pr_debug("register: flag: F: open interpreter file now\n");
+ 			p++;
+@@ -540,6 +688,10 @@
+ 
+ 	/* Parse the 'flags' field. */
+ 	p = check_special_flags(p, e);
++	/* Secure credential inheritance needs a separate qualification. */
++	if ((e->flags & MISC_FMT_BE6L_EXECFD_EXE) &&
++	    (e->flags & MISC_FMT_CREDENTIALS))
++		goto einval;
+ 	if (*p == '\n')
+ 		p++;
+ 	if (p != buf + count)
+@@ -610,6 +762,8 @@
+ 		*dp++ = 'C';
+ 	if (e->flags & MISC_FMT_OPEN_FILE)
+ 		*dp++ = 'F';
++	if (e->flags & MISC_FMT_BE6L_EXECFD_EXE)
++		*dp++ = 'X';
+ 	*dp++ = '\n';
+ 
+ 	if (!test_bit(Magic, &e->flags)) {
+--- a/fs/binfmt_elf.c
++++ b/fs/binfmt_elf.c
+@@ -255,6 +255,10 @@
+ 	NEW_AUX_ENT(AT_BASE, interp_load_addr);
+ 	if (bprm->interp_flags & BINPRM_FLAGS_PRESERVE_ARGV0)
+ 		flags |= AT_FLAGS_PRESERVE_ARGV0;
++	if (bprm->be6l_execfd_exe)
++		flags |= AT_FLAGS_BE6L_EXECFD_EXE;
++	if (bprm->be6l_execfd_exe && mm->be6l_guest_loader)
++		flags |= AT_FLAGS_BE6L_INTERPFD;
+ 	NEW_AUX_ENT(AT_FLAGS, flags);
+ 	NEW_AUX_ENT(AT_ENTRY, e_entry);
+ 	NEW_AUX_ENT(AT_UID, from_kuid_munged(cred->user_ns, cred->uid));
+@@ -284,6 +288,8 @@
+ 	if (bprm->have_execfd) {
+ 		NEW_AUX_ENT(AT_EXECFD, bprm->execfd);
+ 	}
++	if (bprm->be6l_execfd_exe && mm->be6l_guest_loader)
++		NEW_AUX_ENT(AT_BE6L_INTERPFD, bprm->be6l_interpfd);
+ #ifdef CONFIG_RSEQ
+ 	NEW_AUX_ENT(AT_RSEQ_FEATURE_SIZE, offsetof(struct rseq, end));
+ 	NEW_AUX_ENT(AT_RSEQ_ALIGN, __alignof__(struct rseq));
+--- a/include/linux/binfmts.h
++++ b/include/linux/binfmts.h
+@@ -29,6 +29,9 @@
+ 	unsigned int
+ 		/* Should an execfd be passed to userspace? */
+ 		have_execfd:1,
++
++		/* Private built-in binfmt X experiment; never implies C. */
++		be6l_execfd_exe:1,
+ 
+ 		/* Use the creds of a script (see binfmt_misc) */
+ 		execfd_creds:1,
+@@ -63,6 +66,7 @@
+ 				   different for binfmt_{misc,script} */
+ 	const char *fdpath;	/* generated filename for execveat */
+ 	unsigned interp_flags;
++	int be6l_interpfd;
+ 	int execfd;		/* File descriptor of the executable */
+ 	unsigned long exec;
+ 
+--- a/include/uapi/linux/binfmts.h
++++ b/include/uapi/linux/binfmts.h
+@@ -22,4 +22,8 @@
+ #define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+ #define AT_FLAGS_PRESERVE_ARGV0 (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+ 
++/* BE6L private experiment: mm->exe_file retains the binfmt O file. */
++#define AT_FLAGS_BE6L_EXECFD_EXE (1U << 16)
++#define AT_FLAGS_BE6L_INTERPFD (1U << 17)
++
+ #endif /* _UAPI_LINUX_BINFMTS_H */
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -518,6 +518,22 @@
+ {
+ 	struct file *exe_file;
+ 
++	/* oldmm is live; the private interpreter pin is immutable.
++	 * As for exe_file below, its existing write denial must hold.
++	 */
++	if (oldmm->be6l_binfmt_interpreter) {
++		mm->be6l_binfmt_interpreter =
++			get_file(oldmm->be6l_binfmt_interpreter);
++		if (exe_file_deny_write_access(mm->be6l_binfmt_interpreter))
++			pr_warn_once("BE6L interpreter deny failed in %s\n", __func__);
++	}
++
++	if (oldmm->be6l_guest_loader) {
++		mm->be6l_guest_loader = get_file(oldmm->be6l_guest_loader);
++		if (exe_file_deny_write_access(mm->be6l_guest_loader))
++			pr_warn_once("BE6L guest loader deny failed in %s\n", __func__);
++	}
++
+ 	exe_file = get_mm_exe_file(oldmm);
+ 	RCU_INIT_POINTER(mm->exe_file, exe_file);
+ 	/*
+@@ -1055,6 +1071,8 @@
+ 	mm_init_owner(mm, p);
+ 	mm_pasid_init(mm);
+ 	RCU_INIT_POINTER(mm->exe_file, NULL);
++	mm->be6l_binfmt_interpreter = NULL;
++	mm->be6l_guest_loader = NULL;
+ 	mmu_notifier_subscriptions_init(mm);
+ 	init_tlb_flush_pending(mm);
+ #if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !defined(CONFIG_SPLIT_PMD_PTLOCKS)
+@@ -1139,6 +1157,16 @@
+ 	exit_mmap(mm);
+ 	mm_put_huge_zero_folio(mm);
+ 	set_mm_exe_file(mm, NULL);
++	if (mm->be6l_guest_loader) {
++		exe_file_allow_write_access(mm->be6l_guest_loader);
++		fput(mm->be6l_guest_loader);
++		mm->be6l_guest_loader = NULL;
++	}
++	if (mm->be6l_binfmt_interpreter) {
++		exe_file_allow_write_access(mm->be6l_binfmt_interpreter);
++		fput(mm->be6l_binfmt_interpreter);
++		mm->be6l_binfmt_interpreter = NULL;
++	}
+ 	if (!list_empty(&mm->mmlist)) {
+ 		spin_lock(&mmlist_lock);
+ 		list_del(&mm->mmlist);
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -1151,6 +1151,9 @@
+ 
+ 		/* store ref to file /proc/<pid>/exe symlink points to */
+ 		struct file __rcu *exe_file;
++		/* Private X interpreter pin; immutable until final mmput. */
++		struct file *be6l_binfmt_interpreter;
++		struct file *be6l_guest_loader;
+ #ifdef CONFIG_MMU_NOTIFIER
+ 		struct mmu_notifier_subscriptions *notifier_subscriptions;
+ #endif
+--- a/include/uapi/linux/auxvec.h
++++ b/include/uapi/linux/auxvec.h
+@@ -8,6 +8,7 @@
+    put on the initial stack */
+ #define AT_NULL   0	/* end of vector */
+ #define AT_IGNORE 1	/* entry should be ignored */
++#define AT_BE6L_INTERPFD 0xbe6a /* private BE6L V2 loader descriptor */
+ #define AT_EXECFD 2	/* file descriptor of program */
+ #define AT_PHDR   3	/* program headers for program */
+ #define AT_PHENT  4	/* size of program header entry */
+--- a/include/linux/auxvec.h
++++ b/include/linux/auxvec.h
+@@ -4,6 +4,6 @@
+ 
+ #include <uapi/linux/auxvec.h>
+ 
+-#define AT_VECTOR_SIZE_BASE 24 /* NEW_AUX_ENT entries in auxiliary table */
++#define AT_VECTOR_SIZE_BASE 25 /* NEW_AUX_ENT entries in auxiliary table */
+   /* number of "#define AT_.*" above, minus {AT_NULL, AT_IGNORE, AT_NOTELF} */
+ #endif /* _LINUX_AUXVEC_H */

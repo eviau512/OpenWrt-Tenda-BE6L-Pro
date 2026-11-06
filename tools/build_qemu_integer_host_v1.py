@@ -44,6 +44,7 @@ def main():
                         help='Redirect following guest proc-exe stat/statx to its named ELF; deleted inode retention remains open')
     parser.add_argument('--binfmt-guest-exe', action='store_true',
                         help='Use the private kernel X/AT_FLAGS bit16 contract when the host supplies it')
+    parser.add_argument('--binfmt-guest-interp', action='store_true', help='Consume the private V2 kernel PT_INTERP descriptor')
     a = parser.parse_args()
     if a.binfmt_fd_paths and not a.binfmt_defaults:
         parser.error('--binfmt-fd-paths requires --binfmt-defaults')
@@ -51,6 +52,8 @@ def main():
         parser.error('--binfmt-proc-stat requires --binfmt-fd-paths')
     if a.binfmt_guest_exe and not a.binfmt_proc_stat:
         parser.error('--binfmt-guest-exe requires --binfmt-proc-stat')
+    if a.binfmt_guest_interp and not a.binfmt_guest_exe:
+        parser.error('--binfmt-guest-interp requires --binfmt-guest-exe')
     w = a.work.resolve()
     if w.parent != Path('/root') or not w.name.startswith('be6l-qemu-integer-') or w.exists():
         parser.error('Use a fresh /root/be6l-qemu-integer-* work directory')
@@ -159,7 +162,7 @@ def main():
     run('glib-build', [bin_dir/'ninja', '-C', w/'glib-build', '-j4'])
     run('glib-install', [bin_dir/'meson', 'install', '-C', w/'glib-build', '--no-rebuild'])
     source_info = prepare(a.verified_qemu, w/'qemu-source', a.binfmt_defaults,
-                          a.binfmt_fd_paths, a.binfmt_proc_stat, a.binfmt_guest_exe)
+                          a.binfmt_fd_paths, a.binfmt_proc_stat, a.binfmt_guest_exe, a.binfmt_guest_interp)
     source = w/'qemu-source/qemu-11.1.3'
     build = w/'qemu-build'
     build.mkdir()

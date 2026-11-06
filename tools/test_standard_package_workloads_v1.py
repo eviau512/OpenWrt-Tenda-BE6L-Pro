@@ -34,7 +34,12 @@ def main():
         p.error('Use a fresh /root/be6l-standard-workloads-* directory')
     load = lambda directory: json.loads((directory/'result.json').read_text())
     staged, image, emulator, tested, probe = map(load, (a.stage, a.candidate, a.emulator_package, a.exec_test, a.native_probe))
-    contract = 'BE6L_X_AT_FLAGS_16_v1'
+    contract = image.get('guest_exe_contract')
+    if contract not in ('BE6L_X_AT_FLAGS_16_v1', 'BE6L_X_EXECFD_EXE_INTERPFD_V2'):
+        raise ValueError('Unknown private kernel/emulator contract')
+    if contract == 'BE6L_X_EXECFD_EXE_INTERPFD_V2' and (
+            not image.get('guest_interp_fd') or not emulator.get('kernel_guest_interp_aware')):
+        raise ValueError('V2 descriptor handoff is not admitted on both sides')
     root = a.composition/'root'
     native = a.native_probe/'native-interpreter-write-probe'
     if (not image.get('guest_exe_file') or image.get('guest_exe_contract') != contract or

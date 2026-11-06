@@ -27,6 +27,14 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def source_lock_sha_matches(path, expected):
+    # JSON locks may cross Windows/Git with CRLF. Admit only the exact LF and
+    # CRLF representations; every actual kernel source hash is checked below.
+    raw = path.read_bytes().replace(b'\r\n', b'\n')
+    return expected in {hashlib.sha256(raw).hexdigest(),
+                        hashlib.sha256(raw.replace(b'\n', b'\r\n')).hexdigest()}
+
+
 def config_values(text):
     result = {}
     for line in text.splitlines():
@@ -49,22 +57,28 @@ def main():
                         help='Build in binfmt_misc for a separately admitted instruction-emulation candidate')
     parser.add_argument('--guest-exe-file', action='store_true',
                         help='Explicitly admit the private built-in binfmt X source experiment')
+    parser.add_argument('--guest-interp-fd', action='store_true', help='Require the explicit V2 loader-inode/fd handoff profile')
     args = parser.parse_args()
+    if args.guest_interp_fd and not args.guest_exe_file:
+        parser.error('--guest-interp-fd requires --guest-exe-file')
     work = args.work.resolve()
     if work.parent != Path('/root') or not work.name.startswith('be6l-kernel-build-'):
         parser.error('Use a fresh /root/be6l-kernel-build-* directory')
     kernel = args.prepared / 'kernel-source/linux-6.18.55'
     prepared = json.loads((args.prepared / 'result.json').read_text())
     if args.guest_exe_file:
-        lock = BASE / 'upstream/be6l-guest-exe-source-lock.json'
+        lock = BASE / ('upstream/be6l-guest-interp-source-lock.json' if args.guest_interp_fd else 'upstream/be6l-guest-exe-source-lock.json')
+        patch_name = 'be6l-binfmt-guest-interp.patch' if args.guest_interp_fd else 'be6l-binfmt-guest-exe.patch'
+        contract = 'BE6L_X_EXECFD_EXE_INTERPFD_V2' if args.guest_interp_fd else 'BE6L_X_AT_FLAGS_16_v1'
         if (not args.integer_binfmt or not prepared.get('guest_exe_file') or
-            prepared.get('guest_exe_contract') != 'BE6L_X_AT_FLAGS_16_v1' or
-            prepared.get('guest_exe_source_lock_sha256') != sha(lock) or
+            prepared.get('guest_exe_contract') != contract or
+            bool(prepared.get('guest_interp_fd')) != args.guest_interp_fd or
+            not source_lock_sha_matches(lock, prepared.get('guest_exe_source_lock_sha256')) or
             prepared.get('base_preparation_sha256') != json.loads(lock.read_text())['base_preparation_sha256'] or
             set(prepared.get('guest_exe_files', {})) != set(json.loads(lock.read_text())['source_files']) or
             any(sha(kernel / name) != digest for name, digest in prepared['guest_exe_files'].items()) or
-            sha(args.prepared / 'be6l-binfmt-guest-exe.patch') != prepared['guest_exe_patch_sha256'] or
-            sha(BASE / 'upstream/be6l-binfmt-guest-exe.patch') != prepared['guest_exe_patch_sha256']):
+            sha(args.prepared / patch_name) != prepared['guest_exe_patch_sha256'] or
+            sha(BASE / 'upstream' / patch_name) != prepared['guest_exe_patch_sha256']):
             raise ValueError('Guest-executable source contract differs')
     elif prepared.get('guest_exe_file') or not prepared['pristine_case_sensitive_source']:
         raise ValueError('Modified source requires an explicit guest-executable build profile')
@@ -155,6 +169,7 @@ def main():
     report['integer_binfmt_builtin'] = args.integer_binfmt
     report['external_modules_require_fresh_build'] = args.integer_binfmt
     report['guest_exe_file'] = args.guest_exe_file
+    report['guest_interp_fd'] = args.guest_interp_fd
     report['guest_exe_contract'] = prepared.get('guest_exe_contract') if args.guest_exe_file else None
     (work / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     print('FRESH_ARM64_KERNEL_AND_IN_TREE_MODULES_BUILT', len(modules), flush=True)

@@ -25,13 +25,15 @@ def replace_once(text, before, after):
 
 
 def prepare(verified_source, work, binfmt_defaults=False, binfmt_fd_paths=False,
-            binfmt_proc_stat=False, binfmt_guest_exe=False):
+            binfmt_proc_stat=False, binfmt_guest_exe=False, binfmt_guest_interp=False):
     if binfmt_fd_paths and not binfmt_defaults:
         raise ValueError('FD dispatch changes require the explicit binfmt defaults profile')
     if binfmt_proc_stat and not binfmt_fd_paths:
         raise ValueError('Following proc-stat changes require the explicit FD-path profile')
     if binfmt_guest_exe and not binfmt_proc_stat:
         raise ValueError('Kernel executable retention requires the complete explicit proc-stat profile')
+    if binfmt_guest_interp and not binfmt_guest_exe:
+        raise ValueError('Kernel loader descriptor handoff requires the explicit executable-retention profile')
     if work.exists():
         raise ValueError('Use a fresh experiment directory')
     archive = verified_source/'source.tar.xz'
@@ -305,6 +307,43 @@ bool be6l_kernel_execfd_exe;
 
 static void excp_dump_file(FILE *logfile, CPUArchState *env,''')
         change('linux-user/syscall.c', kernel_exe_syscall)
+    if binfmt_guest_interp:
+        change('linux-user/qemu.h', lambda s: replace_once(s,
+            'extern bool be6l_kernel_execfd_exe;',
+            'extern bool be6l_kernel_execfd_exe;\nextern int be6l_kernel_interp_fd;'))
+        def guest_interp_main(s):
+            s = replace_once(s, 'bool be6l_kernel_execfd_exe;',
+                'bool be6l_kernel_execfd_exe;\nint be6l_kernel_interp_fd = -1;\n'
+                '#define BE6L_AT_FLAGS_INTERPFD (1U << 17)\n#define BE6L_AT_INTERPFD 0xbe6a')
+            return replace_once(s,
+                '        !!(qemu_getauxval(AT_FLAGS) & BE6L_AT_FLAGS_EXECFD_EXE);',
+                '''        !!(qemu_getauxval(AT_FLAGS) & BE6L_AT_FLAGS_EXECFD_EXE);
+    if (be6l_kernel_execfd_exe &&
+        (qemu_getauxval(AT_FLAGS) & BE6L_AT_FLAGS_INTERPFD)) {
+        unsigned long loader_fd;
+        errno = 0;
+        loader_fd = qemu_getauxval(BE6L_AT_INTERPFD);
+        if (errno || loader_fd > INT_MAX || loader_fd == execfd) {
+            error_report("Invalid BE6L kernel loader descriptor");
+            exit(EXIT_FAILURE);
+        }
+        be6l_kernel_interp_fd = loader_fd;
+    }''')
+        change('linux-user/main.c', guest_interp_main)
+        change('linux-user/elfload.c', lambda s: replace_once(s,
+            '    fd = open(path(filename), O_RDONLY);',
+            '''#ifdef BE6L_INTEGER_HOST
+    if (be6l_kernel_interp_fd >= 0) {
+        /* The kernel validated and pinned this exact PT_INTERP inode before
+         * committing exec. Consume once; existing close(fd) below owns it.
+         */
+        fd = be6l_kernel_interp_fd;
+        be6l_kernel_interp_fd = -1;
+    } else
+#endif
+    {
+        fd = open(path(filename), O_RDONLY);
+    }'''))
     patch = ''.join(patches)
     (work/'qemu-integer-host.patch').write_text(patch)
     result = dict(version=VERSION, release_archive_sha256=ARCHIVE_SHA,
@@ -317,8 +356,9 @@ static void excp_dump_file(FILE *logfile, CPUArchState *env,''')
         default_tb_cache_mib=4 if binfmt_defaults else 0,
         binfmt_fd_paths=binfmt_fd_paths,
         binfmt_following_proc_stat=binfmt_proc_stat,
-        guest_exe_contract='BE6L_X_AT_FLAGS_16_v1' if binfmt_guest_exe else None,
+        guest_exe_contract='BE6L_X_EXECFD_EXE_INTERPFD_V2' if binfmt_guest_interp else 'BE6L_X_AT_FLAGS_16_v1' if binfmt_guest_exe else None,
         kernel_execfd_exe_aware=binfmt_guest_exe,
+        kernel_guest_interp_aware=binfmt_guest_interp,
         deleted_executable_inode_retained=False,
         cloexec_retry_scope='readable standard A53 ELF only; scripts excluded' if binfmt_fd_paths else None,
         source_prepared=True, emulator_built=False, generated_code_audited=False,
@@ -340,7 +380,8 @@ if __name__ == '__main__':
     parser.add_argument('--binfmt-fd-paths', action='store_true')
     parser.add_argument('--binfmt-proc-stat', action='store_true')
     parser.add_argument('--binfmt-guest-exe', action='store_true')
+    parser.add_argument('--binfmt-guest-interp', action='store_true')
     args = parser.parse_args()
     print(json.dumps(prepare(args.verified_source, args.work, args.binfmt_defaults,
                               args.binfmt_fd_paths, args.binfmt_proc_stat,
-                              args.binfmt_guest_exe), indent=2))
+                              args.binfmt_guest_exe, args.binfmt_guest_interp), indent=2))

@@ -29,7 +29,10 @@ def main():
     p.add_argument('--corner-probe', type=Path, help='Optional admitted standard ELF negative-semantics probe directory')
     p.add_argument('--guest-exe-file', action='store_true',
                    help='Register X only with the matching kernel and aware interpreter receipts')
+    p.add_argument('--guest-interp-fd', action='store_true', help='Require the matched V2 loader-fd kernel/emulator profile')
     a = p.parse_args()
+    if a.guest_interp_fd and not a.guest_exe_file:
+        p.error('--guest-interp-fd requires --guest-exe-file')
     w = a.work.resolve()
     if w.parent != Path('/root') or not re.fullmatch('be6l-binfmt-test-[a-z0-9-]+', w.name) or w.exists():
         p.error('Use a fresh /root/be6l-binfmt-test-* directory')
@@ -44,11 +47,13 @@ def main():
             root_digest(root) != candidate['root_records_sha256'] or
             staged['source_emulator_receipt_sha256'] != sha(a.emulator_package/'result.json')):
         raise ValueError('Missing exact target/kernel/native-inventory/standard-runtime admission')
-    contract = 'BE6L_X_AT_FLAGS_16_v1'
+    contract = 'BE6L_X_EXECFD_EXE_INTERPFD_V2' if a.guest_interp_fd else 'BE6L_X_AT_FLAGS_16_v1'
     if a.guest_exe_file and (
             not candidate.get('guest_exe_file') or candidate.get('guest_exe_contract') != contract or
             not emulator.get('kernel_execfd_exe_aware') or emulator.get('guest_exe_contract') != contract):
         raise ValueError('X requires both the matched kernel contract and aware signed interpreter')
+    if a.guest_interp_fd and (not candidate.get('guest_interp_fd') or not emulator.get('kernel_guest_interp_aware')):
+        raise ValueError('V2 requires both sides of the kernel loader-descriptor contract')
     flags = 'POFX' if a.guest_exe_file else 'POF'
     guest = staged['guest_root']
     if not re.fullmatch('/tmp/be6l-binfmt-stage-[a-z0-9-]+/guest', guest) or staged['interpreter'] != '/usr/libexec/be6l/qemu-aarch64':

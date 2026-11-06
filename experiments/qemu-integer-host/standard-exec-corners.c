@@ -194,7 +194,7 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--deleted-statx")) return proc_statx_checks();
     if (argc == 2 && !strcmp(argv[1], "--renamed")) return renamed_exe();
     if (argc == 2 && !strcmp(argv[1], "--write-denial")) {
-        if (getauxval(AT_FLAGS) & (1U << 16)) return 111;
+        if (getauxval(AT_FLAGS) & (3U << 16)) return 111;
         return write_denied("/proc/self/exe");
     }
     if (argc == 3 && !strcmp(argv[1], "--fork-pin")) return fork_pin_owner(atoi(argv[2]));
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
     const char *names[] = {"missing-elf-interpreter-errno", "linked-proc-exe-stat", "deleted-proc-exe-open",
         "linked-proc-exe-statx", "renamed-proc-exe", "deleted-proc-exe-statx",
         "guest-executable-write-denial", "exit-releases-write-denial", "fork-inherits-write-denial",
-        "setuid-guest-credentials", "no-new-privileges"};
+        "setuid-guest-credentials", "no-new-privileges", "private-kernel-auxv-hidden"};
     const int count = sizeof(names)/sizeof(names[0]);
     int failed = 0;
     for (int i = 0; i < count; i++) {
@@ -226,6 +226,12 @@ int main(int argc, char **argv)
             if (i == 7) _exit(exit_releases_pin());
             if (i == 8) _exit(fork_inherits_pin());
             if (i == 9 || i == 10) setuid_exec(i == 10);
+            if (i == 11) {
+                unsigned long flags = getauxval(AT_FLAGS);
+                errno = 0;
+                unsigned long descriptor = getauxval(0xbe6a);
+                _exit(!(flags & (3U << 16)) && !descriptor && errno == ENOENT ? 0 : 113);
+            }
             if (i == 2 || i == 5) {
                 const char *name = "/tmp/be6l-exec-corners-deleted";
                 copy_self(name);
