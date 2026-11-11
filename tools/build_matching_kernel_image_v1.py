@@ -62,6 +62,9 @@ def main():
     integer_binfmt = prior.get('integer_binfmt_builtin', False)
     guest_exe = bool(prior.get('guest_exe_file'))
     guest_interp = bool(prior.get('guest_interp_fd'))
+    if guest_interp and (prior.get('guest_interp_revision') != 2 or not prior.get('dispatch_failures_terminal') or
+                         component.get('guest_interp_revision') != 2 or not component.get('dispatch_failures_terminal')):
+        raise ValueError('Superseded V2 dispatch/root cannot be admitted in an Image')
     if (guest_exe != bool(component.get('guest_exe_file')) or
         prior.get('guest_exe_contract') != component.get('guest_exe_contract') or
         guest_interp != bool(component.get('guest_interp_fd'))):
@@ -190,6 +193,7 @@ def main():
         integer_binfmt_builtin=integer_binfmt, marked_private_host_elf_paths=private_elf,
         guest_exe_file=guest_exe, guest_exe_contract=prior.get('guest_exe_contract'),
         guest_interp_fd=guest_interp,
+        guest_interp_revision=prior.get('guest_interp_revision'), dispatch_failures_terminal=prior.get('dispatch_failures_terminal', False),
         binfmt_registration_enabled=False,
         unchanged_compiled_module_objects=True, module_layout_audit=layout,
         image_tool_sha256={name: sha(getattr(args, name)) for name in ('dtc', 'mkimage', 'lzma')},

@@ -70,6 +70,8 @@ def main():
         lock = BASE / ('upstream/be6l-guest-interp-source-lock.json' if args.guest_interp_fd else 'upstream/be6l-guest-exe-source-lock.json')
         patch_name = 'be6l-binfmt-guest-interp.patch' if args.guest_interp_fd else 'be6l-binfmt-guest-exe.patch'
         contract = 'BE6L_X_EXECFD_EXE_INTERPFD_V2' if args.guest_interp_fd else 'BE6L_X_AT_FLAGS_16_v1'
+        if args.guest_interp_fd and (prepared.get('guest_interp_revision') != 2 or not prepared.get('dispatch_failures_terminal')):
+            raise ValueError('Only the fail-closed V2 dispatch revision is admitted')
         if (not args.integer_binfmt or not prepared.get('guest_exe_file') or
             prepared.get('guest_exe_contract') != contract or
             bool(prepared.get('guest_interp_fd')) != args.guest_interp_fd or
@@ -170,6 +172,8 @@ def main():
     report['external_modules_require_fresh_build'] = args.integer_binfmt
     report['guest_exe_file'] = args.guest_exe_file
     report['guest_interp_fd'] = args.guest_interp_fd
+    report['guest_interp_revision'] = prepared.get('guest_interp_revision') if args.guest_interp_fd else None
+    report['dispatch_failures_terminal'] = bool(prepared.get('dispatch_failures_terminal')) if args.guest_interp_fd else False
     report['guest_exe_contract'] = prepared.get('guest_exe_contract') if args.guest_exe_file else None
     (work / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     print('FRESH_ARM64_KERNEL_AND_IN_TREE_MODULES_BUILT', len(modules), flush=True)

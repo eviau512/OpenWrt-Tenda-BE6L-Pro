@@ -28,6 +28,18 @@ eight isolated standard-package workloads from28 signed A53 packages. Rename,
 deleted proc-exe and executable write-denial lifetime now pass. Missing-loader
 errno, setuid and full standard-package integration remain open.
 
+The [loader-descriptor V2 revision2](docs/EXEC-LOADER-FD-EXPERIMENT.md) has a
+fresh matched kernel/module/package/Image/loader admission and actual `a1ca`
+startup. It closes matched-X failure fallback to native ELF and passes24/24
+extracted-C regressions; initial V2/r103 is superseded. On target it passes20
+execution cases,11/12 corners,16 native-caller errno cases and eight isolated
+package workloads. Its own default300-second disconnect recovery after explicit
+NPU detach returns to authenticated stock. Setuid, full host-package integration
+and broader recovery remain open.
+The [X-Wrt lifetime draft](docs/PPE-LIFETIME-DRAFT-20261111.md) now
+includes SMAC, publication order and error retention, but native drain and exit
+protocols remain unfinished; its gate is closed and it is not in that candidate.
+
 See the [architecture, implemented features, open problems and next milestones](docs/ARCHITECTURE-AND-ROADMAP.md)
 for the current project overview. Standard Cortex-A53 binary-package compatibility
 remains a separate goal from the existing custom soft-ABI C components.

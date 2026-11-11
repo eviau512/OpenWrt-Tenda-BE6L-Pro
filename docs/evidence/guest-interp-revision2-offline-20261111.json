@@ -1,0 +1,642 @@
+{
+  "date": "2026-11-11",
+  "scope": "Offline revision2 admission snapshot; not target qualification",
+  "initial_v2_and_r103_superseded": true,
+  "source": {
+    "base_preparation_sha256": "4e902edf391c545391138a4af87c370c6d4a27b694d00eefada01b5c75f27147",
+    "guest_exe_patch_sha256": "c86aa3aad8fbd01f2131eb8ab1af03149d6bdf8be61b5ca87df97ac58db97899",
+    "guest_exe_files": {
+      "fs/exec.c": "3a3608fc3428fd0374d6d202eac9df0b656cec681f2fa885eeff91f1fce629d3",
+      "fs/binfmt_misc.c": "381a17248d051aa10af6d31d2bbec3aed8a7f6d1635f81d918cba9009b8a34ef",
+      "fs/binfmt_elf.c": "78703e92902c3913c3e022eb79e3ffea0796f26f07ada21541562bf850d1ecca",
+      "include/linux/binfmts.h": "cc17847698730a55e6505034b6b4715e70d28f13d27e533d08ba03d490f211e3",
+      "include/uapi/linux/binfmts.h": "52e8752145c3da3e3e460fee8b3df37f1471398897d36ab51dbec64e0bca76a1",
+      "kernel/fork.c": "252ae1e8057748f1156ee993425ee56b96ba28d38a9069c9289f7e442de2e2cf",
+      "include/linux/mm_types.h": "de3eb5041b53f400cde13ed0cac78f1a3d71f70e56a22d7fccc940e6c196fd21",
+      "include/uapi/linux/auxvec.h": "a60dd0ba705cc9da0bbccdff141651e94cdbafa05a561d24a630cfe54446253a",
+      "include/linux/auxvec.h": "667e8bb825c3fd02ba5dd6fda843b4df4aeeb6a1ef5bc16af114b0afdb8811fc"
+    },
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true,
+    "guest_exe_contract": "BE6L_X_EXECFD_EXE_INTERPFD_V2"
+  },
+  "kernel": {
+    "full_kernel_built": true,
+    "in_tree_module_count": 78,
+    "in_tree_module_sha256": {
+      "crypto/cmac.ko": "2db48e6983f98ab762ac7af5cb31e446e061c0dc5224df2e7001df482bdb7e49",
+      "crypto/drbg.ko": "2c69ca325eb24a78dbc71186b10b9c3e26557c7029757f635c34b11ed51a76d2",
+      "crypto/geniv.ko": "4ea95211d611d84726c11e80feba1b3dbce3811976aa8b78146eafd2914db584",
+      "crypto/hmac.ko": "4efcbea7a2ad48cb778bae3d6610992eff9f6060fbbdf4d2ae74dc8fc88ab11f",
+      "crypto/jitterentropy_rng.ko": "45507a368c47bb01ace34e00780acb25b2c11d30f945877f08cec50f50f101af",
+      "crypto/seqiv.ko": "13ec564d00051fde4a5c96f4985726b794f1237eef5d703fd8f82ab617ecfb81",
+      "crypto/sha3_generic.ko": "159c806c0f6a3c46bd701d2ed916366aef2742a108b485a19dcedfe626ed5935",
+      "crypto/sha512.ko": "54da34a4dd4c5dad5410975204c1441bbcf4a61ca11cec84fe499fa62719af7c",
+      "net/ipv4/inet_diag.ko": "65240f70dc109ea6772c8b2f935ab1858f02d6979f111bfd2955c26530b7c859",
+      "net/ipv4/raw_diag.ko": "4af801811438ec65f596965110e5e79c00c5623bcdc5ed42b137e0ce811bba3b",
+      "net/ipv4/tcp_diag.ko": "7c0f5d0354e4201c5fe78c0fb4385cd6a1f9da272a2b1be5449902ee3b404f44",
+      "net/ipv4/udp_diag.ko": "70f24d7f179df0fa43f66e6106cfc351e0d6e1bd27b1a30d09ad617f367e0346",
+      "net/mptcp/mptcp_diag.ko": "727cb3c5c5183653d47200aef857359bb757965766c8ed4eade12c618514d2cb",
+      "net/netfilter/nfnetlink.ko": "77c6a4ab90267092038e74f292642d62694141fa723a90bd906252eebf4f0413",
+      "net/netfilter/nft_chain_nat.ko": "3321b2c4796db0f91529710cb01d5231058f1f3923380743f73f8775c0d98c0e",
+      "net/netfilter/nft_ct.ko": "e6c121f49bdbca0c650b956e96c198556d328848bf611f563cfe714ed2c529da",
+      "net/netfilter/nft_fib.ko": "88d4d83e4e598b6468524ce578b3ebf6317e88ea1ac8d62785150e212e871784",
+      "net/netfilter/nft_fib_inet.ko": "8138dfcb36cf9a44370026541c749aea628e066c15f92f80d3193b0b7feeede0",
+      "net/netfilter/nft_flow_offload.ko": "4b251804b6adb78960f1487d04c8b793a61c0e7c5ad9408b9167b4ee8655e33a",
+      "net/netfilter/nft_hash.ko": "adac372dde6317340b96ad435cdcc6094715f55a889e05f0bd105388a0f1cf6e",
+      "net/netfilter/nft_limit.ko": "85f8a9684e491b5cddfcac38f07ed9e291331817d652767f510971610fd97fa1",
+      "net/netfilter/nft_log.ko": "4eaf7cc3a7f83070ad7be1a011bb718296f0e7197c2df6e331298d7140d5c25e",
+      "net/netfilter/nft_masq.ko": "85d1b2eb822db21351b0d07c691eb798903fae012b76f7a4369bb23c65c82be5",
+      "net/netfilter/nft_nat.ko": "ce0adeeebb6974e3cc224e9cf0eb1e96c5bceb781f4f3f66993c2153cd015c69",
+      "net/netfilter/nft_numgen.ko": "86946099b476190244f102d96dc161dca56a095f616d99a34618d3ef23b291d5",
+      "net/netfilter/nft_quota.ko": "c28da7d631e3b798300c09b40e94361e4609989244801acc1c3e555010364f5b",
+      "net/netfilter/nft_redir.ko": "ff90366897eb0568018b448504737d051badb9b0982fd42845e810f5fea2f4e9",
+      "net/netfilter/nft_reject.ko": "bb8317bf96d4d3ff953777430668df13d3bdbbb9ba66ef8c0b170a5f7d5c566b",
+      "net/netfilter/nft_reject_inet.ko": "e31a1aa0a231bb67306ac6fa8f73ef43d1b97706d1792a751e53028efd641498",
+      "net/netfilter/nft_socket.ko": "20f0ca3af3aab6ae757a0473a5e3d1834719d33b8068af7a86adba43e6e0a66b",
+      "net/netfilter/nft_tproxy.ko": "08f7d66e0ea0951867c4b9d95d4bf26fa91d9dab385f7fcc06c21387cae4dd7a",
+      "net/netfilter/nf_conntrack.ko": "3f04218f19baaef3fc7edb6b3c14cdfc07da2d1dcd3e92a47c0b7b378c814f76",
+      "net/netfilter/nf_conntrack_netlink.ko": "d95a4e68037661454f942e6b25b6b1be39e9d8f8f6e1f9810fc96e7b1361bfe8",
+      "net/netfilter/nf_flow_table.ko": "11afa001f28c74ed5a2a9b0a819d01f7ee8010f9102997667ca375beeba387a6",
+      "net/netfilter/nf_flow_table_inet.ko": "933f233599142f8939254f9ed486692a6fe7e28462cf7f9eaea1f42acff34353",
+      "net/netfilter/nf_log_syslog.ko": "2ace49caa354142ddc318b8fcc33c1ecff09967ada131386f52c730471f40df8",
+      "net/netfilter/nf_nat.ko": "636495d6d01a8f679507f1aa4a9f7422a208b73e4cc350a8b0342c6d423d4684",
+      "net/netfilter/nf_tables.ko": "15afc871c62aba21866445a832728e3e27e21ebc0fb53de55bdc6a5556cb5ffb",
+      "net/sched/act_bpf.ko": "5538dbfda448d3baf7495725608071c266b09b46319a091fbe7d8df407a316c9",
+      "net/sched/act_gact.ko": "313caec3dcfd84eb1f6dbf31c60642e1aee5ab318448f5f6c897e993288df131",
+      "net/sched/act_mirred.ko": "3fdae632c6c133abe2e0338e879c3614fb623e310a27544c0e716fafbbc97265",
+      "net/sched/act_skbedit.ko": "941c5a786d3c0c840f00b762c566d0292cea31cb73edea3ec1223196fcdb18e2",
+      "net/sched/act_vlan.ko": "0e63f6b05491df66833f9033c6e895586f6a4a20fa9b619454afaf4d5cbff361",
+      "net/sched/cls_basic.ko": "a560fd43cf3fbf81c287d11448f50873d3b3d03922d5005ca8e336e535057a60",
+      "net/sched/cls_bpf.ko": "d845746bace816d39b099e541690b1f03213a9d846ecebe9ad1ba463f5ea152d",
+      "net/sched/cls_flow.ko": "eb71b4be70de5f84899249b7fbadc3fc286c93eecb74731c4dbbadf723584fa3",
+      "net/sched/cls_flower.ko": "25e5e21666f0d2938a67bb978767414817fef4dd2f5897e9e23e389c6c2b62e1",
+      "net/sched/cls_fw.ko": "4e37d6a07c81e324d9a899977422e271b683ae0290b34adf4f47ea1cf22215a9",
+      "net/sched/cls_matchall.ko": "eb6f79a3fb370ba00fa460c04731dc0c6832c5df3fc1c857a367c5c326b786bf",
+      "net/sched/cls_route.ko": "0a367f8fb375c44d7aa29a1951bb45900aa435470b3b2bb8dd368fc1144caa38",
+      "net/sched/cls_u32.ko": "9124b09e1faea30337228e7d1f105787ec046f4e050954e6bf206ba198461d6b",
+      "net/sched/em_u32.ko": "5ee9252e1120cbe66669d0de3943fcc76113d8cd877f0b0def0713a92c0a9445",
+      "net/sched/sch_hfsc.ko": "b85d22e7c9fa0970a1742974aae51523c0fc3827f5099977b3e519c89e39060e",
+      "net/sched/sch_htb.ko": "e32199ac2945c65a09f1144a81a576e1a2d8596987fcd4507ddd956474874b89",
+      "net/sched/sch_ingress.ko": "e5b2296bb4fc056052c21f75e4dcf1e12807db5ece9b9c5f319b75761444b393",
+      "net/sched/sch_tbf.ko": "c8cbe3bf56a813fe548673e82f8bc7cb7bafa99fcba2e15b1747494b703fcbca",
+      "net/ipv6/netfilter/nft_fib_ipv6.ko": "6a3458a3caca4a58570dd757b3f1f3ebfa82d68acb67c34bd95398cef9c5f9e4",
+      "net/ipv6/netfilter/nft_reject_ipv6.ko": "cf7beab7f7ebd159f90a4cae32571638246735827c051a2110d0ca9e4bb5b495",
+      "net/ipv6/netfilter/nf_defrag_ipv6.ko": "1502687132347b88d414cef99fe2f9c34efbaaae0bd06a8338190b17ad3ac7c2",
+      "net/ipv6/netfilter/nf_reject_ipv6.ko": "ded5dc2b6f8eae455cc03d5d00b1d81ca2f21c402e9752ae29505e3ed2420eca",
+      "net/ipv6/netfilter/nf_socket_ipv6.ko": "a790200b44ce6a4f97c93bd3562b2e900d0f9454a9a16edd189318dd6db1b594",
+      "net/ipv6/netfilter/nf_tproxy_ipv6.ko": "9c7dccdb1c7e93a3a9bd17469a2976918d1a09d0e7824230e64b9b7c17a80d58",
+      "net/ipv4/netfilter/nft_fib_ipv4.ko": "29f3b3a43cd53e08b65a5a763ae221ec8a1e0c15c794a4ec74dee8c319bb00d0",
+      "net/ipv4/netfilter/nft_reject_ipv4.ko": "e370e2d7534548a6ddaf2e03e8eb25a2eb420ce878f1ce37b74d6fba15b0a691",
+      "net/ipv4/netfilter/nf_defrag_ipv4.ko": "a3c83bdc51995d4ef9306f56ce58c2bfd736e371a89be51b9f0981ab3fe37c7b",
+      "net/ipv4/netfilter/nf_reject_ipv4.ko": "22f499e5667d60b49e1e27d5d580a5b6f30bae2076ccb07dd320093a8edd30ad",
+      "net/ipv4/netfilter/nf_socket_ipv4.ko": "2c260c2a79f735404da12131ef0738d60e5cbdf31260def6fb419ba149d90f7e",
+      "net/ipv4/netfilter/nf_tproxy_ipv4.ko": "aea4ed7cb8ae0a3318f997835a641c30b3212d602fa5b7333a3a037668d737ae",
+      "lib/crypto/libsha512.ko": "6a379b54122dd18722c9b2b604bd3730c191bdef830eee99ab88fdff4013ad4f",
+      "drivers/hwmon/hwmon.ko": "8ccd0abd12bf8d8432159a4ffa63d90af363c8016e7b30d7c69643a31af0ed7a",
+      "drivers/leds/leds-gpio.ko": "6c900fbd34d9eeaeaf30f849d4cceca048671b1a1d87dda4aec5db2136fa4106",
+      "drivers/net/tun.ko": "21ac086827abb0fa9d4f922f1ded89907dfa6e9ed4da3210e1a5866a8dc07497",
+      "drivers/net/phy/air_en8811h.ko": "b3e7c9faa726df303a233f0fb1c2f281213c3a1a329260fd3e0976ad0a8c5e8a",
+      "drivers/net/ppp/pppoe.ko": "d788fd1fb20f4583e706f5d51ff6aebaf83aacfca0bcbfab81bc69cbcdc95734",
+      "drivers/net/ppp/pppox.ko": "0805fdc7208edf6b83df7a639b2de5eae128676b61059c3d771730f94d24a9a1",
+      "drivers/net/ppp/ppp_async.ko": "36dc04583c1df1507deb3f525b3c952f50435818d35c548b34a9c16a329348d7",
+      "drivers/net/ppp/ppp_generic.ko": "596346728fc1c7cb172f4c513a10e4b24f038bf8247e998f8e260205b1555ad2",
+      "drivers/net/slip/slhc.ko": "a1da2f200d9f8cf1170a2d1f75aa14a7fde8d6c36763215d72c5244d3ee3ba62"
+    },
+    "module_symvers_sha256": "b9a2dd2ba92f0085637228b6b8416bb99a93c93a7b4937a9bf894dcec1616cda",
+    "effective_config_sha256": "fde7b22d75dc6080f254c965de05532f9ac5210c3c3e15fef7488b4fc724d66c",
+    "vmlinux_sha256": "8c748c62d76509d677b50ac5da00697373f619fdb8c45bea5ab5c41145087524"
+  },
+  "package": {
+    "normal_signed_component_transaction": true,
+    "kernel_package_version": "6.18.55~7b648602069fdc1d228ca9bad74de7f2-r104",
+    "package_count_rebuilt": 57,
+    "installed_packages": 219,
+    "total_rebuilt_module_count": 84,
+    "rebuilt_in_tree_module_count": 77,
+    "rebuilt_external_module_count": 7,
+    "retained_external_module_count": 0,
+    "installed_root_records_sha256": "75b8a5d13783385d619a4e861d27dbec0379b1f44460ebb2015573927a7fec19",
+    "private_signing_key_removed": true,
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true
+  },
+  "layout85": {
+    "passed": true,
+    "module_count": 85,
+    "kernel_config_sha256": "fde7b22d75dc6080f254c965de05532f9ac5210c3c3e15fef7488b4fc724d66c"
+  },
+  "layout84": {
+    "passed": true,
+    "module_count": 84,
+    "kernel_config_sha256": "fde7b22d75dc6080f254c965de05532f9ac5210c3c3e15fef7488b4fc724d66c"
+  },
+  "image": {
+    "image_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+    "image_bytes": 55019528,
+    "kernel_sha256": "f3406d41f29e70b86d2225e2ef3b826b97efb955400d5dc1d900bb172f5a4120",
+    "kernel_effective_bytes": 64749568,
+    "kernel_headroom_bytes": 262144,
+    "kernel_config_sha256": "f37e443e549f7e9ae658547ce6434139178cc2b7d3f5a92bde0e5b38d9d99dce",
+    "vmlinux_sha256": "6eb4802d46a86fb522624b663796dbba17dc3c66d9ba5bf04ee8a2e115a465bf",
+    "root_records_sha256": "75b8a5d13783385d619a4e861d27dbec0379b1f44460ebb2015573927a7fec19",
+    "external_cpio_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+    "unchanged_compiled_module_objects": true,
+    "dtb_sha256": "a8d9f8cbd86dc25ba3feb43265aa80d7da076ecc56df19fab4bcadd2585b6884",
+    "dtb_readonly_partitions": 10,
+    "bmt_readonly": true,
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true,
+    "guest_exe_contract": "BE6L_X_EXECFD_EXE_INTERPFD_V2",
+    "static_image_admission": true
+  },
+  "payload": {
+    "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+    "segments": [
+      [
+        2149580800,
+        64749568
+      ],
+      [
+        2263756800,
+        16384
+      ],
+      [
+        2415919104,
+        34660352
+      ],
+      [
+        2280652800,
+        4096
+      ]
+    ],
+    "files": [
+      {
+        "name": "Image",
+        "size": 64356360,
+        "sha256": "f3406d41f29e70b86d2225e2ef3b826b97efb955400d5dc1d900bb172f5a4120",
+        "md5": "0edff484fd81a6cb00fb4321599d31a3"
+      },
+      {
+        "name": "board.dtb",
+        "size": 12650,
+        "sha256": "e825e4ce064f4909b4547df18f407526e3ebb060bbbb3cfb3b59df3206cc5c15",
+        "md5": "70ad359e27107c37222bbaa3d2a0c6fa"
+      },
+      {
+        "name": "entry.bin",
+        "size": 4096,
+        "sha256": "8d9ca98a6b6d6710654c45f01d6f0acbb6af6391b09b22872ce5b720243969ae",
+        "md5": "8d4402eaab70e7bc895f847af498ca2f"
+      },
+      {
+        "name": "linux64-kexec-loader",
+        "size": 123652,
+        "sha256": "41e74dca7a382769f615e827eb019be44195322f622b7e87a4fdaf503f4a9e74",
+        "md5": "f6994530b1a05363e49ea6bce6c48fb0"
+      },
+      {
+        "name": "arm32-fallback",
+        "size": 34657408,
+        "sha256": "baba295f687c384de15fe080d0f3cbd6c6761327ad0b6a7542f88c8744de9917",
+        "md5": "c51ec924247b6893ea6df43b947a8514"
+      },
+      {
+        "name": "kexec",
+        "size": 65673,
+        "sha256": "77c7f3177a8455f787bf4972217388ed6ec48be971e19b43e4edab7b4beeb028",
+        "md5": "8050bdaec1f77d534f7f4c7ba95507f9"
+      },
+      {
+        "name": "ld-musl-arm.so.1",
+        "size": 529085,
+        "sha256": "195a3353cbbbb1b586e62aa1b6dd4a746eb774219636a5fb847a622fd548b8c9",
+        "md5": "da459afdc45c9918ef4140664bbdc9cc"
+      }
+    ],
+    "prior_loader_paths_bound": 110,
+    "prior_loader_paths_unchanged": 52,
+    "prior_loader_marker_only_paths": [
+      "lib/aarch64-soft/libblobmsg_json.so",
+      "lib/aarch64-soft/libc.so",
+      "lib/aarch64-soft/libcurl.so",
+      "lib/aarch64-soft/libcurl.so.4",
+      "lib/aarch64-soft/libcurl.so.4.8.0",
+      "lib/aarch64-soft/libjson-c.so",
+      "lib/aarch64-soft/libjson-c.so.5",
+      "lib/aarch64-soft/libjson-c.so.5.5.0",
+      "lib/aarch64-soft/libjson_script.so",
+      "lib/aarch64-soft/liblua.so.5.1.5",
+      "lib/aarch64-soft/libmbedcrypto.so",
+      "lib/aarch64-soft/libmbedcrypto.so.16",
+      "lib/aarch64-soft/libmbedcrypto.so.3.6.7",
+      "lib/aarch64-soft/libmbedtls.so",
+      "lib/aarch64-soft/libmbedtls.so.21",
+      "lib/aarch64-soft/libmbedtls.so.3.6.7",
+      "lib/aarch64-soft/libmbedx509.so",
+      "lib/aarch64-soft/libmbedx509.so.3.6.7",
+      "lib/aarch64-soft/libmbedx509.so.7",
+      "lib/aarch64-soft/libsetlbf.so",
+      "lib/aarch64-soft/libubox.so",
+      "lib/aarch64-soft/libubus.so",
+      "lib/aarch64-soft/libuci.so",
+      "lib/aarch64-soft/libucode.so",
+      "lib/aarch64-soft/libucode.so.0",
+      "lib/aarch64-soft/libudebug.so",
+      "opt/be6l-a64-soft/bin/busybox",
+      "opt/be6l-a64-soft/bin/curl",
+      "opt/be6l-a64-soft/bin/jshn",
+      "opt/be6l-a64-soft/bin/lua",
+      "opt/be6l-a64-soft/bin/luac",
+      "opt/be6l-a64-soft/bin/ubus",
+      "opt/be6l-a64-soft/bin/ubusd",
+      "opt/be6l-a64-soft/bin/uci",
+      "opt/be6l-a64-soft/bin/ucode",
+      "opt/be6l-a64-soft/lib/lua/nixio.so",
+      "opt/be6l-a64-soft/lib/lua/ubus.so",
+      "opt/be6l-a64-soft/lib/lua/uci.so",
+      "opt/be6l-a64-soft/lib/lua/uloop.so",
+      "opt/be6l-a64-soft/lib/ucode/debug.so",
+      "opt/be6l-a64-soft/lib/ucode/fs.so",
+      "opt/be6l-a64-soft/lib/ucode/io.so",
+      "opt/be6l-a64-soft/lib/ucode/log.so",
+      "opt/be6l-a64-soft/lib/ucode/math.so",
+      "opt/be6l-a64-soft/lib/ucode/netaddr.so",
+      "opt/be6l-a64-soft/lib/ucode/resolv.so",
+      "opt/be6l-a64-soft/lib/ucode/serial.so",
+      "opt/be6l-a64-soft/lib/ucode/socket.so",
+      "opt/be6l-a64-soft/lib/ucode/struct.so",
+      "opt/be6l-a64-soft/lib/ucode/ubus.so",
+      "opt/be6l-a64-soft/lib/ucode/uci.so",
+      "opt/be6l-a64-soft/lib/ucode/udebug.so",
+      "opt/be6l-a64-soft/lib/ucode/uloop.so",
+      "sbin/askfirst",
+      "sbin/init",
+      "sbin/procd",
+      "sbin/udevtrigger",
+      "sbin/upgraded"
+    ],
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true
+  },
+  "source_regression": {
+    "scope": "Actual extracted C function bodies with substituted kernel services; no device, locking, credentials or complete exec-chain qualification.",
+    "baseline": {
+      "passed": 16,
+      "total": 24,
+      "functions_sha256": {
+        "search_binary_handler": "1ef745e57dadfff8d43a4a8de6a635926a907a5905af11b92507b30e2b0bbae3",
+        "load_misc_binary": "5904d8a03835d8265712f64697c8e4e59da46a7c686b7d44250a221b454858cb",
+        "be6l_elf_read": "f6fb8c3bdbd00c96f37ac332e2d0de7308cc629126ce387c0c20c5843fe719f8",
+        "be6l_elf_phdrs": "3d665e348dda29381fbc86d11c77938f63a2f7562b802e4e2807c19ca810b42c"
+      },
+      "tests": {
+        "unmatched-native-control": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "disabled-misc-native-control": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-helper-ENOEXEC-terminal": {
+          "pass": false,
+          "actual_errno": 0,
+          "expected_errno": -8,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 1
+        },
+        "X-helper-ENOMEM-terminal": {
+          "pass": true,
+          "actual_errno": -12,
+          "expected_errno": -12,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-helper-EIO-terminal": {
+          "pass": true,
+          "actual_errno": -5,
+          "expected_errno": -5,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-ENOENT-terminal": {
+          "pass": true,
+          "actual_errno": -2,
+          "expected_errno": -2,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-ELIBBAD-terminal": {
+          "pass": true,
+          "actual_errno": -80,
+          "expected_errno": -80,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-EACCES-terminal": {
+          "pass": true,
+          "actual_errno": -13,
+          "expected_errno": -13,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-early-argument-ENOEXEC-terminal": {
+          "pass": false,
+          "actual_errno": 0,
+          "expected_errno": -8,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-emulator-open-ENOEXEC-terminal": {
+          "pass": false,
+          "actual_errno": 0,
+          "expected_errno": -8,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-nested-O-ENOEXEC-terminal": {
+          "pass": false,
+          "actual_errno": 0,
+          "expected_errno": -8,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "non-X-ENOEXEC-still-falls-through": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-success-rewrites-interpreter": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-next-round-native-emulator-accepted": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 1
+        },
+        "stale-terminal-reset-at-new-search": {
+          "pass": false,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "prepare-error-preserved": {
+          "pass": true,
+          "actual_errno": -5,
+          "expected_errno": -5,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "security-error-preserved": {
+          "pass": true,
+          "actual_errno": -13,
+          "expected_errno": -13,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "phdr-read-success": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0
+        },
+        "phdr-ENOMEM-preserved": {
+          "pass": false,
+          "actual_errno": -8,
+          "expected_errno": -12
+        },
+        "phdr-short-read-EIO-preserved": {
+          "pass": false,
+          "actual_errno": -8,
+          "expected_errno": -5
+        },
+        "phdr-interrupted-read-preserved": {
+          "pass": false,
+          "actual_errno": -8,
+          "expected_errno": -4
+        },
+        "phdr-bad-entsize-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        },
+        "phdr-empty-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        },
+        "phdr-over-limit-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        }
+      }
+    },
+    "revision2": {
+      "passed": 24,
+      "total": 24,
+      "functions_sha256": {
+        "search_binary_handler": "d9bcf4215fbd7f70c5b5ff08c4790f9f92cb5727669930ac67e7d172d2da99e4",
+        "load_misc_binary": "21de90a0b69594fa9fc868eff3f80ee7763a32bc11c0bc5c6b980dc647759471",
+        "be6l_elf_read": "f6fb8c3bdbd00c96f37ac332e2d0de7308cc629126ce387c0c20c5843fe719f8",
+        "be6l_elf_phdrs": "95fb0be41aa42acbd78dabdd5fa39b48c2b09d950e52782ab296fa0631fbaf0f"
+      },
+      "tests": {
+        "unmatched-native-control": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "disabled-misc-native-control": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-helper-ENOEXEC-terminal": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-helper-ENOMEM-terminal": {
+          "pass": true,
+          "actual_errno": -12,
+          "expected_errno": -12,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-helper-EIO-terminal": {
+          "pass": true,
+          "actual_errno": -5,
+          "expected_errno": -5,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-ENOENT-terminal": {
+          "pass": true,
+          "actual_errno": -2,
+          "expected_errno": -2,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-ELIBBAD-terminal": {
+          "pass": true,
+          "actual_errno": -80,
+          "expected_errno": -80,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-loader-EACCES-terminal": {
+          "pass": true,
+          "actual_errno": -13,
+          "expected_errno": -13,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-early-argument-ENOEXEC-terminal": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "X-emulator-open-ENOEXEC-terminal": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "X-nested-O-ENOEXEC-terminal": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "non-X-ENOEXEC-still-falls-through": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "X-success-rewrites-interpreter": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 1
+        },
+        "X-next-round-native-emulator-accepted": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 1
+        },
+        "stale-terminal-reset-at-new-search": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0,
+          "native_handler_calls": 1,
+          "guest_helper_calls": 0
+        },
+        "prepare-error-preserved": {
+          "pass": true,
+          "actual_errno": -5,
+          "expected_errno": -5,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "security-error-preserved": {
+          "pass": true,
+          "actual_errno": -13,
+          "expected_errno": -13,
+          "native_handler_calls": 0,
+          "guest_helper_calls": 0
+        },
+        "phdr-read-success": {
+          "pass": true,
+          "actual_errno": 0,
+          "expected_errno": 0
+        },
+        "phdr-ENOMEM-preserved": {
+          "pass": true,
+          "actual_errno": -12,
+          "expected_errno": -12
+        },
+        "phdr-short-read-EIO-preserved": {
+          "pass": true,
+          "actual_errno": -5,
+          "expected_errno": -5
+        },
+        "phdr-interrupted-read-preserved": {
+          "pass": true,
+          "actual_errno": -4,
+          "expected_errno": -4
+        },
+        "phdr-bad-entsize-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        },
+        "phdr-empty-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        },
+        "phdr-over-limit-ENOEXEC": {
+          "pass": true,
+          "actual_errno": -8,
+          "expected_errno": -8
+        }
+      }
+    }
+  },
+  "native_errno_probe": {
+    "elf_sha256": "33fe4a2d8f8edf496d376d1128a9932dac8a1c3ab3b5144b4fb99755baf4eecd",
+    "source_sha256": "af10cf5fb2f278df9b965a4981d425e55760fa7fecf6d46f6dcecac965ce71ec",
+    "native_arm32": true,
+    "static": true,
+    "vfp_neon_instruction_count": 0,
+    "expected_case_count": 16,
+    "expected_cases": {
+      "missing-loader": "ENOENT",
+      "loader-no-execute": "EACCES",
+      "loader-bad-magic": "ELIBBAD",
+      "loader-short-header": "EIO",
+      "loader-not-directory": "ENOTDIR",
+      "original-no-execute": "EACCES",
+      "original-bad-phentsize": "ENOEXEC",
+      "success-control": 0
+    },
+    "target_executed": false
+  },
+  "setuid_compatibility_blocked": true,
+  "credentials_flag_with_x_rejected": true,
+  "target_executed": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "xwrt_lifetime_draft_included": false,
+  "routed_nat_qualified": false
+}

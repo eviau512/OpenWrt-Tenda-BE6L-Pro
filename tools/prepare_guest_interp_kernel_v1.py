@@ -18,7 +18,9 @@ def changes():
         'include/uapi/linux/auxvec.h': [('#define AT_EXECFD 2', '#define AT_BE6L_INTERPFD 0xbe6a /* private BE6L V2 loader descriptor */\n#define AT_EXECFD 2')],
         'include/linux/auxvec.h': [('AT_VECTOR_SIZE_BASE 24', 'AT_VECTOR_SIZE_BASE 25')],
         'include/uapi/linux/binfmts.h': [('#define AT_FLAGS_BE6L_EXECFD_EXE (1U << 16)', '#define AT_FLAGS_BE6L_EXECFD_EXE (1U << 16)\n#define AT_FLAGS_BE6L_INTERPFD (1U << 17)')],
-        'include/linux/binfmts.h': [('\tint execfd;', '\tint be6l_interpfd;\n\tint execfd;')],
+        'include/linux/binfmts.h': [('\tint execfd;', '\tint be6l_interpfd;\n\tint execfd;'), (
+            '\t\tbe6l_execfd_exe:1,',
+            '\t\tbe6l_execfd_exe:1,\n\t\t/* Terminal match for one search_binary_handler round only. */\n\t\tbe6l_binfmt_terminal:1,')],
         'include/linux/mm_types.h': [('\t\tstruct file *be6l_binfmt_interpreter;', '\t\tstruct file *be6l_binfmt_interpreter;\n\t\tstruct file *be6l_guest_loader;')],
         'kernel/fork.c': [(
             '\tRCU_INIT_POINTER(mm->exe_file, NULL);\n\tmm->be6l_binfmt_interpreter = NULL;',
@@ -38,11 +40,19 @@ def changes():
             '#include <linux/mm.h>', '#include <linux/mm.h>\n#include <linux/elf.h>'), (
             'static int load_misc_binary(struct linux_binprm *bprm)',
             helper+'\nstatic int load_misc_binary(struct linux_binprm *bprm)'), (
+            '\tfmt = get_binfmt_handler(misc, bprm);\n\tif (!fmt)\n\t\treturn retval;',
+            '\tfmt = get_binfmt_handler(misc, bprm);\n\tif (!fmt)\n\t\treturn retval;\n'
+            '\tif (fmt->flags & MISC_FMT_BE6L_EXECFD_EXE)\n\t\tbprm->be6l_binfmt_terminal = 1;'), (
             '\t\tretval = set_mm_exe_file(bprm->mm, bprm->file);',
             '\t\tretval = be6l_prepare_guest_interp(bprm);\n'
             '\t\tif (retval)\n\t\t\tgoto release_interp;\n'
             '\t\tretval = set_mm_exe_file(bprm->mm, bprm->file);')],
         'fs/exec.c': [(
+            '\tretval = prepare_binprm(bprm);',
+            '\t/* A successful X rewrite starts a new interpreter search round. */\n'
+            '\tbprm->be6l_binfmt_terminal = false;\n\tretval = prepare_binprm(bprm);'), (
+            '\t\tif (bprm->point_of_no_return || (retval != -ENOEXEC)) {',
+            '\t\tif (bprm->point_of_no_return || bprm->be6l_binfmt_terminal ||\n\t\t    (retval != -ENOEXEC)) {'), (
             '\t\tbprm->execfd = retval;\n\t}',
             '\t\tbprm->execfd = retval;\n\t}\n'
             '\tif (bprm->be6l_execfd_exe && me->mm->be6l_guest_loader) {\n'
@@ -107,6 +117,7 @@ def main():
     result = json.loads((a.prepared/'result.json').read_text())
     result.update(pristine_case_sensitive_source=False, case_sensitive_source=True,
         guest_exe_file=True, guest_interp_fd=True, guest_exe_contract=CONTRACT,
+        guest_interp_revision=2, dispatch_failures_terminal=True,
         base_preparation_sha256=sha(a.prepared/'result.json'),
         guest_exe_source_lock_sha256=sha(BASE/'upstream/be6l-guest-interp-source-lock.json'),
         guest_exe_patch_sha256=sha(w/PATCH), guest_exe_files={name:sha(kernel/name) for name in changed},

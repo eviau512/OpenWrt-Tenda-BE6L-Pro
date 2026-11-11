@@ -1,0 +1,32 @@
+{
+  "elf_sha256": "e67877c42077046970cddf2806b5207f278d98da94f7f1aec1cb851ad392c207",
+  "source_sha256": "988f15f5977486d8979425444be788eddf8728bf53eddd1e3c1bb91f7edba708",
+  "native_arm32": true,
+  "static": true,
+  "vfp_neon_instruction_count": 0,
+  "expected_case_count": 4,
+  "cases": [
+    "execve-control",
+    "execve-rename-bad-path",
+    "execveat-cloexec-control",
+    "execveat-cloexec-rename-bad-path"
+  ],
+  "kernel_source_sha256": {
+    "fs/exec.c": "bc0a790189b31dd0ead4b4c6ee20b0e4a609d6876f1f32c2408c38cf09e3fc53",
+    "kernel/ptrace.c": "fb526a024bcc0d5b20e2dd42bc8424b6525ec50c3bbfeaf48976ffd0bff71f15",
+    "arch/arm64/kernel/ptrace.c": "92b065f91716747ca91abc12fff003111f396ee2ed54f8ec8fa5e08e63c0cf5e",
+    "include/linux/ptrace.h": "1150f9a6c9e4dea3247183c16995f8ef4420cdfdb91bf3e4281cfc52e5f9c04c"
+  },
+  "compat_syscall_table_sha256": "2603692d9db29f8c708ddcaae1054e41b737477737f5b6b9e6343888dbd71eff",
+  "reviewed_event_boundary": "exec_binprm after final search_binary_handler success, before return to user mode",
+  "reviewed_compat_controls": "syscall26 compat_sys_ptrace -> compat_arch_ptrace -> compat_ptrace_request -> ptrace_request SETOPTIONS/CONT",
+  "expected_live_loader_write_errno": "ETXTBSY",
+  "isolated_fixture_only": true,
+  "existing_interpreters_unchanged": true,
+  "parent_death_kills_child": true,
+  "ptrace_exec_event_target_verified": false,
+  "retained_loader_inode_target_verified": false,
+  "secureexec_covered": false,
+  "target_executed": false,
+  "complete_exec_compatibility_qualified": false
+}

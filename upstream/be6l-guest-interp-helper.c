@@ -16,14 +16,18 @@ static Elf64_Phdr *be6l_elf_phdrs(struct file *file, const Elf64_Ehdr *header)
 {
 	unsigned int size = sizeof(Elf64_Phdr) * header->e_phnum;
 	Elf64_Phdr *data;
+	int err;
 
 	/* Match load_elf_phdrs' size limits and failure boundary. */
 	if (header->e_phentsize != sizeof(Elf64_Phdr) || !size || size > 65536)
-		return NULL;
+		return ERR_PTR(-ENOEXEC);
 	data = kmalloc(size, GFP_KERNEL);
-	if (data && be6l_elf_read(file, data, size, header->e_phoff)) {
+	if (!data)
+		return ERR_PTR(-ENOMEM);
+	err = be6l_elf_read(file, data, size, header->e_phoff);
+	if (err) {
 		kfree(data);
-		data = NULL;
+		return ERR_PTR(err);
 	}
 	return data;
 }
@@ -51,8 +55,8 @@ static int be6l_prepare_guest_interp(struct linux_binprm *bprm)
 	    !can_mmap_file(bprm->file))
 		return -ENOEXEC;
 	phdrs = be6l_elf_phdrs(bprm->file, &header);
-	if (!phdrs)
-		return -ENOEXEC;
+	if (IS_ERR(phdrs))
+		return PTR_ERR(phdrs);
 	for (i = 0; i < header.e_phnum; i++) {
 		if (phdrs[i].p_type != PT_INTERP)
 			continue;
@@ -82,8 +86,11 @@ static int be6l_prepare_guest_interp(struct linux_binprm *bprm)
 		if (!be6l_a53_elf(&interp_header) || !can_mmap_file(interpreter))
 			goto out;
 		interp_phdrs = be6l_elf_phdrs(interpreter, &interp_header);
-		if (!interp_phdrs)
+		if (IS_ERR(interp_phdrs)) {
+			if (PTR_ERR(interp_phdrs) == -ENOMEM)
+				err = -ENOMEM;
 			goto out;
+		}
 		kfree(interp_phdrs);
 		/* open_exec owns both a ref and write denial. No close/reopen gap:
 		 * mmput releases them, fork duplicates them, and a separate CLOEXEC

@@ -66,6 +66,9 @@ def main():
     if work.parent != Path('/root') or not work.name.startswith('be6l-candidate-ramboot-'):
         parser.error('Use a fresh /root/be6l-candidate-ramboot-* directory')
     report = json.loads((a.candidate / 'result.json').read_text())
+    if ((report.get('guest_interp_fd') or report.get('guest_exe_contract') == 'BE6L_X_EXECFD_EXE_INTERPFD_V2') and
+            (report.get('guest_interp_revision') != 2 or report.get('dispatch_failures_terminal') is not True)):
+        raise ValueError('Superseded V2 dispatch cannot be admitted in a RAM payload')
     composition = json.loads((a.composition / 'result.json').read_text())
     tested = json.loads((a.runtime_test / 'result.json').read_text())
     root = a.composition / 'root'
@@ -221,6 +224,8 @@ def main():
         guest_exe_file=bool(report.get('guest_exe_file')),
         guest_exe_contract=report.get('guest_exe_contract'),
         guest_interp_fd=bool(report.get('guest_interp_fd')),
+        guest_interp_revision=report.get('guest_interp_revision'),
+        dispatch_failures_terminal=report.get('dispatch_failures_terminal', False),
         embedded_cpio=embedded, dtb_changed_properties=['/chosen/' + key for key in changed],
         loader_source_sha256=sha(source), candidate_receipt_sha256=sha(a.candidate / 'result.json'),
         runtime_test_receipt_sha256=sha(a.runtime_test / 'result.json'),

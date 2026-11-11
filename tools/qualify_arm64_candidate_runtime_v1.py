@@ -58,6 +58,9 @@ def main():
     if work.parent != Path('/root') or not re.fullmatch('be6l-candidate-qualification-[a-z0-9-]+', work.name):
         p.error('Use a fresh /root/be6l-candidate-qualification-* directory')
     report = json.loads((a.candidate / 'result.json').read_text())
+    if ((report.get('guest_interp_fd') or report.get('guest_exe_contract') == 'BE6L_X_EXECFD_EXE_INTERPFD_V2') and
+            (report.get('guest_interp_revision') != 2 or report.get('dispatch_failures_terminal') is not True)):
+        raise ValueError('Superseded V2 dispatch cannot be admitted for startup qualification')
     root = a.composition / 'root'
     if root_digest(root) != report['root_records_sha256'] or sha(a.kernel / 'vmlinux') != report['vmlinux_sha256']:
         raise ValueError('Sealed source changed')
@@ -183,6 +186,8 @@ def main():
     if root_digest(root) != report['root_records_sha256']:
         raise ValueError('Original offline root changed')
     result = dict(fit_sha256=report['image_sha256'], actual_kernel_build_id=actual_ids[0],
+        guest_interp_revision=report.get('guest_interp_revision'),
+        dispatch_failures_terminal=report.get('dispatch_failures_terminal', False),
         expected_kernel_build_id=expected_ids[0], boot_id=boot, dual_cpu_aarch64=True,
         ram_root=True, ten_mtd_guards=True, critical_partition_digests_unchanged=True,
         exact_installed_packages=len(installed), exact_modules=len(modules),

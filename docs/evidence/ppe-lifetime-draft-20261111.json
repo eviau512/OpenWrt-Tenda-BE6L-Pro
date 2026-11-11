@@ -1,0 +1,223 @@
+{
+  "date": "2026-11-11",
+  "base_ppe_sha256": "de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1",
+  "reference_ppe_sha256": "51ad29d2a1e563c60c61d226eb0b160d0624b6c7f8b440d261762827a0012933",
+  "reference_revision": "5ae8e6912e64682fcad54593467e84c80f170656",
+  "reference_linux": "6.18.60",
+  "base_linux": "6.18.55",
+  "license": "GPL-2.0-only",
+  "modified_sha256": {
+    "airoha_ppe.c": "f02b0a17b6f945a78df3bf097061b7f6b14f175c22be6755cd88cd0f0632d252",
+    "airoha_eth.h": "639e31560223acbee08a3cc1a3a04855ab006dc82c1c32ff72a03ffe08b9d395",
+    "airoha_eth.c": "affb8434efd438acb7d38ccbfca178e443e5615717760a53f51673aba985c32e"
+  },
+  "patch_sha256": "da26c6dc92fd9cd69e988d9a4b38dfb29c881a4e8f227c9293556e9279fa5591",
+  "read_only_patch_apply_check_passed": true,
+  "base_ppe_unchanged": true,
+  "arm64_objects_compile_passed": true,
+  "objects": [
+    {
+      "object_sha256": "cb0f5848a86df0327b8c53ead3fd40122efbb1fcb63da3d653303094c95bfd99",
+      "source_sha256": "f02b0a17b6f945a78df3bf097061b7f6b14f175c22be6755cd88cd0f0632d252",
+      "elf64_aarch64": true
+    },
+    {
+      "object_sha256": "36d5f19e0999906615d36fcbea1bc74ed2c43f4416de2655332db8eb1b853d78",
+      "source_sha256": "affb8434efd438acb7d38ccbfca178e443e5615717760a53f51673aba985c32e",
+      "elf64_aarch64": true
+    }
+  ],
+  "ownership_observation_count": 25,
+  "ported_smac_case_count": 16,
+  "expected_source_observations_passed": true,
+  "source_order_checks": {
+    "tc_cookie_before_rx_pending": true,
+    "child_owner_before_hardware_write": true,
+    "child_link_before_hardware_write": true,
+    "deinit_preflight_before_destructive_table_free": true,
+    "native_cold_gate_no_enabling_setter": true
+  },
+  "negative_control": {
+    "scenario": "negative-control-void-callback-cannot-restore-cookie",
+    "expected_unsafe_boundary_reproduced": true,
+    "safety_claim": false
+  },
+  "ownership_scenarios": [
+    {
+      "scenario": "normal-unbind-control",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "normal-destroy-control",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "read-error-retains-owner",
+      "expected_observation_passed": true,
+      "returned_error": -5
+    },
+    {
+      "scenario": "write-timeout-retains-owner",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "child-timeout-retains-parent-link",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "slot-release-timeout-retains-owner",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "tc-destroy-timeout-retains-cookie",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "preflight-timeout-keeps-destructive-teardown-unreached",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "native-ack-is-not-drain",
+      "expected_observation_passed": true,
+      "returned_error": -95
+    },
+    {
+      "scenario": "native-nonbind-is-not-drain",
+      "expected_observation_passed": true,
+      "returned_error": -95
+    },
+    {
+      "scenario": "identity-mismatch-retains-hash",
+      "expected_observation_passed": true,
+      "returned_error": -116
+    },
+    {
+      "scenario": "slot-collision-does-not-steal",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "owner-reserved-before-transaction",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "parent-child-timeout-retains-parent-table",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "parent-normal-removal-idempotent",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "wdma-timeout-retains-child",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "wired-event-timeout-retains-device",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "ingress-unregister-timeout-retains-device",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "wdma-unregister-timeout-retains-device",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "native-cold-gate-rejects-publication",
+      "expected_observation_passed": true,
+      "returned_error": -95
+    },
+    {
+      "scenario": "poison-gate-rejects-publication",
+      "expected_observation_passed": true,
+      "returned_error": -95
+    },
+    {
+      "scenario": "stopping-gate-rejects-publication",
+      "expected_observation_passed": true,
+      "returned_error": -95
+    },
+    {
+      "scenario": "preflight-staged-progress-retains-failed-cookie",
+      "expected_observation_passed": true,
+      "returned_error": -110
+    },
+    {
+      "scenario": "negative-control-void-callback-cannot-restore-cookie",
+      "expected_observation_passed": true,
+      "returned_error": 0
+    },
+    {
+      "scenario": "child-rejected-by-parent-cleanup-without-use-after-free",
+      "expected_observation_passed": true,
+      "returned_error": -22
+    }
+  ],
+  "actual_function_sha256": {
+    "airoha_ppe_foe_write_failed": "4998d945f96f3bc959bf114093d2381bad273a884c83944761c9dc88a6726d2f",
+    "airoha_ppe_foe_withdraw_complete": "3cf1bb6da1d4e9c4d55dcf1ad2ff90a06399f0aac90a6a5957d7d0b89bc41dab",
+    "airoha_ppe_foe_slot_busy": "7ecb94dde02b603a37d1d831dbddbbb97d995a0985e0ac1434ca46a71e4edae2",
+    "airoha_ppe_foe_reserve_slot": "5150f14399a6bc933764f74e98225473b41e0b0e12e46204203c5a7075ac5f05",
+    "airoha_ppe_foe_unbind_flow": "103359b08b7255056e637ca7e00bc0729601f813bf2a8a07d01081eabb3a84da",
+    "airoha_ppe_foe_remove_flow": "d3471692e193212e70a649591f1c0d79f14ddb0fba68ddd1cf8e3a023c38012c",
+    "airoha_ppe_foe_release_slot": "2203b69e8a462b7591dfda8582ac270b7d4de27c7d9aa3296ddc0e42488551c1",
+    "airoha_ppe_foe_remove_l2_flow": "78dd020445f545f88ad053f5df2ca44886a9a1c6e8950b6f46e2fe943fdc8664",
+    "airoha_ppe_foe_flow_remove_entry": "a7e893739235de6da2e47390da9d46059e25a346e5fdb784146b8523e10d07b6",
+    "airoha_ppe_foe_flow_commit_entry": "5a0e97a015e4c085ae01ad6e11db9b82024817e92ae7e6f4192a6d303a731df5",
+    "airoha_ppe_flush_wdma_entry": "9e5a03b4f88e89d89d278668e4d2bf722f4ff5bcde4a401f81a66e1ecbfd142d",
+    "airoha_ppe_wired_l4_event": "4302837d27215928da6abc78358d1eac0762c7c43bf72bc5520f6d0564065412",
+    "airoha_ppe_netdevice_event": "555f0997b43f3985be08178b9859d66af4b4c1f51746981347b7cd3b18bef7e1",
+    "airoha_ppe_flow_offload_destroy": "758b483ea7169efdcbc8c6d53187b4eb3fe00c09e440fca471239e2b6f3062e4",
+    "airoha_ppe_free_flow": "097689557fcdef35f0c5f608b5f8139a1783689ef844e5bb6188a935a944a12c",
+    "airoha_ppe_lifetime_preflight": "abb4bce52de49829c6d8bffae2251f8953ffbbeaf49e31dd803d096b00e07c6b",
+    "airoha_ppe_smac_write": "8b17de075dbdf11c53767d69c214d385de4fe3c7ec56315c2e5dc20d2506ae94",
+    "airoha_ppe_smac_get": "120fbde6eceb69ebcd4af8f566a5fba44d84bd629c48378b0785183c48a82612",
+    "airoha_ppe_smac_put": "286a83bd33af6ceded87184465cfa26970639cbc9bfe96a1b5d85d2ea4601ad3"
+  },
+  "substituted_operations": [
+    "register reads/writes",
+    "transaction success/failure",
+    "spinlocks",
+    "hash table/list infrastructure",
+    "allocator",
+    "netdev references",
+    "walk synchronization"
+  ],
+  "excluded": [
+    "actual DMA/output drain",
+    "IRQ/RCU/RTNL concurrency",
+    "bounded NETDEV_UNREGISTER",
+    "platform devres release",
+    "full driver teardown",
+    "runtime TC replacement construction"
+  ],
+  "unresolved": [
+    "AN7552/AN7563 physical FOE/output DMA withdrawal provider",
+    "NETDEV_UNREGISTER bounded completion under RTNL without retained-ref stall",
+    "fallible platform remove/devres/IRQ/RX/NPU exit integration",
+    "full kernel/module candidate and physical fault validation"
+  ],
+  "complete_kernel_or_modules_linked": false,
+  "driver_abi_qualified": false,
+  "xwrt_94104_complete_port": false,
+  "native_binding_admitted": false,
+  "hardware_withdrawal_qualified": false,
+  "target_executed": false,
+  "mainline_kernel_or_device_changed": false
+}

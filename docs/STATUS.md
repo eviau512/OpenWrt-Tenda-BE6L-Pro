@@ -1,8 +1,15 @@
 # Hardware qualification status
 
-Updated 2026-11-05. This distinguishes the last qualified image from offline
+Updated 2026-11-11. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
+The [V2 revision2 a1ca candidate](EXEC-LOADER-FD-EXPERIMENT.md) passes actual
+startup,20 execution cases,11/12 corners,16 native-caller errno cases and eight
+isolated package workloads. Missing-loader errno is fixed in those tests;
+setuid remains blocked. InitialV2/r103 is superseded due native-handler fallback.
+The [PPE lifetime draft](PPE-LIFETIME-DRAFT-20261111.md) is separate and unadmitted:
+native drain and bounded driver/platform exit remain open. These results do not
+qualify complete standard-package integration or routed NPU offload.
 The [integer-host emulation fallback](ARM64-INSTRUCTION-FALLBACK.md) now builds
 and passes actual standard-ABI static/dynamic FP/NEON, C++ and Go runtime tests,
 including threads, atomic64, TLS and signals. The native control confirms SIGILL4.

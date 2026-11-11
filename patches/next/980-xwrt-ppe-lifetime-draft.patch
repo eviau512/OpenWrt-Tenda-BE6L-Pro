@@ -1,0 +1,776 @@
+From: BE6L source research
+Subject: [DRAFT NOT ADMITTED] Stage X-Wrt941-04 PPE ownership port
+
+SMAC routines adapted from X-Wrt 941-04, GPL-2.0-only (same driver license).
+Native binding is hard gated. AN7552/AN7563 withdrawal provider and fallible
+platform removal remain missing; clear/ACK/RCU/delay are not DMA fences.
+Do not add to series or any candidate. Software fixtures are not target proof.
+
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -978,12 +978,156 @@
+ 	return err;
+ }
+ 
++static int airoha_ppe_smac_write(struct airoha_ppe *ppe, unsigned int id,
++				 const u8 *addr)
++{
++	struct airoha_eth *eth = ppe->eth;
++	u32 data[] = { get_unaligned_be32(addr + 2),
++		       get_unaligned_be16(addr) };
++	int i, offset, err;
++	u32 val;
++
++	lockdep_assert_held(&ppe->smac_lock);
++
++	/* Flows can bind in either PPE, so use identical indices in both. */
++	for (i = 0; i < eth->soc->num_ppe; i++) {
++		for (offset = 0; offset < ARRAY_SIZE(data); offset++) {
++			airoha_fe_wr(eth, REG_UPDMEM_DATA(i), data[offset]);
++			airoha_fe_wr(eth, REG_UPDMEM_CTRL(i),
++				     FIELD_PREP(PPE_UPDMEM_ADDR_MASK, id) |
++				     FIELD_PREP(PPE_UPDMEM_OFFSET_MASK, offset) |
++				     PPE_UPDMEM_WR_MASK | PPE_UPDMEM_REQ_MASK);
++			err = read_poll_timeout_atomic(airoha_fe_rr, val,
++						       val & PPE_UPDMEM_ACK_MASK,
++						       1, 100, false, eth,
++						       REG_UPDMEM_CTRL(i));
++			if (err) {
++				dev_err_ratelimited(eth->dev,
++						    "Timeout programming PPE %d SMAC slot %u\n",
++						    i, id);
++				return err;
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int airoha_ppe_smac_get(struct airoha_ppe *ppe,
++			       struct airoha_flow_table_entry *e,
++			       const u8 *addr)
++{
++	int type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, e->data.ib1);
++	struct airoha_ppe_smac *slot;
++	unsigned long flags;
++	int i, free = -1, err = 0;
++
++	if ((type != PPE_PKT_TYPE_IPV6_ROUTE_3T &&
++	     type != PPE_PKT_TYPE_IPV6_ROUTE_5T) ||
++	    !(e->data.ib1 & AIROHA_FOE_IB1_BIND_TTL))
++		return 0;
++	if (!is_valid_ether_addr(addr))
++		return -EINVAL;
++
++	spin_lock_irqsave(&ppe->smac_lock, flags);
++	for (i = 0; i < ARRAY_SIZE(ppe->smac); i++) {
++		slot = &ppe->smac[i];
++		if (slot->valid && ether_addr_equal(slot->addr, addr))
++			goto found;
++		if (!slot->refs && free < 0)
++			free = i;
++	}
++	if (free < 0) {
++		err = -ENOSPC;
++		goto unlock;
++	}
++	if (ppe->smac_failed) {
++		err = -EIO;
++		goto unlock;
++	}
++
++	i = free;
++	slot = &ppe->smac[i];
++	slot->valid = false;
++	err = airoha_ppe_smac_write(ppe, i, addr);
++	if (err) {
++		/* A late ACK must not race another UPDMEM transaction. Existing
++		 * successfully programmed slots remain usable without writes.
++		 */
++		ppe->smac_failed = true;
++		goto unlock;
++	}
++	ether_addr_copy(slot->addr, addr);
++	slot->valid = true;
++found:
++	slot->refs++;
++	e->smac_ref = true;
++	e->data.ipv6.l2.src_mac_hi &= ~AIROHA_FOE_MAC_SMAC_ID;
++	e->data.ipv6.l2.src_mac_hi |= FIELD_PREP(AIROHA_FOE_MAC_SMAC_ID, i);
++unlock:
++	spin_unlock_irqrestore(&ppe->smac_lock, flags);
++
++	return err;
++}
++
++static void airoha_ppe_smac_put(struct airoha_ppe *ppe,
++				struct airoha_flow_table_entry *e)
++{
++	unsigned int id = FIELD_GET(AIROHA_FOE_MAC_SMAC_ID,
++				    e->data.ipv6.l2.src_mac_hi);
++	unsigned long flags;
++
++	if (!e->smac_ref)
++		return;
++
++	spin_lock_irqsave(&ppe->smac_lock, flags);
++	if (WARN_ON_ONCE(id >= ARRAY_SIZE(ppe->smac) || !ppe->smac[id].refs))
++		goto unlock;
++	ppe->smac[id].refs--;
++	e->smac_ref = false;
++unlock:
++	spin_unlock_irqrestore(&ppe->smac_lock, flags);
++}
++
++
++/* This boundary needs an AN7552/AN7563 provider that proves outstanding
++ * accesses to the physical FOE slot AND referenced output resources drained.
++ * UPDMEM/PPE ACK, clearing PPE.EN, RCU and a delay cannot provide that proof.
++ * Do not wire this to generic npu->ops.ppe_deinit: native AN7563 bypasses it.
++ * No enabling setter exists in this draft. See the explicit admission receipt.
++ */
++static int airoha_ppe_foe_withdraw_complete(struct airoha_ppe *ppe, u32 hash)
++{
++	if (airoha_is_7563(ppe->eth))
++		return -EOPNOTSUPP;
++	return 0;
++}
++
++static bool
++airoha_ppe_foe_slot_busy(struct airoha_ppe *ppe,
++			struct airoha_flow_table_entry *owner, u32 hash)
++{
++	lockdep_assert_held(&ppe_lock);
++	return ppe->foe_owner[hash] && ppe->foe_owner[hash] != owner;
++}
++
++static void
++airoha_ppe_foe_reserve_slot(struct airoha_ppe *ppe,
++			   struct airoha_flow_table_entry *e, u32 hash)
++{
++	lockdep_assert_held(&ppe_lock);
++	e->hash = hash;
++	ppe->foe_owner[hash] = e;
++}
++
+ static void airoha_ppe_foe_write_failed(struct airoha_ppe *ppe, int err)
+ {
+ 	int i;
+ 
+-	/* A timed out write may have reached hardware. Stop forwarding before
+-	 * releasing its software owner or any referenced destination.
++	ppe->foe_failed = true;
++
++	/* Containment only: clearing EN is NOT withdrawal/drain proof.
++	 * Preserve the owner and every resource until the provider succeeds.
+ 	 */
+ 	for (i = 0; i < ppe->eth->soc->num_ppe; i++)
+ 		airoha_fe_clear(ppe->eth, REG_PPE_GLO_CFG(i),
+@@ -992,87 +1136,121 @@
+ 		err);
+ }
+ 
+-static void airoha_ppe_foe_unbind_flow(struct airoha_ppe *ppe,
+-				       struct airoha_flow_table_entry *e)
++static int airoha_ppe_foe_unbind_flow(struct airoha_ppe *ppe,
++				      struct airoha_flow_table_entry *e)
+ {
+ 	struct airoha_foe_entry *entry, hwe;
++	u32 hash = e->hash;
+ 	int err = 0;
+-	u32 hash = e->hash;
+ 
+ 	lockdep_assert_held(&ppe_lock);
+ 	if (hash == 0xffff)
+-		return;
+-	if (ppe->foe_owner[hash] != e)
+-		goto clear_hash;
+-
++		return 0;
++	if (hash >= airoha_ppe_get_total_num_entries(ppe) ||
++	    ppe->foe_owner[hash] != e) {
++		err = -ESTALE;
++		goto failed;
++	}
+ 	entry = airoha_ppe_foe_get_entry_locked(ppe, hash);
+ 	if (!entry) {
+ 		err = -EIO;
+-	} else if (FIELD_GET(AIROHA_FOE_IB1_BIND_STATE, entry->ib1) ==
+-		   AIROHA_FOE_STATE_BIND) {
++		goto failed;
++	}
++	if (FIELD_GET(AIROHA_FOE_IB1_BIND_STATE, entry->ib1) ==
++	    AIROHA_FOE_STATE_BIND) {
+ 		hwe = *entry;
+ 		hwe.ib1 &= ~AIROHA_FOE_IB1_BIND_STATE;
+ 		err = airoha_ppe_foe_commit_entry(ppe, &hwe, hash, false);
+-	}
++		if (err)
++			goto failed;
++	}
++	/* Even a successful invalidation has not proved output DMA drained. */
++	err = airoha_ppe_foe_withdraw_complete(ppe, hash);
+ 	if (err)
+-		airoha_ppe_foe_write_failed(ppe, err);
++		goto failed;
+ 	ppe->foe_owner[hash] = NULL;
+-clear_hash:
+ 	e->hash = 0xffff;
+-}
+-
+-static void airoha_ppe_foe_remove_flow(struct airoha_ppe *ppe,
+-				       struct airoha_flow_table_entry *e)
+-{
++	return 0;
++failed:
++	airoha_ppe_foe_write_failed(ppe, err);
++	return err;
++}
++
++static int airoha_ppe_foe_remove_flow(struct airoha_ppe *ppe,
++				      struct airoha_flow_table_entry *e)
++{
++	int err;
++
+ 	lockdep_assert_held(&ppe_lock);
+-
++	err = airoha_ppe_foe_unbind_flow(ppe, e);
++	if (err)
++		return err;
+ 	hlist_del_init(&e->list);
+-	airoha_ppe_foe_unbind_flow(ppe, e);
+ 	if (e->type == FLOW_TYPE_L2_SUBFLOW) {
+ 		hlist_del_init(&e->l2_subflow_node);
+ 		kfree(e);
+ 	}
+-}
+-
+-static void airoha_ppe_foe_release_slot(struct airoha_ppe *ppe, u32 hash)
+-{
+-	struct airoha_flow_table_entry *e = ppe->foe_owner[hash];
++	return 0;
++}
++
++static int airoha_ppe_foe_release_slot(struct airoha_ppe *ppe, u32 hash)
++{
++	struct airoha_flow_table_entry *e;
+ 
+ 	lockdep_assert_held(&ppe_lock);
++	if (hash >= airoha_ppe_get_total_num_entries(ppe))
++		return -EINVAL;
++	e = ppe->foe_owner[hash];
+ 	if (!e)
+-		return;
+-	airoha_ppe_foe_unbind_flow(ppe, e);
++		return 0;
+ 	if (e->type == FLOW_TYPE_L2_SUBFLOW)
+-		airoha_ppe_foe_remove_flow(ppe, e);
+-}
+-
+-static void airoha_ppe_foe_remove_l2_flow(struct airoha_ppe *ppe,
+-					  struct airoha_flow_table_entry *e)
+-{
+-	struct hlist_head *head = &e->l2_flows;
++		return airoha_ppe_foe_remove_flow(ppe, e);
++	return airoha_ppe_foe_unbind_flow(ppe, e);
++}
++
++static int airoha_ppe_foe_remove_l2_flow(struct airoha_ppe *ppe,
++					 struct airoha_flow_table_entry *e)
++{
++	struct airoha_flow_table_entry *sub;
+ 	struct hlist_node *n;
++	int err;
+ 
+ 	lockdep_assert_held(&ppe_lock);
+-
+-	rhashtable_remove_fast(&ppe->l2_flows, &e->l2_node,
+-			       airoha_l2_flow_table_params);
+-	hlist_for_each_entry_safe(e, n, head, l2_subflow_node)
+-		airoha_ppe_foe_remove_flow(ppe, e);
+-}
+-
+-static void airoha_ppe_foe_flow_remove_entry(struct airoha_ppe *ppe,
+-					     struct airoha_flow_table_entry *e)
+-{
++	hlist_for_each_entry_safe(sub, n, &e->l2_flows, l2_subflow_node) {
++		err = airoha_ppe_foe_remove_flow(ppe, sub);
++		if (err)
++			return err;
++	}
++	return rhashtable_remove_fast(&ppe->l2_flows, &e->l2_node,
++				     airoha_l2_flow_table_params);
++}
++
++static int airoha_ppe_foe_flow_remove_entry(struct airoha_ppe *ppe,
++					    struct airoha_flow_table_entry *e)
++{
++	int err;
++
++	/* TC owns parents only. remove_flow frees a child immediately, so it
++	 * must never be followed by accesses through this parent cleanup path. */
++	if (WARN_ON_ONCE(e->type == FLOW_TYPE_L2_SUBFLOW))
++		return -EINVAL;
+ 	spin_lock_bh(&ppe_lock);
+-
+-	hlist_del_init(&e->ingress_node);
+-	hlist_del_init(&e->wlan_node);
++	if (e->lifetime_retired) {
++		err = 0;
++		goto unlock;
++	}
+ 	if (e->type == FLOW_TYPE_L2)
+-		airoha_ppe_foe_remove_l2_flow(ppe, e);
++		err = airoha_ppe_foe_remove_l2_flow(ppe, e);
+ 	else
+-		airoha_ppe_foe_remove_flow(ppe, e);
+-
++		err = airoha_ppe_foe_remove_flow(ppe, e);
++	if (!err) {
++		hlist_del_init(&e->ingress_node);
++		hlist_del_init(&e->wlan_node);
++		e->lifetime_retired = true;
++	}
++unlock:
+ 	spin_unlock_bh(&ppe_lock);
++	return err;
+ }
+ 
+ /* The hardware miss arrives before DSA decapsulation. Resolve its input
+@@ -1572,7 +1750,7 @@
+ 		 * source mac address
+ 		 */
+ 		hwe.ipv6.l2.src_mac_hi = FIELD_PREP(AIROHA_FOE_MAC_SMAC_ID,
+-						    0xf);
++						    AIROHA_FOE_SMAC_KEEP);
+ 	} else {
+ 		memcpy(&hwe.bridge.l2, &e->data.bridge.l2,
+ 		       sizeof(hwe.bridge.l2));
+@@ -1589,18 +1767,21 @@
+ 		kfree(f);
+ 		return err;
+ 	}
+-	airoha_ppe_foe_release_slot(ppe, hash);
++	if (airoha_ppe_foe_slot_busy(ppe, NULL, hash)) {
++		kfree(f);
++		return -EBUSY;
++	}
++	/* Publish the physical owner and parent link before a write can
++	 * reach hardware, including a timed out write. */
++	f->data = hwe;
++	f->type = FLOW_TYPE_L2_SUBFLOW;
++	airoha_ppe_foe_reserve_slot(ppe, f, hash);
++	hlist_add_head(&f->l2_subflow_node, &e->l2_flows);
+ 	err = airoha_ppe_foe_commit_entry(ppe, &hwe, hash, rx_wlan);
+ 	if (err) {
+ 		airoha_ppe_foe_write_failed(ppe, err);
+-		kfree(f);
+ 		return err;
+ 	}
+-	f->data = hwe;
+-	f->type = FLOW_TYPE_L2_SUBFLOW;
+-	f->hash = hash;
+-	ppe->foe_owner[hash] = f;
+-	hlist_add_head(&f->l2_subflow_node, &e->l2_flows);
+ 
+ 	return 0;
+ }
+@@ -1615,8 +1796,12 @@
+ 	bool commit_done = false;
+ 	struct hlist_node *n;
+ 	u32 index, state;
++	int err;
+ 
+ 	spin_lock_bh(&ppe_lock);
++	if (ppe->stopping || ppe->foe_failed ||
++	    (airoha_is_7563(ppe->eth) && !ppe->lifetime_ready))
++		goto unlock;
+ 
+ 	hwe = airoha_ppe_foe_get_entry_locked(ppe, hash);
+ 	if (!hwe)
+@@ -1642,7 +1827,8 @@
+ 		if (e->type == FLOW_TYPE_L2_SUBFLOW) {
+ 			state = FIELD_GET(AIROHA_FOE_IB1_BIND_STATE, hwe->ib1);
+ 			if (state != AIROHA_FOE_STATE_BIND) {
+-				airoha_ppe_foe_remove_flow(ppe, e);
++				if (airoha_ppe_foe_remove_flow(ppe, e))
++					goto unlock;
+ 			}
+ 			continue;
+ 		}
+@@ -1656,15 +1842,16 @@
+ 
+ 		if (airoha_ppe_foe_refresh_wdma(e))
+ 			continue;
+-		airoha_ppe_foe_unbind_flow(ppe, e);
+-		airoha_ppe_foe_release_slot(ppe, hash);
+-		if (airoha_ppe_foe_commit_entry(ppe, &e->data, hash, rx_wlan)) {
+-			airoha_ppe_foe_write_failed(ppe, -EIO);
++		/* One physical owner per software flow. Never steal a slot. */
++		if (airoha_ppe_foe_slot_busy(ppe, e, hash) || e->hash != 0xffff)
++			continue;
++		airoha_ppe_foe_reserve_slot(ppe, e, hash);
++		err = airoha_ppe_foe_commit_entry(ppe, &e->data, hash, rx_wlan);
++		if (err) {
++			airoha_ppe_foe_write_failed(ppe, err);
+ 			goto unlock;
+ 		}
+ 		commit_done = true;
+-		e->hash = hash;
+-		ppe->foe_owner[hash] = e;
+ 		break;
+ 	}
+ 
+@@ -1711,6 +1898,11 @@
+ 
+ 	e->hash = 0xffff;
+ 	spin_lock_bh(&ppe_lock);
++	if (ppe->stopping || ppe->foe_failed ||
++	    (airoha_is_7563(ppe->eth) && !ppe->lifetime_ready)) {
++		ret = -EOPNOTSUPP;
++		goto unlock;
++	}
+ 	if (e->wired_dead ||
+ 	    (e->wired_egress_dev &&
+ 	     READ_ONCE(e->wired_egress_dev->reg_state) != NETREG_REGISTERED) ||
+@@ -1786,7 +1978,7 @@
+ 		err = airoha_ppe_foe_invalidate_wdma(ppe, e->hash,
+ 						     e->wdma_wcid, e->wdma_idx);
+ 		if (!err)
+-			airoha_ppe_foe_unbind_flow(ppe, e);
++			err = airoha_ppe_foe_unbind_flow(ppe, e);
+ 		return err;
+ 	}
+ 
+@@ -1795,7 +1987,9 @@
+ 						     e->wdma_wcid, e->wdma_idx);
+ 		if (err)
+ 			return err;
+-		airoha_ppe_foe_remove_flow(ppe, sub);
++		err = airoha_ppe_foe_remove_flow(ppe, sub);
++		if (err)
++			return err;
+ 	}
+ 
+ 	return 0;
+@@ -1804,6 +1998,8 @@
+ static void airoha_ppe_flush_wdma_failed(struct airoha_ppe *ppe, int err)
+ {
+ 	int i;
++
++	ppe->foe_failed = true;
+ 
+ 	/* A failed table write must not leave a reusable radio ID bound. */
+ 	for (i = 0; i < ppe->eth->soc->num_ppe; i++)
+@@ -1834,8 +2030,11 @@
+ 				continue;
+ 			key = e->data.bridge_an7563.key;
+ 			if (FIELD_GET(AN7563_L2_KEY_SPORT, key[2]) == 7 &&
+-			    (key[1] & 0xffff) == wcid + 1)
+-				airoha_ppe_foe_release_slot(ppe, hash);
++			    (key[1] & 0xffff) == wcid + 1) {
++				err = airoha_ppe_foe_release_slot(ppe, hash);
++				if (err)
++					goto failed;
++			}
+ 		}
+ 	}
+ 	hlist_for_each_entry(e, &ppe->wlan_flows, wlan_node) {
+@@ -1845,6 +2044,7 @@
+ 		if (err)
+ 			break;
+ 	}
++failed:
+ 	if (err)
+ 		airoha_ppe_flush_wdma_failed(ppe, err);
+ 	spin_unlock_bh(&ppe_lock);
+@@ -1864,20 +2064,21 @@
+ 	return airoha_get_dsa_port(&conduit) >= 0 && conduit == changed;
+ }
+ 
+-/* Called under ppe_lock. Other SoCs and existing L2 owners are untouched. */
+-static void
++static int
+ airoha_ppe_wired_l4_event(struct airoha_ppe *ppe,
+ 			struct airoha_flow_table_entry *e,
+ 			struct net_device *netdev, bool unregister)
+ {
++	int err;
++
+ 	if (!e->wired_l4 ||
+ 	    (!airoha_ppe_wired_depends_on(e->ingress_dev, netdev) &&
+ 	     !airoha_ppe_wired_depends_on(e->wired_egress_dev, netdev)))
+-		return;
++		return 0;
+ 	e->wired_dead = true;
+-	airoha_ppe_foe_unbind_flow(ppe, e);
+-	if (!unregister)
+-		return;
++	err = airoha_ppe_foe_unbind_flow(ppe, e);
++	if (err || !unregister)
++		return err;
+ 	if (e->ingress_dev == netdev) {
+ 		dev_put(e->ingress_dev);
+ 		e->ingress_dev = NULL;
+@@ -1886,6 +2087,7 @@
+ 		dev_put(e->wired_egress_dev);
+ 		e->wired_egress_dev = NULL;
+ 	}
++	return 0;
+ }
+ 
+ static int airoha_ppe_netdevice_event(struct notifier_block *nb,
+@@ -1904,9 +2106,12 @@
+ 		return NOTIFY_DONE;
+ 
+ 	spin_lock_bh(&ppe_lock);
+-	hlist_for_each_entry(e, &ppe->ingress_flows, ingress_node)
+-		airoha_ppe_wired_l4_event(ppe, e, netdev,
+-					  event == NETDEV_UNREGISTER);
++	hlist_for_each_entry(e, &ppe->ingress_flows, ingress_node) {
++		err = airoha_ppe_wired_l4_event(ppe, e, netdev,
++					       event == NETDEV_UNREGISTER);
++		if (err)
++			goto unlock;
++	}
+ 	if (event != NETDEV_UNREGISTER)
+ 		goto unlock;
+ 	hlist_for_each_entry(e, &ppe->ingress_flows, ingress_node) {
+@@ -1915,8 +2120,11 @@
+ 
+ 		if (e->ingress_dev != netdev)
+ 			continue;
+-		hlist_for_each_entry_safe(sub, next, &e->l2_flows, l2_subflow_node)
+-			airoha_ppe_foe_remove_flow(ppe, sub);
++		hlist_for_each_entry_safe(sub, next, &e->l2_flows, l2_subflow_node) {
++			err = airoha_ppe_foe_remove_flow(ppe, sub);
++			if (err)
++				goto unlock;
++		}
+ 		e->ingress_dev = NULL;
+ 		dev_put(netdev);
+ 	}
+@@ -1924,8 +2132,10 @@
+ 		if (e->wdma_dev != netdev)
+ 			continue;
+ 		err = airoha_ppe_flush_wdma_entry(ppe, e);
+-		if (err)
++		if (err) {
+ 			airoha_ppe_flush_wdma_failed(ppe, err);
++			goto unlock;
++		}
+ 		/* TC rules may outlive their redirect device. Keep their owner
+ 		 * until TC deletes it, but never rebind its old radio identity.
+ 		 */
+@@ -1936,6 +2146,9 @@
+ unlock:
+ 	spin_unlock_bh(&ppe_lock);
+ 
++	/* NETDEV_UNREGISTER cannot be vetoed here. Retention prevents an
++	 * early put, but a provider is required to avoid stalled unregister.
++	 * This unresolved boundary is why native admission is hard closed. */
+ 	return NOTIFY_DONE;
+ }
+ 
+@@ -1980,7 +2193,8 @@
+ 		ib1 = READ_ONCE(hwe->ib1);
+ 		state = FIELD_GET(AIROHA_FOE_IB1_BIND_STATE, ib1);
+ 		if (state != AIROHA_FOE_STATE_BIND) {
+-			airoha_ppe_foe_remove_flow(ppe, iter);
++			if (airoha_ppe_foe_remove_flow(ppe, iter))
++				return;
+ 			continue;
+ 		}
+ 
+@@ -2015,9 +2229,8 @@
+ 
+ 	memcpy(&hwe, hwe_p, sizeof(*hwe_p));
+ 	if (!airoha_ppe_foe_compare_entry(e, &hwe)) {
+-		if (ppe->foe_owner[e->hash] == e)
+-			ppe->foe_owner[e->hash] = NULL;
+-		e->hash = 0xffff;
++		/* A mismatching tuple is not withdrawal proof. Keep identity. */
++		airoha_ppe_foe_write_failed(ppe, -ESTALE);
+ 		goto unlock;
+ 	}
+ 
+@@ -2373,20 +2586,28 @@
+ 		e->wdma_wcid = FIELD_GET(AIROHA_FOE_MAC_WDMA_WCID, etype);
+ 	}
+ 
++	if (airoha_is_7563(eth)) {
++		err = airoha_ppe_smac_get(eth->ppe, e, data.eth.h_source);
++		if (err)
++			goto free_entry;
++	}
++	/* Cookie must exist before RX can discover the pending owner. */
++	err = rhashtable_insert_fast(&eth->flow_table, &e->node,
++				     airoha_flow_table_params);
++	if (err)
++		goto free_entry;
+ 	err = airoha_ppe_foe_flow_commit_entry(eth->ppe, e);
+ 	if (err)
+-		goto free_entry;
+-
+-	err = rhashtable_insert_fast(&eth->flow_table, &e->node,
+-				     airoha_flow_table_params);
+-	if (err < 0)
+-		goto remove_foe_entry;
++		goto remove_cookie;
+ 
+ 	return 0;
+ 
+-remove_foe_entry:
+-	airoha_ppe_foe_flow_remove_entry(eth->ppe, e);
++remove_cookie:
++	/* A failed software publication has not inserted an RX-visible list. */
++	rhashtable_remove_fast(&eth->flow_table, &e->node,
++			       airoha_flow_table_params);
+ free_entry:
++	airoha_ppe_smac_put(eth->ppe, e);
+ 	airoha_ppe_flow_entry_put_devs(e);
+ 	kfree(e);
+ 
+@@ -2397,15 +2618,19 @@
+ 					   struct flow_cls_offload *f)
+ {
+ 	struct airoha_flow_table_entry *e;
++	int err;
+ 
+ 	e = rhashtable_lookup(&eth->flow_table, &f->cookie,
+ 			      airoha_flow_table_params);
+ 	if (!e)
+ 		return -ENOENT;
+ 
+-	airoha_ppe_foe_flow_remove_entry(eth->ppe, e);
++	err = airoha_ppe_foe_flow_remove_entry(eth->ppe, e);
++	if (err)
++		return err;
+ 	rhashtable_remove_fast(&eth->flow_table, &e->node,
+ 			       airoha_flow_table_params);
++	airoha_ppe_smac_put(eth->ppe, e);
+ 	airoha_ppe_flow_entry_put_devs(e);
+ 	kfree(e);
+ 
+@@ -2781,6 +3006,10 @@
+ 		ppe->dev.ops.check_skb_domain = airoha_ppe_check_skb_domain;
+ 	ppe->dev.priv = ppe;
+ 	ppe->eth = eth;
++	spin_lock_init(&ppe->smac_lock);
++	/* No native enable path until notifier/devres withdrawal is complete. */
++	ppe->lifetime_ready = false;
++
+ 	mutex_init(&ppe->diag_mutex);
+ 	eth->ppe = ppe;
+ 
+@@ -2860,11 +3089,40 @@
+ 	struct airoha_flow_table_entry *e = ptr;
+ 	struct airoha_ppe *ppe = arg;
+ 
+-	airoha_ppe_foe_flow_remove_entry(ppe, e);
++	/* Deinit must preflight all entries before destructive hash teardown.
++	 * A void callback cannot restore a cookie that has already gone. */
++	if (WARN_ON_ONCE(airoha_ppe_foe_flow_remove_entry(ppe, e)))
++		return;
++	airoha_ppe_smac_put(ppe, e);
+ 	airoha_ppe_flow_entry_put_devs(e);
+ 	kfree(e);
+ }
+ 
++
++static int airoha_ppe_lifetime_preflight(struct airoha_eth *eth)
++{
++	struct rhashtable_iter iter;
++	struct airoha_flow_table_entry *e;
++	int err = 0;
++
++	rhashtable_walk_enter(&eth->flow_table, &iter);
++	rhashtable_walk_start(&iter);
++	while ((e = rhashtable_walk_next(&iter))) {
++		if (IS_ERR(e)) {
++			if (PTR_ERR(e) == -EAGAIN)
++				continue;
++			err = PTR_ERR(e);
++			break;
++		}
++		err = airoha_ppe_foe_flow_remove_entry(eth->ppe, e);
++		if (err)
++			break;
++	}
++	rhashtable_walk_stop(&iter);
++	rhashtable_walk_exit(&iter);
++	return err;
++}
++
+ void airoha_ppe_deinit(struct airoha_eth *eth)
+ {
+ 	struct airoha_npu *npu;
+@@ -2872,12 +3130,24 @@
+ 	if (!eth->ppe)
+ 		return;
+ 
++	/* Stop new RX bindings before dropping the notifier/control owner. */
++	spin_lock_bh(&ppe_lock);
++	eth->ppe->stopping = true;
++	spin_unlock_bh(&ppe_lock);
+ 	be6l_diag_driver_stop(eth->ppe);
+ 
+ 	if (eth->ppe->netdevice_registered)
+ 		unregister_netdevice_notifier(&eth->ppe->netdevice_nb);
+ 
+ 	mutex_lock(&flow_offload_mutex);
++	if (airoha_ppe_lifetime_preflight(eth)) {
++		/* BLOCKED: this void remove interface cannot stop devres freeing
++		 * resources. Returning is containment, not an unload solution.
++		 * Native admission MUST remain disabled until provider integration. */
++		dev_err(eth->dev, "PPE withdrawal missing: draft cannot unload safely\n");
++		mutex_unlock(&flow_offload_mutex);
++		return;
++	}
+ 
+ 	if (airoha_is_7563(eth)) {
+ 		airoha_fe_clear(eth, REG_PPE_GLO_CFG(0), PPE_GLO_CFG_EN_MASK);
+--- a/drivers/net/ethernet/airoha/airoha_eth.h
++++ b/drivers/net/ethernet/airoha/airoha_eth.h
+@@ -588,6 +588,7 @@
+ 	struct rhash_head node;
+ 	unsigned long cookie;
+ 
++	bool smac_ref, lifetime_retired;
+ 	/* Must be last --ends in a flexible-array member. */
+ 	struct airoha_foe_entry data;
+ };
+@@ -681,7 +682,20 @@
+ 
+ struct be6l_diag;
+ 
++#define AIROHA_FOE_SMAC_KEEP 0xf
++#define AIROHA_PPE_SMAC_SLOTS AIROHA_FOE_SMAC_KEEP
++struct airoha_ppe_smac {
++	u8 addr[ETH_ALEN];
++	u32 refs;
++	bool valid;
++};
++
+ struct airoha_ppe {
++	spinlock_t smac_lock;
++	struct airoha_ppe_smac smac[AIROHA_PPE_SMAC_SLOTS];
++	bool smac_failed, foe_failed, stopping;
++	/* Deliberately false; no setter in an unadmitted source draft. */
++	bool lifetime_ready;
+ 	/* CPU observer only; the control mutex serializes publication/removal. */
+ 	struct mutex diag_mutex;
+ 	struct be6l_diag __rcu *route_diag;
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -145,7 +145,8 @@
+ 	airoha_fe_wr(eth, REG_FE_MAC_LMIN(reg), lmin);
+ 	airoha_fe_wr(eth, REG_FE_MAC_LMAX(reg), lmax);
+ 
+-	airoha_ppe_init_upd_mem(dev, addr);
++	if (!airoha_is_7563(eth))
++		airoha_ppe_init_upd_mem(dev, addr);
+ 
+ 	return 0;
+ }

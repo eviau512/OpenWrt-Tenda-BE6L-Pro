@@ -44,6 +44,25 @@
  	return 0;
  
  out_unlock:
+@@ -1676,6 +1693,8 @@
+ 	struct linux_binfmt *fmt;
+ 	int retval;
+ 
++	/* A successful X rewrite starts a new interpreter search round. */
++	bprm->be6l_binfmt_terminal = false;
+ 	retval = prepare_binprm(bprm);
+ 	if (retval < 0)
+ 		return retval;
+@@ -1694,7 +1713,8 @@
+ 
+ 		read_lock(&binfmt_lock);
+ 		put_binfmt(fmt);
+-		if (bprm->point_of_no_return || (retval != -ENOEXEC)) {
++		if (bprm->point_of_no_return || bprm->be6l_binfmt_terminal ||
++		    (retval != -ENOEXEC)) {
+ 			read_unlock(&binfmt_lock);
+ 			return retval;
+ 		}
 --- a/fs/binfmt_misc.c
 +++ b/fs/binfmt_misc.c
 @@ -14,6 +14,8 @@
@@ -63,7 +82,7 @@
  
  typedef struct {
  	struct list_head list;
-@@ -201,6 +204,113 @@
+@@ -201,6 +204,120 @@
  /*
   * the loader itself
   */
@@ -85,14 +104,18 @@
 +{
 +	unsigned int size = sizeof(Elf64_Phdr) * header->e_phnum;
 +	Elf64_Phdr *data;
++	int err;
 +
 +	/* Match load_elf_phdrs' size limits and failure boundary. */
 +	if (header->e_phentsize != sizeof(Elf64_Phdr) || !size || size > 65536)
-+		return NULL;
++		return ERR_PTR(-ENOEXEC);
 +	data = kmalloc(size, GFP_KERNEL);
-+	if (data && be6l_elf_read(file, data, size, header->e_phoff)) {
++	if (!data)
++		return ERR_PTR(-ENOMEM);
++	err = be6l_elf_read(file, data, size, header->e_phoff);
++	if (err) {
 +		kfree(data);
-+		data = NULL;
++		return ERR_PTR(err);
 +	}
 +	return data;
 +}
@@ -120,8 +143,8 @@
 +	    !can_mmap_file(bprm->file))
 +		return -ENOEXEC;
 +	phdrs = be6l_elf_phdrs(bprm->file, &header);
-+	if (!phdrs)
-+		return -ENOEXEC;
++	if (IS_ERR(phdrs))
++		return PTR_ERR(phdrs);
 +	for (i = 0; i < header.e_phnum; i++) {
 +		if (phdrs[i].p_type != PT_INTERP)
 +			continue;
@@ -151,8 +174,11 @@
 +		if (!be6l_a53_elf(&interp_header) || !can_mmap_file(interpreter))
 +			goto out;
 +		interp_phdrs = be6l_elf_phdrs(interpreter, &interp_header);
-+		if (!interp_phdrs)
++		if (IS_ERR(interp_phdrs)) {
++			if (PTR_ERR(interp_phdrs) == -ENOMEM)
++				err = -ENOMEM;
 +			goto out;
++		}
 +		kfree(interp_phdrs);
 +		/* open_exec owns both a ref and write denial. No close/reopen gap:
 +		 * mmput releases them, fork duplicates them, and a separate CLOEXEC
@@ -177,7 +203,12 @@
  static int load_misc_binary(struct linux_binprm *bprm)
  {
  	Node *fmt;
-@@ -218,7 +328,8 @@
+@@ -215,10 +332,13 @@
+ 	fmt = get_binfmt_handler(misc, bprm);
+ 	if (!fmt)
+ 		return retval;
++	if (fmt->flags & MISC_FMT_BE6L_EXECFD_EXE)
++		bprm->be6l_binfmt_terminal = 1;
  
  	/* Need to be able to load the file after exec */
  	retval = -ENOENT;
@@ -187,7 +218,7 @@
  		goto ret;
  
  	if (fmt->flags & MISC_FMT_PRESERVE_ARGV0) {
-@@ -263,6 +374,31 @@
+@@ -263,6 +383,31 @@
  	if (IS_ERR(interp_file))
  		goto ret;
  
@@ -219,7 +250,7 @@
  	bprm->interpreter = interp_file;
  	if (fmt->flags & MISC_FMT_OPEN_BINARY)
  		bprm->have_execfd = 1;
-@@ -270,6 +406,12 @@
+@@ -270,6 +415,12 @@
  		bprm->execfd_creds = 1;
  
  	retval = 0;
@@ -232,7 +263,7 @@
  ret:
  
  	/*
-@@ -335,6 +477,12 @@
+@@ -335,6 +486,12 @@
  			e->flags |= (MISC_FMT_CREDENTIALS |
  					MISC_FMT_OPEN_BINARY);
  			break;
@@ -245,7 +276,7 @@
  		case 'F':
  			pr_debug("register: flag: F: open interpreter file now\n");
  			p++;
-@@ -540,6 +688,10 @@
+@@ -540,6 +697,10 @@
  
  	/* Parse the 'flags' field. */
  	p = check_special_flags(p, e);
@@ -256,7 +287,7 @@
  	if (*p == '\n')
  		p++;
  	if (p != buf + count)
-@@ -610,6 +762,8 @@
+@@ -610,6 +771,8 @@
  		*dp++ = 'C';
  	if (e->flags & MISC_FMT_OPEN_FILE)
  		*dp++ = 'F';
@@ -289,17 +320,19 @@
  	NEW_AUX_ENT(AT_RSEQ_ALIGN, __alignof__(struct rseq));
 --- a/include/linux/binfmts.h
 +++ b/include/linux/binfmts.h
-@@ -29,6 +29,9 @@
+@@ -29,6 +29,11 @@
  	unsigned int
  		/* Should an execfd be passed to userspace? */
  		have_execfd:1,
 +
 +		/* Private built-in binfmt X experiment; never implies C. */
 +		be6l_execfd_exe:1,
++		/* Terminal match for one search_binary_handler round only. */
++		be6l_binfmt_terminal:1,
  
  		/* Use the creds of a script (see binfmt_misc) */
  		execfd_creds:1,
-@@ -63,6 +66,7 @@
+@@ -63,6 +68,7 @@
  				   different for binfmt_{misc,script} */
  	const char *fdpath;	/* generated filename for execveat */
  	unsigned interp_flags;

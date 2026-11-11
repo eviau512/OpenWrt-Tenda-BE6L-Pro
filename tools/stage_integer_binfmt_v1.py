@@ -31,6 +31,9 @@ def main():
     if w.parent != Path('/root') or not re.fullmatch('be6l-binfmt-stage-[a-z0-9-]+', w.name) or w.exists():
         p.error('Use a fresh /root/be6l-binfmt-stage-* directory')
     image = json.loads((a.candidate/'result.json').read_text())
+    if ((image.get('guest_interp_fd') or image.get('guest_exe_contract') == 'BE6L_X_EXECFD_EXE_INTERPFD_V2') and
+            (image.get('guest_interp_revision') != 2 or image.get('dispatch_failures_terminal') is not True)):
+        raise ValueError('Superseded V2 dispatch cannot be admitted for runtime staging')
     qualified = json.loads((a.qualification/'result.json').read_text())
     guest = json.loads((a.guest/'result.json').read_text())
     emulator = json.loads((a.emulator_package/'result.json').read_text())
@@ -130,6 +133,8 @@ def main():
     run('guest-proc', 'mkdir -p '+remote+'/guest/proc '+remote+'/guest/tmp && chmod 1777 '+remote+
         '/guest/tmp && mount -t proc -o nosuid,nodev,noexec proc '+remote+'/guest/proc')
     result = dict(boot_id=a.expected_boot_id, fit_sha256=image['image_sha256'], remote=remote,
+        guest_interp_revision=image.get('guest_interp_revision'),
+        dispatch_failures_terminal=image.get('dispatch_failures_terminal', False),
         guest_root=remote+'/guest', interpreter=interpreter, marked_host_elf_count=len(actual_host),
         complete_host_elf_inventory_verified=True, native_host_elf_paths=sorted(actual_host),
         guest_payload_digests_verified=True, normal_signed_emulator_installed=True,

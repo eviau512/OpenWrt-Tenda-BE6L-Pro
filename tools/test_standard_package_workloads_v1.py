@@ -35,6 +35,9 @@ def main():
     load = lambda directory: json.loads((directory/'result.json').read_text())
     staged, image, emulator, tested, probe = map(load, (a.stage, a.candidate, a.emulator_package, a.exec_test, a.native_probe))
     contract = image.get('guest_exe_contract')
+    if ((image.get('guest_interp_fd') or contract == 'BE6L_X_EXECFD_EXE_INTERPFD_V2') and
+            (image.get('guest_interp_revision') != 2 or image.get('dispatch_failures_terminal') is not True)):
+        raise ValueError('Superseded V2 dispatch cannot be admitted for package workloads')
     if contract not in ('BE6L_X_AT_FLAGS_16_v1', 'BE6L_X_EXECFD_EXE_INTERPFD_V2'):
         raise ValueError('Unknown private kernel/emulator contract')
     if contract == 'BE6L_X_EXECFD_EXE_INTERPFD_V2' and (
@@ -174,6 +177,8 @@ def main():
         run('host-digests-after', 'md5sum -c -', checksums)
         run('after', status_command)
     report = dict(boot_id=a.expected_boot_id, fit_sha256=image['image_sha256'], flags='POFX',
+        guest_interp_revision=image.get('guest_interp_revision'),
+        dispatch_failures_terminal=image.get('dispatch_failures_terminal', False),
         source_stage_receipt_sha256=sha(a.stage/'result.json'), source_exec_test_sha256=sha(a.exec_test/'result.json'),
         source_native_probe_receipt_sha256=sha(a.native_probe/'result.json'), source_script_sha256=script_shas,
         cases=cases, expected_package_case_count=8,

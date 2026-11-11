@@ -27,6 +27,7 @@ def main():
     p.add_argument('--expected-boot-id', type=lambda s: str(uuid.UUID(s)), required=True)
     p.add_argument('--expected-cases', type=int, default=14)
     p.add_argument('--corner-probe', type=Path, help='Optional admitted standard ELF negative-semantics probe directory')
+    p.add_argument('--native-errno-probe', type=Path, help='Optional admitted static ARM32 caller; requires V2 and corner probe')
     p.add_argument('--guest-exe-file', action='store_true',
                    help='Register X only with the matching kernel and aware interpreter receipts')
     p.add_argument('--guest-interp-fd', action='store_true', help='Require the matched V2 loader-fd kernel/emulator profile')
@@ -54,6 +55,22 @@ def main():
         raise ValueError('X requires both the matched kernel contract and aware signed interpreter')
     if a.guest_interp_fd and (not candidate.get('guest_interp_fd') or not emulator.get('kernel_guest_interp_aware')):
         raise ValueError('V2 requires both sides of the kernel loader-descriptor contract')
+    if a.guest_interp_fd and (candidate.get('guest_interp_revision') != 2 or not candidate.get('dispatch_failures_terminal')):
+        raise ValueError('V2 execution requires terminal matched-X failures')
+    native = None
+    native_receipt = None
+    if a.native_errno_probe:
+        if not a.guest_interp_fd or not a.corner_probe:
+            raise ValueError('Native errno matrix requires V2 and the standard corner fixture')
+        native = a.native_errno_probe/'native-a64-exec-errno'
+        native_receipt = json.loads((a.native_errno_probe/'result.json').read_text())
+        if (not native_receipt.get('native_arm32') or not native_receipt.get('static') or
+                native_receipt.get('vfp_neon_instruction_count') != 0 or
+                native_receipt.get('expected_case_count') != 16 or
+                not native_receipt.get('isolated_fixture_only') or
+                sha(native) != native_receipt.get('elf_sha256') or
+                native.read_bytes()[:6] != b'\x7fELF\x01\x01'):
+            raise ValueError('Native errno caller admission differs')
     flags = 'POFX' if a.guest_exe_file else 'POF'
     guest = staged['guest_root']
     if not re.fullmatch('/tmp/be6l-binfmt-stage-[a-z0-9-]+/guest', guest) or staged['interpreter'] != '/usr/libexec/be6l/qemu-aarch64':
@@ -82,6 +99,12 @@ def main():
         run('verify-corner-probe', 'md5sum -c -',
             (hashlib.md5(corner.read_bytes()).hexdigest()+'  '+guest+'/bin/be6l-exec-corners\n').encode())
         run('corner-probe-mode', 'chmod 755 '+guest+'/bin/be6l-exec-corners')
+    remote_native = guest.rsplit('/', 1)[0]+'/native-errno-probe'
+    if native:
+        run('upload-native-errno-probe', 'cat >'+remote_native, native.read_bytes())
+        run('verify-native-errno-probe', 'md5sum -c -',
+            (hashlib.md5(native.read_bytes()).hexdigest()+'  '+remote_native+'\n').encode())
+        run('native-errno-probe-mode', 'chmod 755 '+remote_native)
 
     # Recheck complete immutable host payloads immediately before activation.
     digests = {}
@@ -103,6 +126,8 @@ def main():
     cleanup_ok = False
     cases = {}
     corner_cases = {}
+    native_cases = {}
+    native_ok = None
     expected_corners = corner_receipt.get('expected_negative_cases', 3) if a.corner_probe else None
     controls_ok = False
     matrix_exit = None
@@ -142,6 +167,17 @@ def main():
             result = run('negative-corners', 'timeout -s KILL 45 chroot '+guest+' /bin/be6l-exec-corners', require_success=False)
             corner_cases = {name: dict(passed=state == 'PASS', wait_status=int(status))
                 for name, state, status in re.findall(r'^EXEC_CORNER (\S+) (PASS|FAIL) status=(\d+)$', result.stdout.decode(), re.M)}
+        if native:
+            result = run('native-errno-matrix', 'timeout -s KILL 90 '+remote_native+' '+guest,
+                         timeout=110, require_success=False)
+            native_cases = {name: dict(passed=state == 'PASS', expected_errno=int(expected),
+                                      actual_errno=int(actual), observations=details)
+                for name, state, expected, actual, details in re.findall(
+                    r'^NATIVE_EXEC_ERRNO (\S+) (PASS|FAIL) expected=(\d+) actual=(-?\d+) (.*)$',
+                    result.stdout.decode(), re.M)}
+            native_ok = (result.returncode == 0 and len(native_cases) == 16 and
+                         all(case['passed'] for case in native_cases.values()) and
+                         'NATIVE_EXEC_ERRNO_SUMMARY cases=16 failures=0' in result.stdout.decode())
     except Exception as failure:
         error = type(failure).__name__+': '+str(failure)
     finally:
@@ -167,13 +203,15 @@ def main():
         negative_exec_corner_cases=corner_cases,
         expected_negative_case_count=expected_corners,
         source_corner_probe_receipt_sha256=sha(a.corner_probe/'result.json') if a.corner_probe else None,
+        source_native_errno_probe_receipt_sha256=sha(a.native_errno_probe/'result.json') if native else None,
+        native_exec_errno_cases=native_cases, native_exec_errno_all_passed=native_ok,
         all_negative_corners_passed=(len(corner_cases) == expected_corners and all(item['passed'] for item in corner_cases.values())) if a.corner_probe else None,
         rule_unregistered_and_mount_removed=cleanup_ok, host_payloads_unchanged=True,
         error=error, target_executed=True, flash_operations=False,
         standard_a53_package_compatibility_qualified=False)
     (w/'result.json').write_text(json.dumps(report, indent=2)+'\n')
     print('BINFMT_EXECUTION_MATRIX_RECORDED', json.dumps(report), flush=True)
-    if error or not report['all_exec_cases_passed'] or not controls_ok or not cleanup_ok or (a.corner_probe and not report['all_negative_corners_passed']):
+    if error or not report['all_exec_cases_passed'] or not controls_ok or not cleanup_ok or (a.corner_probe and not report['all_negative_corners_passed']) or (native and not native_ok):
         raise SystemExit(1)
 
 

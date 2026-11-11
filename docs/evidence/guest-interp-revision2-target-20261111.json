@@ -1,0 +1,426 @@
+{
+  "date": "2026-11-11",
+  "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+  "scope": "Actual RAM-only revision2+r5 startup, execution and isolated workloads; not full standard A53 compatibility",
+  "guest_interp_revision": 2,
+  "dispatch_failures_terminal": true,
+  "source_receipt_sha256": {
+    "startup": "9a3dd51411304750f5488d3f6a5bca935cc5a989fec8faf9c2cffc0371ca2096",
+    "execution": "4dc7d44c74de6138db430dcca5a3fbf3ee3f6750bb5b7fa11019caba02814fb8",
+    "workloads": "055a1c1948830f1593d27a4f096d62329e159363a40c645326f1eca50c6c2597"
+  },
+  "startup": {
+    "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+    "actual_kernel_build_id": "8756f1f7dcc25a43b511d14c67b95549da9acb21",
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true,
+    "expected_kernel_build_id": "8756f1f7dcc25a43b511d14c67b95549da9acb21",
+    "boot_id": "04397e28-3a68-4e0c-bd04-293f02be91be",
+    "dual_cpu_aarch64": true,
+    "ram_root": true,
+    "ten_mtd_guards": true,
+    "critical_partition_digests_unchanged": true,
+    "exact_installed_packages": 219,
+    "exact_modules": 84,
+    "exact_native_regular_elf_files": 61,
+    "default_native_pid1": true,
+    "default_native_netifd": true,
+    "default_native_vm_modules_mapped": {
+      "fs": true,
+      "ubus": true,
+      "uloop": true,
+      "uci": true,
+      "nl80211": true
+    },
+    "required_services_running_without_respawn": true,
+    "recovery_heartbeat_accepted": true,
+    "npu_workers_advancing": true,
+    "npu_faults": 0,
+    "luci_http_status": 403,
+    "luci_login_form_rendered": true,
+    "luci_argon_chinese": true,
+    "required_application_selection_preserved": true,
+    "original_offline_root_unchanged": true,
+    "startup_acceptance_passed": true,
+    "new_candidate_recovery_tested": false,
+    "routed_nat_qualified": false,
+    "standard_a53_package_compatibility_qualified": false,
+    "flash_operations": false
+  },
+  "execution": {
+    "boot_id": "04397e28-3a68-4e0c-bd04-293f02be91be",
+    "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+    "source_stage_receipt_sha256": "a119a42a49068153e3513d804b5b97760c9a1ff106c19d67563bee4c31df985f",
+    "flags": "POFX",
+    "cases": {
+      "execve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-absolute": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "execveat-empty-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fexecve": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "unlinked-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "shebang-script": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "relative-path": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "proc-self-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "missing-file": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "dropped-credentials": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-fd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-dirfd-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-script-rejected": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-no-exec-permission": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "cloexec-symlink-nofollow": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "invalid-execveat-flags": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "guest_exe_contract": "BE6L_X_EXECFD_EXE_INTERPFD_V2",
+    "matrix_exit": 0,
+    "expected_exec_case_count": 20,
+    "all_exec_cases_passed": true,
+    "standard_package_child_chain_passed": true,
+    "interpreter_credentials_from_guest": false,
+    "negative_exec_corner_cases": {
+      "missing-elf-interpreter-errno": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "linked-proc-exe-stat": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "deleted-proc-exe-open": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "linked-proc-exe-statx": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "renamed-proc-exe": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "deleted-proc-exe-statx": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "guest-executable-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "exit-releases-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "fork-inherits-write-denial": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "setuid-guest-credentials": {
+        "passed": false,
+        "wait_status": 28672
+      },
+      "no-new-privileges": {
+        "passed": true,
+        "wait_status": 0
+      },
+      "private-kernel-auxv-hidden": {
+        "passed": true,
+        "wait_status": 0
+      }
+    },
+    "expected_negative_case_count": 12,
+    "source_corner_probe_receipt_sha256": "44a5012289e5637833d710f6c3ae648ef9166c66a023661c275c6689cf470658",
+    "source_native_errno_probe_receipt_sha256": "e6817a7ec5ccd42a4b9550704d401cdd346917104c485a981f6326ddf2a812f0",
+    "native_exec_errno_cases": {
+      "execve-success-control": {
+        "passed": true,
+        "expected_errno": 0,
+        "actual_errno": -1,
+        "observations": "caller_returned=0 fds=-1/-1 fdflags=-1/-1 program_write_errno=-1 loader_write_errno=-1 parent_fds=3/3 after_success_write=0/0 wait_status=0"
+      },
+      "execve-missing-loader": {
+        "passed": true,
+        "expected_errno": 2,
+        "actual_errno": 2,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=-1 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-loader-no-execute": {
+        "passed": true,
+        "expected_errno": 13,
+        "actual_errno": 13,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-loader-bad-magic": {
+        "passed": true,
+        "expected_errno": 80,
+        "actual_errno": 80,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-loader-short-header": {
+        "passed": true,
+        "expected_errno": 5,
+        "actual_errno": 5,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-loader-not-directory": {
+        "passed": true,
+        "expected_errno": 20,
+        "actual_errno": 20,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-original-no-execute": {
+        "passed": true,
+        "expected_errno": 13,
+        "actual_errno": 13,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execve-original-bad-phentsize": {
+        "passed": true,
+        "expected_errno": 8,
+        "actual_errno": 8,
+        "observations": "caller_returned=1 fds=4/4 fdflags=-1/-1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-success-control": {
+        "passed": true,
+        "expected_errno": 0,
+        "actual_errno": -1,
+        "observations": "caller_returned=0 fds=-1/-1 fdflags=-1/-1 program_write_errno=-1 loader_write_errno=-1 parent_fds=3/3 after_success_write=0/0 wait_status=0"
+      },
+      "execveat-cloexec-missing-loader": {
+        "passed": true,
+        "expected_errno": 2,
+        "actual_errno": 2,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=-1 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-loader-no-execute": {
+        "passed": true,
+        "expected_errno": 13,
+        "actual_errno": 13,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-loader-bad-magic": {
+        "passed": true,
+        "expected_errno": 80,
+        "actual_errno": 80,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-loader-short-header": {
+        "passed": true,
+        "expected_errno": 5,
+        "actual_errno": 5,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-loader-not-directory": {
+        "passed": true,
+        "expected_errno": 20,
+        "actual_errno": 20,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-original-no-execute": {
+        "passed": true,
+        "expected_errno": 13,
+        "actual_errno": 13,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      },
+      "execveat-cloexec-original-bad-phentsize": {
+        "passed": true,
+        "expected_errno": 8,
+        "actual_errno": 8,
+        "observations": "caller_returned=1 fds=5/5 fdflags=1/1 program_write_errno=0 loader_write_errno=0 parent_fds=3/3 after_success_write=-1/-1 wait_status=0"
+      }
+    },
+    "native_exec_errno_all_passed": true,
+    "all_negative_corners_passed": false,
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "flash_operations": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "workloads": {
+    "boot_id": "04397e28-3a68-4e0c-bd04-293f02be91be",
+    "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+    "flags": "POFX",
+    "guest_interp_revision": 2,
+    "dispatch_failures_terminal": true,
+    "source_stage_receipt_sha256": "a119a42a49068153e3513d804b5b97760c9a1ff106c19d67563bee4c31df985f",
+    "source_exec_test_sha256": "4dc7d44c74de6138db430dcca5a3fbf3ee3f6750bb5b7fa11019caba02814fb8",
+    "source_native_probe_receipt_sha256": "7af2effc60563ee10ae7743a1aec68c564e775488f0128bfbca53f65bb031c47",
+    "source_script_sha256": {
+      "standard-package-nixio.lua": "bbce4c26a58b9b3575c323fe9ab6b2405dd7796f7f2a12ab1c18698a20b6083c",
+      "standard-package-workloads.sh": "fa81062a433a65d7e1e8547f62fcef384328d4c30d374f6a241b6140a1b2dc91"
+    },
+    "cases": {
+      "busybox-pipeline": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "lua-nixio-fp-file-fork": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "curl-version": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "curl-file-transfer": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "jsonfilter": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "uci-transaction": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "ucode-fs-module": {
+        "passed": true,
+        "exit_code": 0
+      },
+      "ubus-private-socket": {
+        "passed": true,
+        "exit_code": 0
+      }
+    },
+    "expected_package_case_count": 8,
+    "all_package_cases_passed": true,
+    "interpreter_lifetime": {
+      "workload_exit": 0,
+      "rule_removed_while_guest_alive": true,
+      "interpreter_denied_after_unregister": true,
+      "guest_hold_exit": 0,
+      "interpreter_writable_after_last_guest_exit": true
+    },
+    "rule_unregistered_and_mount_removed": true,
+    "host_payloads_unchanged": true,
+    "error": null,
+    "target_executed": true,
+    "target_package_scripts_executed": false,
+    "isolated_standard_runtime_only": true,
+    "isolated_character_devices": {
+      "null": {
+        "major": 1,
+        "minor": 3,
+        "mode": "0666"
+      },
+      "zero": {
+        "major": 1,
+        "minor": 5,
+        "mode": "0666"
+      },
+      "random": {
+        "major": 1,
+        "minor": 8,
+        "mode": "0666"
+      },
+      "urandom": {
+        "major": 1,
+        "minor": 9,
+        "mode": "0666"
+      }
+    },
+    "isolated_locked_uid_gid_fixture": true,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "test_guest_proc_and_tmpfs_unmounted": true,
+  "final_critical_partition_md5": [
+    "e831fc5dff58c75da64274f206df5edd",
+    "a910eba27223f8563811168179eb4f04",
+    "124dfc2a6d507d20aa34f8b4eb968e02"
+  ],
+  "all_ten_mtd_readonly_at_cleanup": true,
+  "npu_explicitly_detached_before_recovery": true,
+  "setuid_compatibility_blocked": true,
+  "standard_a53_package_compatibility_qualified": false,
+  "flash_operations": false,
+  "routed_nat_qualified": false,
+  "default_recovery": {
+    "candidate_boot_id": "04397e28-3a68-4e0c-bd04-293f02be91be",
+    "stock_boot_id": "4d0517da-7251-433c-9ab8-446473c01e1a",
+    "default_boot_grace_seconds": 600,
+    "default_disconnect_seconds": 300,
+    "polling_seconds": 5,
+    "last_authenticated_heartbeat_uptime": 426,
+    "reboot_request_uptime": 726,
+    "heartbeat_to_request_seconds": 300,
+    "reset_banner_observed": true,
+    "stock_kernel_uart_observed": false,
+    "authenticated_stock_version": "V16.03.60.67_cn",
+    "authenticated_stock_kernel": "5.4.55",
+    "authenticated_stock_arch": "armv7l",
+    "authenticated_stock_confirmed": true,
+    "heartbeat_sent_by_capture": false,
+    "npu_explicitly_detached_before_test": true,
+    "no_autoboot_interrupt": true,
+    "flash_operations": false,
+    "scoped_default_disconnect_recovery_passed": true,
+    "broader_recovery_qualified": false,
+    "active_npu_recovery_qualified": false,
+    "hard_lock_recovery_qualified": false
+  }
+}
