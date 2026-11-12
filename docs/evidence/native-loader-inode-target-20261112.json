@@ -1,0 +1,67 @@
+{
+  "boot_id": "fb595cb0-98c3-44b4-b250-120563a3703b",
+  "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+  "guest_interp_revision": 2,
+  "dispatch_failures_terminal": true,
+  "guest_exe_contract": "BE6L_X_EXECFD_EXE_INTERPFD_V2",
+  "source_stage_receipt_sha256": "f5bfd0871a1c276e5d98a7835e4a706be9824eccc1459066d59420a5960890f2",
+  "source_candidate_receipt_sha256": "77d2657067728084fb30c2f4cddc23a87568e2a880184e4c52514695a809e9b7",
+  "source_qualification_receipt_sha256": "4f7b9ef70b3659ff69d7702e673479b26e3ad507731e665e9f2143d2390e5c1b",
+  "source_corner_probe_receipt_sha256": "44a5012289e5637833d710f6c3ae648ef9166c66a023661c275c6689cf470658",
+  "source_native_probe_receipt_sha256": "5fb1854145f8b85026e9cad4e5d6eff196b6c0b47e21a5e2a46718cea78eb6ce",
+  "source_emulator_receipt_sha256": "9f40c116700a08ff54d812419d5195e6afad948d6031f5afe5bf0278d0229a85",
+  "flags": "POFX",
+  "own_rule_name": "be6l-inode-1744c34d058847ee9b2540b798c0b213",
+  "own_mount_id": "58",
+  "cases": {
+    "execve-control": {
+      "passed": true,
+      "observations": "exec_event=1 held_errno=26/26 same_inode=1 replacement_distinct=0 replacement_write_errno=-1 after_write_errno=0/0 child_exec_errno=-1 setup_errno=0 wait_status=0 parent_fds=3/3 signal=0"
+    },
+    "execve-rename-bad-path": {
+      "passed": true,
+      "observations": "exec_event=1 held_errno=26/26 same_inode=1 replacement_distinct=1 replacement_write_errno=0 after_write_errno=0/0 child_exec_errno=-1 setup_errno=0 wait_status=0 parent_fds=3/3 signal=0"
+    },
+    "execveat-cloexec-control": {
+      "passed": true,
+      "observations": "exec_event=1 held_errno=26/26 same_inode=1 replacement_distinct=0 replacement_write_errno=-1 after_write_errno=0/0 child_exec_errno=-1 setup_errno=0 wait_status=0 parent_fds=3/3 signal=0"
+    },
+    "execveat-cloexec-rename-bad-path": {
+      "passed": true,
+      "observations": "exec_event=1 held_errno=26/26 same_inode=1 replacement_distinct=1 replacement_write_errno=0 after_write_errno=0/0 child_exec_errno=-1 setup_errno=0 wait_status=0 parent_fds=3/3 signal=0"
+    }
+  },
+  "expected_case_count": 4,
+  "native_exit_code": 0,
+  "all_inode_cases_and_postconditions_passed": true,
+  "rule_unregistered_and_mount_removed": true,
+  "cleanup_failures": [],
+  "host_payloads_unchanged": true,
+  "boot_and_guards_preserved": true,
+  "error": null,
+  "secureexec_covered": false,
+  "target_executed": true,
+  "flash_operations": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "scope": "Four actual ptrace exec-stop inode retention cases, not privileged exec or general package compatibility",
+  "date": "2026-11-12",
+  "startup_kernel_build_id": "8756f1f7dcc25a43b511d14c67b95549da9acb21",
+  "startup_acceptance_passed": true,
+  "owned_guest_proc_and_tmpfs_unmounted": true,
+  "guarded_normal_reboot": {
+    "reboot_requested": true,
+    "reset_observed": true,
+    "capture_seconds": 125,
+    "autoboot_interrupt_sent": false,
+    "flash_operations": false,
+    "expected_boot_id": "fb595cb0-98c3-44b4-b250-120563a3703b"
+  },
+  "separate_stock_authentication": {
+    "boot_id": "a93691a4-53c9-47d5-a94b-2b388fdc534e",
+    "version": "V16.03.60.67_cn",
+    "kernel": "5.4.55",
+    "arch": "armv7l",
+    "authenticated": true,
+    "source_receipt_sha256": "b3c21181f7dce9a8a3ace1cc29503bf111938f9ffdc359445f46d178ce389f1e"
+  }
+}

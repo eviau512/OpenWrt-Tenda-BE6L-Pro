@@ -102,11 +102,38 @@ standard-corner fixture admissions; the option runs before unregistering the
 owned rule. Building this helper alone does not qualify its target observations.
 
 A separate [native ptrace probe](../experiments/qemu-integer-host/native-loader-inode.c)
-and [strict runner](../tools/test_native_loader_inode_v1.py) are prepared for the
-next target test. Four cases stop execve/execveat at PTRACE_EVENT_EXEC, rename
+and [strict runner](../tools/test_native_loader_inode_v1.py) now pass four
+actual target cases. They stop execve/execveat at PTRACE_EVENT_EXEC, rename
 the loader and replace its old pathname with a bad ELF before QEMU runs. They
 require the retained inode to stay write-protected and usable, then release
 after exit. [Offline evidence](evidence/native-loader-inode-offline-20261111.json)
 records the static ARM32 build and reviewed kernel/COMPAT event boundary.
-These four cases have **not run on the device**; neither inode-replacement
-success nor secureexec compatibility is claimed.
+On2026-11-12, all four pass on a new a1ca boot: the original loader remains the
+same inode and returns ETXTBSY before/after rename, a distinct bad replacement
+stays writable, execution still exits0, and program/loader write access returns
+after exit. Parent FD counts remain3/3. The owned rule, registry mount and guest
+mounts are removed; host hashes and guards are unchanged. The existing guarded
+normal reboot then returns to separately authenticated stock.
+[Target evidence](evidence/native-loader-inode-target-20261112.json) records
+the exact observations. Secureexec and complete package compatibility remain
+unqualified; this does not complete every concurrent loader race or ELF case.
+
+A separate [closed-stdio probe](../experiments/qemu-integer-host/native-closed-stdio.c)
+and [runner](../tools/test_native_closed_stdio_v1.py) pass16/16 target cases on
+another current a1ca boot. They close fd0, fd1, fd2, or all three, across execve
+and CLOEXEC execveat, using a normal dynamic runtime and a **freestanding
+synthetic static fixture**. Closed descriptors remain EBADF; the other stdio
+inodes and the inherited report FD are preserved. The fixture finds no private
+auxv entries/flags or program/loader FD aliases within its bounded scan; parent
+FD counts and exit write-denial release pass. Owned fixture aliases, files,
+rules and mounts are removed, all62 host hashes and guards match, and guarded
+normal reboot returns to separately authenticated stock.
+[Target evidence](evidence/closed-stdio-target-20261112.json) and
+[build evidence](evidence/closed-stdio-offline-20261112.json) retain the exact
+scope. This does not qualify standard static packages, secureexec, arbitrary
+descriptor populations or complete main-root compatibility.
+
+The remaining privileged-startup and main-root work is described in the
+[unadmitted credential design](PRIVILEGED-EXEC-DESIGN-DRAFT.md) and
+[actual multi-ABI inventory/plan](MAINROOT-A53-INVENTORY-PLAN.md). Neither is
+implemented or admitted by these successful bounded exec tests.

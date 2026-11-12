@@ -1,0 +1,66 @@
+{
+  "native_arm32": true,
+  "native_static": true,
+  "native_vfp_neon_instruction_count": 0,
+  "files": {
+    "native-closed-stdio": {
+      "sha256": "1aa8009954df4a18accc7dcaa3fd69bbc886bd4c58c4eac1c2989eb7cfd355be",
+      "size": 405776,
+      "program_types": [
+        1879048193,
+        1,
+        1,
+        1685382481,
+        1685382482
+      ]
+    },
+    "be6l-closed-stdio-dynamic": {
+      "sha256": "52939beb45af8b4e7b498b1de75028e28baa53d08306e185ca9b78c7d493d6c0",
+      "size": 73288,
+      "program_types": [
+        6,
+        3,
+        1,
+        1,
+        2,
+        1685382480,
+        1685382481,
+        1685382482
+      ]
+    },
+    "be6l-closed-stdio-static-synthetic": {
+      "sha256": "a83975e69e5dd96c29661c476b0edd886d618f43481eab9142fc920d148a6aad",
+      "size": 2096,
+      "program_types": [
+        1,
+        1685382481
+      ]
+    }
+  },
+  "source_sha256": {
+    "native-closed-stdio.c": "2a6a43c5010b7ac30b37b67cc979e44a6c05be9d824268542ac9e5c94ccf934d",
+    "closed-stdio-a64.c": "dd2dce80b153feff8e5cdbb32c00c92480701d5a78e18d94881224a4b9e7eb67",
+    "closed-stdio-wire.h": "d5e95fa5adea4e39ef30a105099fdd5a17b00ba86e616b8d1ec0abd652aa22ec"
+  },
+  "expected_case_count": 16,
+  "close_masks": [
+    1,
+    2,
+    4,
+    7
+  ],
+  "exec_modes": [
+    "execve",
+    "execveat-empty-cloexec"
+  ],
+  "report_pipe_min_fd": 3,
+  "private_fd_alias_scan_limit": 256,
+  "dynamic_fixture_requires_verified_standard_guest_runtime": true,
+  "static_fixture": "synthetic freestanding A64 integer code, no libc/compiler runtime linked",
+  "static_standard_package_abi_qualified": false,
+  "isolated_fixture_only": true,
+  "existing_loader_bytes_unchanged": true,
+  "target_executed": false,
+  "secureexec_covered": false,
+  "standard_a53_package_compatibility_qualified": false
+}

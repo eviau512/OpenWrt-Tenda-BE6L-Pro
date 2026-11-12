@@ -1,0 +1,633 @@
+{
+  "boot_id": "86ba71be-0065-4f57-94e3-bdae2817a5ef",
+  "fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+  "guest_interp_revision": 2,
+  "dispatch_failures_terminal": true,
+  "guest_exe_contract": "BE6L_X_EXECFD_EXE_INTERPFD_V2",
+  "source_stage_receipt_sha256": "415383dbd256a9cc302b76bcd81823f9efca70c03714484569dcf777077a061b",
+  "source_candidate_receipt_sha256": "77d2657067728084fb30c2f4cddc23a87568e2a880184e4c52514695a809e9b7",
+  "source_qualification_receipt_sha256": "cff3bcb8bd5148c5348dcb86d485d2f4d02abd8c5b9a0a972cb6916b916122b7",
+  "source_native_probe_receipt_sha256": "0a89db2a199a0a3379f2691d09bbb8f592540b17fff3d0946e51a2a659e36545",
+  "source_emulator_receipt_sha256": "9f40c116700a08ff54d812419d5195e6afad948d6031f5afe5bf0278d0229a85",
+  "flags": "POFX",
+  "own_rule_name": "be6l-closedstdio-e94dbc3c5af94e5abcbd4004b3426b8d",
+  "own_mount_id": "58",
+  "cases": {
+    "dynamic-execve-close1": {
+      "passed": true,
+      "observations": "expected_mask=1 report_fd=4 guest_flags=-1/0/0 guest_errno=9/0/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 1,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        0,
+        0
+      ],
+      "stdio_errno": [
+        9,
+        0,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execve-close2": {
+      "passed": true,
+      "observations": "expected_mask=2 report_fd=4 guest_flags=0/-1/0 guest_errno=0/9/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 2,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        -1,
+        0
+      ],
+      "stdio_errno": [
+        0,
+        9,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execve-close4": {
+      "passed": true,
+      "observations": "expected_mask=4 report_fd=4 guest_flags=0/0/-1 guest_errno=0/0/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 4,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        0,
+        -1
+      ],
+      "stdio_errno": [
+        0,
+        0,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execve-close7": {
+      "passed": true,
+      "observations": "expected_mask=7 report_fd=4 guest_flags=-1/-1/-1 guest_errno=9/9/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 7,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        -1,
+        -1
+      ],
+      "stdio_errno": [
+        9,
+        9,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execveat-cloexec-close1": {
+      "passed": true,
+      "observations": "expected_mask=1 report_fd=4 guest_flags=-1/0/0 guest_errno=9/0/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 1,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        0,
+        0
+      ],
+      "stdio_errno": [
+        9,
+        0,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execveat-cloexec-close2": {
+      "passed": true,
+      "observations": "expected_mask=2 report_fd=4 guest_flags=0/-1/0 guest_errno=0/9/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 2,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        -1,
+        0
+      ],
+      "stdio_errno": [
+        0,
+        9,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execveat-cloexec-close4": {
+      "passed": true,
+      "observations": "expected_mask=4 report_fd=4 guest_flags=0/0/-1 guest_errno=0/0/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 4,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        0,
+        -1
+      ],
+      "stdio_errno": [
+        0,
+        0,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "dynamic-execveat-cloexec-close7": {
+      "passed": true,
+      "observations": "expected_mask=7 report_fd=4 guest_flags=-1/-1/-1 guest_errno=9/9/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 7,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        -1,
+        -1
+      ],
+      "stdio_errno": [
+        9,
+        9,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execve-close1": {
+      "passed": true,
+      "observations": "expected_mask=1 report_fd=4 guest_flags=-1/0/0 guest_errno=9/0/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 1,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        0,
+        0
+      ],
+      "stdio_errno": [
+        9,
+        0,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execve-close2": {
+      "passed": true,
+      "observations": "expected_mask=2 report_fd=4 guest_flags=0/-1/0 guest_errno=0/9/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 2,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        -1,
+        0
+      ],
+      "stdio_errno": [
+        0,
+        9,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execve-close4": {
+      "passed": true,
+      "observations": "expected_mask=4 report_fd=4 guest_flags=0/0/-1 guest_errno=0/0/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 4,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        0,
+        -1
+      ],
+      "stdio_errno": [
+        0,
+        0,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execve-close7": {
+      "passed": true,
+      "observations": "expected_mask=7 report_fd=4 guest_flags=-1/-1/-1 guest_errno=9/9/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 7,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        -1,
+        -1
+      ],
+      "stdio_errno": [
+        9,
+        9,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execveat-cloexec-close1": {
+      "passed": true,
+      "observations": "expected_mask=1 report_fd=4 guest_flags=-1/0/0 guest_errno=9/0/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 1,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        0,
+        0
+      ],
+      "stdio_errno": [
+        9,
+        0,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execveat-cloexec-close2": {
+      "passed": true,
+      "observations": "expected_mask=2 report_fd=4 guest_flags=0/-1/0 guest_errno=0/9/0 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 2,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        -1,
+        0
+      ],
+      "stdio_errno": [
+        0,
+        9,
+        0
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execveat-cloexec-close4": {
+      "passed": true,
+      "observations": "expected_mask=4 report_fd=4 guest_flags=0/0/-1 guest_errno=0/0/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 4,
+      "report_fd": 4,
+      "stdio_flags": [
+        0,
+        0,
+        -1
+      ],
+      "stdio_errno": [
+        0,
+        0,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    },
+    "synthetic-static-execveat-cloexec-close7": {
+      "passed": true,
+      "observations": "expected_mask=7 report_fd=4 guest_flags=-1/-1/-1 guest_errno=9/9/9 aliases=0/0 private_aux=0/0 exec_errno=0 wait_status=0 parent_fds=3/3 after_write_errno=0/0 signal=0",
+      "expected_closed_mask": 7,
+      "report_fd": 4,
+      "stdio_flags": [
+        -1,
+        -1,
+        -1
+      ],
+      "stdio_errno": [
+        9,
+        9,
+        9
+      ],
+      "program_loader_fd_aliases": [
+        0,
+        0
+      ],
+      "private_aux_entries_flags": [
+        0,
+        0
+      ],
+      "exec_errno": 0,
+      "wait_status": 0,
+      "parent_fd_counts": [
+        3,
+        3
+      ],
+      "after_exit_write_errno": [
+        0,
+        0
+      ],
+      "interrupted_signal": 0,
+      "original_stdio_inodes_preserved": true
+    }
+  },
+  "expected_case_count": 16,
+  "native_exit_code": 0,
+  "native_summary": {
+    "cases": 16,
+    "failures": 0,
+    "cleanup_errors": 0
+  },
+  "all_stdio_cases_and_postconditions_passed": true,
+  "rule_unregistered_and_mount_removed": true,
+  "cleanup_failures": [],
+  "own_fixture_aliases_and_files_removed": true,
+  "host_payloads_unchanged": true,
+  "boot_and_guards_preserved": true,
+  "static_fixture_synthetic": true,
+  "static_standard_package_abi_qualified": false,
+  "error": null,
+  "secureexec_covered": false,
+  "target_executed": true,
+  "flash_operations": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "date": "2026-11-12",
+  "scope": "Sixteen actual closed-stdio cases; dynamic normal runtime plus freestanding synthetic static fixture, not standard static package qualification",
+  "source_receipt_sha256": "24c34c77f78e0ebc868c3d1d9c42056c812d3eaff69cc16c5d15c0fc4665f49a",
+  "owned_guest_proc_and_tmpfs_unmounted": true,
+  "guarded_normal_reboot": {
+    "reboot_requested": true,
+    "reset_observed": true,
+    "capture_seconds": 125,
+    "autoboot_interrupt_sent": false,
+    "flash_operations": false,
+    "expected_boot_id": "86ba71be-0065-4f57-94e3-bdae2817a5ef"
+  },
+  "separate_stock_authentication": {
+    "boot_id": "1e6df649-62fd-4082-ac8f-3999d325eb46",
+    "version": "V16.03.60.67_cn",
+    "kernel": "5.4.55",
+    "arch": "armv7l",
+    "authenticated": true,
+    "source_receipt_sha256": "be91f94ba529c0ba6de30a6de0a0d0b132bda44de3527876e8b670957564b067"
+  }
+}

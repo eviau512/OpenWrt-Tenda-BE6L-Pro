@@ -1,0 +1,179 @@
+{
+  "scope": "Independent streams from unchanged admitted native.cpio and packaged r5; not a combined CPIO, new kernel/Image, loader admission or target measurement",
+  "work": "/root/be6l-mainroot-compression-20261112-r1",
+  "source_recipe_sha256": {
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/usr/Makefile": "d9c08e2f59ce77725afcbb260c9776a5d91be0b8e042780a635bf2e3a1ab31dd",
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/usr/Kconfig": "ceb24f86e07a622a44146d824636ba3d63b9991643502a9f2f9dac218f612fbb",
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/scripts/Makefile.lib": "45c2d436558440f502cf3fa491b38046bd9ff28e973f2fe0b87267da3a1c3977",
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/usr/gen_initramfs.sh": "bd79c089b1d2aae2232b3cc37a945702ccb5351d7dbad99f1c7a02b489b45c74"
+  },
+  "config_sha256": "f37e443e549f7e9ae658547ce6434139178cc2b7d3f5a92bde0e5b38d9d99dce",
+  "actual_saved_gzip_command": "savedcmd_usr/initramfs_inc_data := cat /root/be6l-native-cpio-guest-interp-20261111-r2/native.cpio | gzip -n -f -9 > usr/initramfs_inc_data",
+  "input_cpio": {
+    "path": "/root/be6l-native-cpio-guest-interp-20261111-r2/native.cpio",
+    "bytes": 130342912,
+    "sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472"
+  },
+  "existing_gzip": {
+    "path": "/root/be6l-kernel-build-guest-interp-20261111-r2/build/usr/initramfs_inc_data",
+    "bytes": 50377701,
+    "sha256": "b3502898cba79b8e651002d842c2f251c29c13c04197ceebfa3ece4d753016c8"
+  },
+  "existing_Image": {
+    "path": "/root/be6l-kernel-build-guest-interp-20261111-r2/build/arch/arm64/boot/Image",
+    "bytes": 64356360,
+    "sha256": "f3406d41f29e70b86d2225e2ef3b826b97efb955400d5dc1d900bb172f5a4120",
+    "effective_bytes": 64749568,
+    "headroom_bytes": 262144
+  },
+  "r5_input": {
+    "path": "/root/be6l-emulator-apk-20261106-r5/files/usr/libexec/be6l/qemu-aarch64",
+    "bytes": 7681368,
+    "sha256": "7e094b445e34d353c47b91cddde062ce2e2d344678813da5e22b9993953d720d",
+    "package_sha256": "253fc682636d2d40b1e6c016317704b21452c74cc2540d1bffd32223adfa5928"
+  },
+  "tools": {
+    "gzip": {
+      "path": "/usr/bin/gzip",
+      "sha256": "2ba6fd35db5f0b5561e56b97124a08b067464b795e8e08278367f23dc539d549",
+      "version": "gzip 1.14"
+    },
+    "xz": {
+      "path": "/usr/bin/xz",
+      "sha256": "1f6ca26fd33066c9d5b95e58a0d9e2f5789cb18fd5741518574113b37ea1934d",
+      "version": "xz (XZ Utils) 5.8.3"
+    },
+    "time": {
+      "path": "/usr/bin/time",
+      "sha256": "34ba90f8199989d88f2f02d40ddcee60be27a7f361db9fb7c100578cc8d7bf1e",
+      "version": "time (GNU Time) UNKNOWN"
+    }
+  },
+  "gzip_to_xz_saving_bytes": 13881657,
+  "streams_are_independent": true,
+  "combined_cpio_created": false,
+  "new_kernel_built": false,
+  "new_Image_built": false,
+  "roots_modified": false,
+  "target_decompression_memory_measured": false,
+  "target_decompression_time_measured": false,
+  "future_mainroot_fit_qualified": false,
+  "existing_outer_Image_lzma": {
+    "path": "/root/be6l-final-image-guest-interp-20261111-r2/Image.lzma",
+    "bytes": 55005508,
+    "sha256": "399762fa0eb21aa7660453ebd3da2ecba78e3b1b1f9be863fc6a83cb08120155"
+  },
+  "existing_FIT": {
+    "path": "/root/be6l-final-image-guest-interp-20261111-r2/openwrt-airoha-an7563a64-tenda_be6l-pro-initramfs-kernel.bin",
+    "bytes": 55019528,
+    "sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1"
+  },
+  "full_private_report": "/root/be6l-mainroot-compression-20261112-r1/result.json",
+  "full_private_report_sha256": "1522be7fd8e6bf17c417ba848ee2f04829d1e6781d996c335b1040a6231e476a",
+  "streams": {
+    "native.gz": {
+      "stdin": "/root/be6l-native-cpio-guest-interp-20261111-r2/native.cpio",
+      "argv": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/root/be6l-mainroot-compression-20261112-r1/native.gz.time",
+        "/usr/bin/gzip",
+        "-n",
+        "-f",
+        "-9"
+      ],
+      "bytes": 50377701,
+      "sha256": "b3502898cba79b8e651002d842c2f251c29c13c04197ceebfa3ece4d753016c8",
+      "elapsed_host_seconds": 13.9039283,
+      "host_compressor_max_rss_kib": 1260,
+      "roundtrip_input_bytes": 130342912,
+      "roundtrip_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "roundtrip_verified": true,
+      "matches_existing_embedded_stream": true
+    },
+    "native.xz": {
+      "stdin": "/root/be6l-native-cpio-guest-interp-20261111-r2/native.cpio",
+      "argv": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/root/be6l-mainroot-compression-20261112-r1/native.xz.time",
+        "/usr/bin/xz",
+        "--check=crc32",
+        "--lzma2=dict=1MiB"
+      ],
+      "bytes": 36496044,
+      "sha256": "f54d9c7d1a85955a04f97c02136d7cc88f1f75cc01a781e61b48659b0872030e",
+      "elapsed_host_seconds": 6.5299759,
+      "host_compressor_max_rss_kib": 142512,
+      "roundtrip_input_bytes": 130342912,
+      "roundtrip_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "roundtrip_verified": true
+    },
+    "r5-alone.gz": {
+      "stdin": "/root/be6l-emulator-apk-20261106-r5/files/usr/libexec/be6l/qemu-aarch64",
+      "argv": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/root/be6l-mainroot-compression-20261112-r1/r5-alone.gz.time",
+        "/usr/bin/gzip",
+        "-n",
+        "-f",
+        "-9"
+      ],
+      "bytes": 2107565,
+      "sha256": "93fc97286f9df9552bd0960119f53919004ff0f63a26b146cb5d9ca28df57a81",
+      "elapsed_host_seconds": 0.6249204000000006,
+      "host_compressor_max_rss_kib": 1256,
+      "roundtrip_input_bytes": 7681368,
+      "roundtrip_sha256": "7e094b445e34d353c47b91cddde062ce2e2d344678813da5e22b9993953d720d",
+      "roundtrip_verified": true
+    },
+    "r5-alone.xz": {
+      "stdin": "/root/be6l-emulator-apk-20261106-r5/files/usr/libexec/be6l/qemu-aarch64",
+      "argv": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/root/be6l-mainroot-compression-20261112-r1/r5-alone.xz.time",
+        "/usr/bin/xz",
+        "--check=crc32",
+        "--lzma2=dict=1MiB"
+      ],
+      "bytes": 1507932,
+      "sha256": "5ff2c412f77fd2870e35ee7ba820ada9966a53d9ce3ca84912058481ed8175c6",
+      "elapsed_host_seconds": 0.7247434000000013,
+      "host_compressor_max_rss_kib": 48020,
+      "roundtrip_input_bytes": 7681368,
+      "roundtrip_sha256": "7e094b445e34d353c47b91cddde062ce2e2d344678813da5e22b9993953d720d",
+      "roundtrip_verified": true
+    }
+  },
+  "xz_streams": {
+    "native.xz": {
+      "crc": "CRC32",
+      "dictionary_bytes": 1048576,
+      "block_count": 42,
+      "listing_sha256": "a285167bbf7be196fb8011f93f010f3dac8237ba5bec72693451e7358aa64fab"
+    },
+    "r5-alone.xz": {
+      "crc": "CRC32",
+      "dictionary_bytes": 1048576,
+      "block_count": 3,
+      "listing_sha256": "b0d61a928d11a6f4cd3c9d9ead8b8b2de1e5ae3fae16179da0d32457b3b5370f"
+    }
+  },
+  "required_profile_changes": [
+    "CONFIG_RD_XZ=y selects CONFIG_DECOMPRESS_XZ=y",
+    "CONFIG_INITRAMFS_COMPRESSION_XZ=y replaces CONFIG_INITRAMFS_COMPRESSION_GZIP=y",
+    "CONFIG_XZ_DEC already y; actual olddefconfig delta must be reviewed",
+    "Keep RD_GZIP for existing gzip support; no ARM64 BCJ or outer FIT compression change inferred",
+    "Fresh complete kernel and all matching modules; repeat85 compilation-layout and84 packaged-payload admission",
+    "Existing final Image builder permits only INITRAMFS_SOURCE delta and cannot be reused to hide a compression config change"
+  ],
+  "future_normal_A53_runtime_added_or_measured": false,
+  "service_selection_changed": false,
+  "independent_stream_lengths_summed_as_future_Image": false
+}

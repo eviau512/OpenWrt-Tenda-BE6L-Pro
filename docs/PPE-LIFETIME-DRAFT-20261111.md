@@ -7,6 +7,14 @@ hard closed `lifetime_ready = false` gate and no enabling setter. Routed
 admission stays closed. The original complete NPU lifetime objective remains
 unfinished.
 
+The later [native withdrawal audit](NPU-WITHDRAWAL-AUDIT-20261111.md) narrows
+the provider gap: existing native ring drain and fenced park are real scoped
+contracts, but do not yet prove every wired FOE/output resource drained.
+The [station/WCID ownership audit](WCID-OBJECT-LIFETIME-AUDIT-20261112.md)
+also distinguishes numeric identity retirement from actual CPU pointers and
+explains why an errno or bitmap alone cannot veto mac80211 station teardown.
+These audits do not enable this draft or establish a hardware UAF observation.
+
 X-Wrt revision `5ae8e6912e64682fcad54593467e84c80f170656` supplies the three
 SMAC functions, adapted only from `ppe->common.eth` to the local `ppe->eth`.
 The reference is Linux 6.18.60, reconstructed through 941-04 with the existing

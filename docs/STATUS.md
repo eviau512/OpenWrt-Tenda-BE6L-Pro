@@ -1,6 +1,6 @@
 # Hardware qualification status
 
-Updated 2026-11-11. This distinguishes the last qualified image from offline
+Updated 2026-11-12. This distinguishes the last qualified image from offline
 candidates and does not imply a device remains powered or in that RAM image.
 
 The [V2 revision2 a1ca candidate](EXEC-LOADER-FD-EXPERIMENT.md) passes actual
@@ -10,6 +10,14 @@ setuid remains blocked. InitialV2/r103 is superseded due native-handler fallback
 The [PPE lifetime draft](PPE-LIFETIME-DRAFT-20261111.md) is separate and unadmitted:
 native drain and bounded driver/platform exit remain open. These results do not
 qualify complete standard-package integration or routed NPU offload.
+
+New current-boot runs pass four retained-loader-inode cases and16 closed-stdio
+cases, with owned rules/fixtures/mounts cleaned and separately authenticated
+stock after guarded reboot. The static stdio fixture is synthetic; secureexec
+and main-root compatibility remain open. The [actual main-root inventory](MAINROOT-A53-INVENTORY-PLAN.md)
+records the ARM32/private-A64/normal-A53 closure and early-bootstrap work required
+before a normal package-managed main root. Its XZ stream measurements are not
+a new Image or target boot qualification.
 The [integer-host emulation fallback](ARM64-INSTRUCTION-FALLBACK.md) now builds
 and passes actual standard-ABI static/dynamic FP/NEON, C++ and Go runtime tests,
 including threads, atomic64, TLS and signals. The native control confirms SIGILL4.

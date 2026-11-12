@@ -1,0 +1,52 @@
+{
+  "status": "independent-design-draft-not-admitted",
+  "reviewed_public_head": "c90986aa969d9ed2a9fde3de1f2378c2456f3d93",
+  "kernel": "Linux6.18.55 BE6L V2 revision2",
+  "emulator": "QEMU11.1.3 integer-host aware-r5",
+  "source_sha256": {
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/fs/exec.c": "3a3608fc3428fd0374d6d202eac9df0b656cec681f2fa885eeff91f1fce629d3",
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/fs/binfmt_misc.c": "381a17248d051aa10af6d31d2bbec3aed8a7f6d1635f81d918cba9009b8a34ef",
+    "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/security/commoncap.c": "29b61388bc205bdf27d83d323fb770be514c5e6743bebe4ce6ab0d9fc8549788",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/qemu-source/qemu-11.1.3/linux-user/main.c": "b16ae5386abdb67002a68397f78473ea4c0700d0d38c42b27775d330eb0f1927",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/qemu-source/qemu-11.1.3/linux-user/elfload.c": "29d6a241e3bfe14c2d722d0bba72b98aab5ccd9ac45a8955630a6cb9c26e7ca1",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/qemu-source/qemu-11.1.3/linux-user/syscall.c": "579f1d9f208107d9f86b62a99fd50755eaecee915cf5c3bc4c353eb18f76898c",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/qemu-source/qemu-11.1.3/util/log.c": "c349dc3eea8b198df00591cb6d1cc3a12c11b354b295fe3205d077dd1b76f978",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/glib-2.86.0/glib/glib-init.c": "0adba287807de556d7ddca6983295949508f1892ac157ab30d2610c54937bc7b",
+    "/root/be6l-openwrt/a64-soft-experiment/musl/src/env/__libc_start_main.c": "5e5487e579a3c8f14fcb38bb54f2ede10a74f94130ebb9134dcba8d5f28c0cf4",
+    "/root/be6l-kernel-build-guest-interp-20261111-r2/build/.config": "f37e443e549f7e9ae658547ce6434139178cc2b7d3f5a92bde0e5b38d9d99dce",
+    "/root/be6l-qemu-integer-binfmt-20261106-r5/qemu-build/config-host.h": "3eef55ddd04ec6539545b69fb2bae1519a4d7d207eec171abac8c1486455ae03"
+  },
+  "observations": {
+    "qemu_contract_read_after_environment_options_and_log_setup": true,
+    "static_qemu_nm_glib_init_ctor_address": "0x7c58f4",
+    "static_qemu_init_array_glib_ctor_entry_address": "0x9efaf8",
+    "static_qemu_init_array_contains_glib_ctor": true,
+    "glib_constructor_source_calls_plain_getenv": true,
+    "private_musl_startup_runs_init_array_before_main": true,
+    "private_musl_startup_does_not_remove_qemu_environment": true,
+    "qemu_CONFIG_PLUGIN": false,
+    "qemu_CONFIG_MODULES": false,
+    "kernel_CONFIG_USER_NS": true,
+    "kernel_CONFIG_SECCOMP_FILTER": true,
+    "kernel_CONFIG_SECURITY": false,
+    "kernel_CONFIG_AUDIT": false,
+    "setuid_probe_still_requires_uid65534_euid0_AT_SECURE1": true,
+    "setuid_guest_credential_source_unimplemented": true
+  },
+  "proposed_only": [
+    "kernel-authorized trusted interpreter identity and protocol",
+    "original guest credential file through existing native helpers before commitment",
+    "minimal native environment before libc and constructors",
+    "separate bounded read-only original guest argv/environment handoff",
+    "fixed bootstrap bypassing QEMU environment and CLI option handlers",
+    "private FD/auxv closure plus complete privilege/suppression negative matrix"
+  ],
+  "existing_implementation_changed": false,
+  "candidate_admitted": false,
+  "credentials_implemented": false,
+  "C_plus_X_enabled": false,
+  "emulator_made_setuid": false,
+  "privileged_tests_executed": false,
+  "device_operated": false,
+  "full_standard_a53_package_compatibility_qualified": false
+}

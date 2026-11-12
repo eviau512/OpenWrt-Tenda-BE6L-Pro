@@ -36,6 +36,9 @@ execution cases,11/12 corners,16 native-caller errno cases and eight isolated
 package workloads. Its own default300-second disconnect recovery after explicit
 NPU detach returns to authenticated stock. Setuid, full host-package integration
 and broader recovery remain open.
+Four deterministic retained-loader-inode cases and16 closed-stdio cases also
+pass on new boots, with owned rules/mounts cleaned and authenticated stock
+recovery. The static stdio control is synthetic, not a standard package claim.
 The [X-Wrt lifetime draft](docs/PPE-LIFETIME-DRAFT-20261111.md) now
 includes SMAC, publication order and error retention, but native drain and exit
 protocols remain unfinished; its gate is closed and it is not in that candidate.

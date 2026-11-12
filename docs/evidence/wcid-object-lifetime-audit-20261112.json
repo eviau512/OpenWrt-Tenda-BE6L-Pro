@@ -1,0 +1,370 @@
+{
+  "date": "2026-11-12",
+  "kind": "Read-only follow-up source ownership audit; no code change or hardware experiment",
+  "matched_external_build": "/root/be6l-external-build-guest-interp-20261111-r2",
+  "matched_build_result_sha256": "c9eb6a9fd1c0d6cba3ce857028fae0f7051d7068625c02bc3148fd4173a2663d",
+  "prepared_source": "/root/be6l-external-source-20261106-r1",
+  "files": {
+    "sta_info": {
+      "path_relative_to_matched_build": "backports-7.2/net/mac80211/sta_info.c",
+      "sha256": "81dd30eee67555613b657bcf87d8a6e38410e085e091a664f708e4dedb43c140",
+      "matches_prepared_source": true
+    },
+    "sta_info_h": {
+      "path_relative_to_matched_build": "backports-7.2/net/mac80211/sta_info.h",
+      "sha256": "a7ccccbb3aa2cf667b02213ac337f7793de9f26abb2c1582a471527cac30ca9b",
+      "matches_prepared_source": true
+    },
+    "driver_ops": {
+      "path_relative_to_matched_build": "backports-7.2/net/mac80211/driver-ops.c",
+      "sha256": "443c2283521086a3e00e334d542aec2ed9618f8e66a365b473e1502bee1a32a2",
+      "matches_prepared_source": true
+    },
+    "driver_ops_h": {
+      "path_relative_to_matched_build": "backports-7.2/net/mac80211/driver-ops.h",
+      "sha256": "90275e513c582338eff8a0e4a38ece0a614b1f499debd51ae0fc669d2277f5d5",
+      "matches_prepared_source": true
+    },
+    "mac80211_api": {
+      "path_relative_to_matched_build": "backports-7.2/include/net/mac80211.h",
+      "sha256": "4500fba4f3ed4ce52f2312180b3c12a9a5a4711bb491c04fa8c92c8fe82ea520",
+      "matches_prepared_source": true
+    },
+    "mt7996_main": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mt7996/main.c",
+      "sha256": "d175833ff1533eb420e77b82565930cbda9e1abb38e06bee2a2a3bb7f5270269",
+      "matches_prepared_source": true
+    },
+    "mt7996_h": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mt7996/mt7996.h",
+      "sha256": "4f6a1661d8277dd7252ad11e1d97b08854972f78e9856f138c8d23c843085b33",
+      "matches_prepared_source": true
+    },
+    "mt7996_init": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mt7996/init.c",
+      "sha256": "b4bc0441252ce4bd14046f6d3fea38ad501b296e92854cc11dd1ab05143d6dde",
+      "matches_prepared_source": true
+    },
+    "mt7996_mac": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mt7996/mac.c",
+      "sha256": "45e9cfcae4fd707f6097621fb836528a219b02ce08e44bca59ce350b11295395",
+      "matches_prepared_source": true
+    },
+    "mt76_h": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mt76.h",
+      "sha256": "e00a7864d9f28a37deaeee2915e2c5d7968f46b1413a3a9bc64fd431f51c736c",
+      "matches_prepared_source": true
+    },
+    "mt76_mac": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/mac80211.c",
+      "sha256": "0646b55c7d330b793e216878ef1efe733ecc840f912e6a39b16d6fc0ec5cce61",
+      "matches_prepared_source": true
+    },
+    "mt76_tx": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/tx.c",
+      "sha256": "030ce55e0b62478bef1dc97ac164327cb3c2b247e263e972ad115eb2f6f20356",
+      "matches_prepared_source": true
+    },
+    "mt76_dma": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/dma.c",
+      "sha256": "79551f6e557330bbbdece857286ac4978e027ebf3e6d3ad03e5d530f95cb2242",
+      "matches_prepared_source": true
+    },
+    "mt76_aggr": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/agg-rx.c",
+      "sha256": "f40f3b77ad8c4a5e99a4865b394718e64668842d5a047b4d9b5061fae9aed7c4",
+      "matches_prepared_source": true
+    },
+    "mt76_npu": {
+      "path_relative_to_matched_build": "mt76-2026.10.08~467ae2e3/npu.c",
+      "sha256": "c526fc278e834b17abca8b7e43502c16958e7a31c690ad6388a782e2a48b2371",
+      "matches_prepared_source": true
+    }
+  },
+  "definitions": {
+    "A1": {
+      "file": "sta_info",
+      "symbol": "__sta_info_alloc",
+      "start_line": 659,
+      "end_line": 828
+    },
+    "A2": {
+      "file": "sta_info",
+      "symbol": "sta_info_free",
+      "start_line": 494,
+      "end_line": 539
+    },
+    "A3": {
+      "file": "sta_info",
+      "symbol": "cleanup_single_sta",
+      "start_line": 187,
+      "end_line": 194
+    },
+    "S1": {
+      "file": "sta_info",
+      "symbol": "_sta_info_move_state",
+      "start_line": 1427,
+      "end_line": 1567
+    },
+    "S2": {
+      "file": "sta_info",
+      "symbol": "__sta_info_destroy_part1",
+      "start_line": 1342,
+      "end_line": 1425
+    },
+    "S3": {
+      "file": "sta_info",
+      "symbol": "__sta_info_destroy_part2",
+      "start_line": 1590,
+      "end_line": 1663
+    },
+    "S4": {
+      "file": "sta_info",
+      "symbol": "sta_info_insert_drv_state",
+      "start_line": 884,
+      "end_line": 924
+    },
+    "S5": {
+      "file": "sta_info",
+      "symbol": "sta_info_insert_finish",
+      "start_line": 952,
+      "end_line": 1065
+    },
+    "L1": {
+      "file": "sta_info",
+      "symbol": "ieee80211_sta_remove_link",
+      "start_line": 3575,
+      "end_line": 3593
+    },
+    "L2": {
+      "file": "sta_info",
+      "symbol": "sta_remove_link",
+      "start_line": 449,
+      "end_line": 481
+    },
+    "O1": {
+      "file": "driver_ops_h",
+      "symbol": "drv_sta_remove",
+      "start_line": 477,
+      "end_line": 493
+    },
+    "O2": {
+      "file": "driver_ops_h",
+      "symbol": "drv_sta_pre_rcu_remove",
+      "start_line": 571,
+      "end_line": 587
+    },
+    "O3": {
+      "file": "driver_ops_h",
+      "symbol": "drv_sync_rx_queues",
+      "start_line": 41,
+      "end_line": 52
+    },
+    "M1": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_remove_link",
+      "start_line": 1857,
+      "end_line": 1929
+    },
+    "M2": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_remove_links",
+      "start_line": 1962,
+      "end_line": 1970
+    },
+    "M3": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_remove",
+      "start_line": 2528,
+      "end_line": 2541
+    },
+    "M4": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_sta_state",
+      "start_line": 2586,
+      "end_line": 2646
+    },
+    "M5": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_sta_pre_rcu_remove",
+      "start_line": 2562,
+      "end_line": 2583
+    },
+    "M6": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_init_link",
+      "start_line": 1777,
+      "end_line": 1855
+    },
+    "M7": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_add_links",
+      "start_line": 1973,
+      "end_line": 2037
+    },
+    "M8": {
+      "file": "mt7996_main",
+      "symbol": "mt7996_mac_sta_change_links",
+      "start_line": 2496,
+      "end_line": 2525
+    },
+    "C1": {
+      "file": "mt76_h",
+      "symbol": "wcid_to_sta",
+      "start_line": 1457,
+      "end_line": 1468
+    },
+    "C2": {
+      "file": "mt76_mac",
+      "symbol": "mt76_wcid_cleanup",
+      "start_line": 1782,
+      "end_line": 1826
+    },
+    "T1": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_mac_tx_free",
+      "start_line": 1478,
+      "end_line": 1607
+    },
+    "T2": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_txwi_free",
+      "start_line": 1443,
+      "end_line": 1475
+    },
+    "T3": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_mac_add_txs",
+      "start_line": 1761,
+      "end_line": 1791
+    },
+    "T4": {
+      "file": "mt76_tx",
+      "symbol": "__mt76_tx_complete_skb",
+      "start_line": 260,
+      "end_line": 329
+    },
+    "T5": {
+      "file": "mt76_tx",
+      "symbol": "mt76_tx_status_skb_get",
+      "start_line": 176,
+      "end_line": 214
+    },
+    "T6": {
+      "file": "mt76_tx",
+      "symbol": "__mt76_tx_status_skb_done",
+      "start_line": 89,
+      "end_line": 111
+    },
+    "R1": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_rx_get_wcid",
+      "start_line": 114,
+      "end_line": 154
+    },
+    "R2": {
+      "file": "mt76_dma",
+      "symbol": "mt76_dma_rx_poll",
+      "start_line": 1204,
+      "end_line": 1226
+    },
+    "R3": {
+      "file": "mt76_mac",
+      "symbol": "mt76_rx_release_burst",
+      "start_line": 942,
+      "end_line": 963
+    },
+    "R4": {
+      "file": "mt76_mac",
+      "symbol": "mt76_rx_release_amsdu",
+      "start_line": 898,
+      "end_line": 940
+    },
+    "R5": {
+      "file": "mt76_mac",
+      "symbol": "mt76_rx_convert",
+      "start_line": 1290,
+      "end_line": 1344
+    },
+    "R6": {
+      "file": "mt76_aggr",
+      "symbol": "mt76_rx_aggr_shutdown",
+      "start_line": 268,
+      "end_line": 290
+    },
+    "R7": {
+      "file": "mt76_aggr",
+      "symbol": "mt76_rx_aggr_stop",
+      "start_line": 292,
+      "end_line": 302
+    },
+    "W1": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_mac_sta_rc_work",
+      "start_line": 3229,
+      "end_line": 3278
+    },
+    "W2": {
+      "file": "mt7996_mac",
+      "symbol": "mt7996_mac_sta_poll",
+      "start_line": 173,
+      "end_line": 289
+    },
+    "N1": {
+      "file": "mt76_npu",
+      "symbol": "mt76_npu_flush_station",
+      "start_line": 138,
+      "end_line": 152
+    }
+  },
+  "source_checks": {
+    "matched_backports_source_used": true,
+    "all_15_files_match_prepared_source": true,
+    "mac80211_owns_one_sta_and_driver_private_allocation": true,
+    "mt7996_sta_data_size": true,
+    "downward_errors_only_warn": true,
+    "final_remove_error_only_warn": true,
+    "final_kfree_sta": true,
+    "mt7996_sync_rx_queues_callback_absent": true,
+    "rx_status_has_real_wcid_pointer": true,
+    "tx_cb_uses_numeric_wcid": true
+  },
+  "return_boundaries": [
+    "mt76_npu_flush_station void discards PPE errno",
+    "station_set and PN cleanup errno ignored in driver removal",
+    "remove_link/remove_links/mac_sta_remove void callers and add rollback",
+    "sta_pre_rcu_remove void cannot retain mac80211 ownership",
+    "sta_state down errno warns and state advances",
+    "final NONE-to-NOTEXIST errno warns then cleanup/free",
+    "sta insertion unwind warns then frees",
+    "ieee80211_sta_remove_link ignores change_sta_links errno then removes link"
+  ],
+  "hardware_reference_classification": {
+    "drv_priv_dma_pointer_found": false,
+    "ppe_and_native_reference": "Numeric WCID/band plus copied MAC/policy/replay cookie and independently owned buffers; not Linux sta/WCID pointers",
+    "late_tx_completion": "Index relookup; NULL avoids sta dereference while token/SKB completion proceeds",
+    "generation_caveat": "Host-only generation cannot distinguish old index-only events after premature index reuse"
+  },
+  "conditional_cpu_pointer_gap": {
+    "path": "rx_amsdu[q].head -> skb->cb.mt76_rx_status.wcid -> later mt76_rx_convert/check_sta",
+    "cross_poll_storage_present_in_source": true,
+    "sync_rx_queues_callback_absent": true,
+    "native_source_pn_hdr_trans_amsdu_special_case_clears_flags": true,
+    "live_native_reachability_or_uaf_reproduced": false,
+    "required_before_claim": "Purge/revalidate raw-pointer caches across station removal, or prove branch unreachable for every supported packet path"
+  },
+  "retired_minimum": [
+    "Preallocated driver-owned WCID/band lease and provider/device epoch, independent of sta drv_priv",
+    "Only needed copied identity, opaque replay-domain/cookie IDs and failure/drain state",
+    "References to independently allocated FOE/SMAC/destination owners and still-owned token/DMA backing",
+    "No sta/msta/msta_link/ieee80211_key_conf pointer after callback return",
+    "Publish no fake mt76_wcid tombstone into normal sta lookup; complete CPU cache cancellation separately",
+    "Release numeric lease only after a covering physical provider fence/reset; source bitmap alone is not that fence"
+  ],
+  "xwrt_94104_complete_port": false,
+  "bitmap_only_quarantine_sufficient": false,
+  "errno_can_veto_mac80211_free": false,
+  "hardware_withdrawal_qualified": false,
+  "target_executed": false,
+  "source_mutated": false
+}
