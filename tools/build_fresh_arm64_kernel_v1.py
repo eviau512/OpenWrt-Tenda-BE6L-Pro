@@ -20,6 +20,80 @@ TOOLCHAIN = 'arm64-source/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.4.0_mu
 CONFIG_SHA = '6da2430a71f780d28e554810936df142a4427df22f8e31fe07f80e581a36e215'
 DRIVER_SHA = 'de1f3299891eef4d987a4e9222eedc535ead18bf0d100c996eea2c0f8d5bb2f1'
 EPOCH = 1792420077
+INITRAMFS_PROFILES = {'gzip': 'be6l-initramfs-gzip-v1', 'xz': 'be6l-initramfs-xz-v1'}
+XZ_CONFIG_UPDATES = {'CONFIG_RD_XZ': 'y', 'CONFIG_DECOMPRESS_XZ': 'y',
+                     'CONFIG_INITRAMFS_COMPRESSION_GZIP': 'n', 'CONFIG_INITRAMFS_COMPRESSION_XZ': 'y'}
+
+
+def compression_fields(compression):
+    return dict(initramfs_compression=compression,
+                initramfs_compression_profile=INITRAMFS_PROFILES[compression])
+
+
+def receipt_compression(receipt):
+    # Historical receipts precede this field pair and only admitted gzip.
+    fields = ('initramfs_compression', 'initramfs_compression_profile')
+    if not any(key in receipt for key in fields):
+        return 'gzip'
+    compression = receipt.get(fields[0])
+    if compression not in INITRAMFS_PROFILES or receipt.get(fields[1]) != INITRAMFS_PROFILES[compression]:
+        raise ValueError('Missing or unsupported explicit initramfs compression profile')
+    return compression
+
+
+def set_config_values(text, updates):
+    for key, value in updates.items():
+        pattern = rf'^(?:{re.escape(key)}=.*|# {re.escape(key)} is not set)$'
+        replacement = key + '=' + value if value != 'n' else '# ' + key + ' is not set'
+        if len(re.findall(pattern, text, re.M)) > 1:
+            raise ValueError('Duplicate configuration symbol: ' + key)
+        text, count = re.subn(pattern, replacement, text, flags=re.M)
+        if not count:
+            text += '\n' + replacement + '\n'
+    return text
+
+
+def admit_compression_config(values, compression):
+    active = {key for key, value in values.items() if key.startswith('CONFIG_INITRAMFS_COMPRESSION_') and value == 'y'}
+    if active != {'CONFIG_INITRAMFS_COMPRESSION_' + compression.upper()}:
+        raise ValueError('Kernel compression choice differs from the explicit profile')
+    required = {'CONFIG_BLK_DEV_INITRD': 'y', 'CONFIG_RD_GZIP': 'y', 'CONFIG_DECOMPRESS_GZIP': 'y'}
+    if compression == 'xz':
+        required.update(XZ_CONFIG_UPDATES, CONFIG_XZ_DEC='y')
+    if any(values.get(key) != value for key, value in required.items()):
+        raise ValueError('Required initramfs decoder/profile configuration differs')
+
+
+def admit_build_config(before, after, integer_binfmt=False, compression='gzip'):
+    delta = {key: dict(before=before.get(key), after=after.get(key))
+             for key in before.keys() | after.keys() if before.get(key) != after.get(key)}
+    expected = {'CONFIG_INITRAMFS_SOURCE': dict(before=before.get('CONFIG_INITRAMFS_SOURCE'), after=after.get('CONFIG_INITRAMFS_SOURCE'))}
+    if integer_binfmt:
+        expected['CONFIG_BINFMT_MISC'] = dict(before='n', after='y')
+    if compression == 'xz':
+        for key, value in XZ_CONFIG_UPDATES.items():
+            expected[key] = dict(before=before.get(key), after=value)
+    if delta != expected:
+        raise ValueError('Unexpected configuration drift; do not build or admit')
+    admit_compression_config(after, compression)
+    return delta
+
+
+def require_raw_cpio(path):
+    if path.suffix != '.cpio':
+        raise ValueError('Only an explicit raw .cpio source is admitted; precompressed sources bypass the kernel recipe')
+    with path.open('rb') as stream:
+        if stream.read(6) != b'070701':
+            raise ValueError('Expected raw newc CPIO bytes')
+
+
+def recipe_hashes(kernel, compression):
+    makefile = (kernel / 'usr/Makefile').read_text()
+    library = (kernel / 'scripts/Makefile.lib').read_text()
+    if compression == 'xz' and (not re.search(r'^compress-\$\(CONFIG_INITRAMFS_COMPRESSION_XZ\)\s*:= xzmisc$', makefile, re.M) or
+            '$(XZ) --check=crc32 --lzma2=dict=1MiB > $@' not in library):
+        raise ValueError('Reviewed XZ initramfs recipe changed')
+    return {name: sha(kernel / name) for name in ('usr/Makefile', 'scripts/Makefile.lib')}
 
 
 def sha(path):
@@ -58,9 +132,14 @@ def main():
     parser.add_argument('--guest-exe-file', action='store_true',
                         help='Explicitly admit the private built-in binfmt X source experiment')
     parser.add_argument('--guest-interp-fd', action='store_true', help='Require the explicit V2 loader-inode/fd handoff profile')
+    parser.add_argument('--initramfs-xz', action='store_true',
+                        help='Opt into the reviewed CRC32/LZMA2-1MiB initramfs profile; requires the complete V2 revision2 chain')
     args = parser.parse_args()
     if args.guest_interp_fd and not args.guest_exe_file:
         parser.error('--guest-interp-fd requires --guest-exe-file')
+    if args.initramfs_xz and not (args.integer_binfmt and args.guest_exe_file and args.guest_interp_fd):
+        parser.error('--initramfs-xz requires --integer-binfmt --guest-exe-file --guest-interp-fd')
+    compression = 'xz' if args.initramfs_xz else 'gzip'
     work = args.work.resolve()
     if work.parent != Path('/root') or not work.name.startswith('be6l-kernel-build-'):
         parser.error('Use a fresh /root/be6l-kernel-build-* directory')
@@ -91,8 +170,10 @@ def main():
         raise ValueError('Wrong qualified kernel configuration')
     evidence = json.loads((BASE / 'docs/evidence/continuation-20261105.json').read_text())
     cpio_sha = evidence['root_archive_measurement']['roots']['native']['cpio_sha256']
+    require_raw_cpio(args.cpio)
     if sha(args.cpio) != cpio_sha:
         raise ValueError('RAM archive differs from reviewed component evidence')
+    recipes = recipe_hashes(kernel, compression)
     work.mkdir(mode=0o700)
     build = work / 'build'
     build.mkdir()
@@ -104,6 +185,8 @@ def main():
         if changed.count('# CONFIG_BINFMT_MISC is not set') != 1:
             raise ValueError('Unexpected baseline binfmt configuration')
         changed = changed.replace('# CONFIG_BINFMT_MISC is not set', 'CONFIG_BINFMT_MISC=y')
+    if args.initramfs_xz:
+        changed = set_config_values(changed, XZ_CONFIG_UPDATES)
     (build / '.config').write_text(changed)
     toolchain = args.bootstrap / TOOLCHAIN
     compiler_prefix = str(toolchain / 'bin/aarch64-openwrt-linux-musl-')
@@ -125,6 +208,8 @@ def main():
         PKG_CONFIG_LIBDIR=str(args.host_prefix / 'usr/lib/x86_64-linux-gnu/pkgconfig'),
         BISON_PKGDATADIR=str(args.host_prefix / 'usr/share/bison'),
         M4=str(args.host_prefix / 'usr/bin/m4'))
+    for key in ('GZIP', 'XZ_DEFAULTS', 'XZ_OPT'):
+        env.pop(key, None)
     make = [str(args.host_prefix / 'usr/bin/make'), '-C', str(kernel), 'O=' + str(build),
         'ARCH=arm64', 'CROSS_COMPILE=' + compiler_prefix,
         'HOSTCC=' + str(wrappers['hostcc']), 'HOSTCXX=' + str(wrappers['hostcxx']),
@@ -141,13 +226,7 @@ def main():
     delta = {key: dict(before=values.get(key), after=actual.get(key))
              for key in values.keys() | actual.keys() if values.get(key) != actual.get(key)}
     (work / 'config-delta.json').write_text(json.dumps(delta, indent=2) + '\n')
-    allowed = {'CONFIG_INITRAMFS_SOURCE'}
-    if args.integer_binfmt:
-        allowed.add('CONFIG_BINFMT_MISC')
-        if delta.get('CONFIG_BINFMT_MISC') != dict(before='n', after='y'):
-            raise ValueError('Requested built-in binfmt configuration differs')
-    if set(delta) != allowed:
-        raise ValueError('Unexpected configuration drift; do not build or admit')
+    admit_build_config(values, actual, args.integer_binfmt, compression)
     print('FRESH_CONFIGURATION_ADMITTED', json.dumps(delta), flush=True)
     run('compile', make + ['-j4', 'vmlinux', 'modules'])
     vmlinux = build / 'vmlinux'
@@ -161,6 +240,7 @@ def main():
     report = dict(kernel_release=release, baseline_config_sha256=CONFIG_SHA,
         effective_config_sha256=sha(build / '.config'), configuration_delta=delta,
         cpio_sha256=cpio_sha, source_preparation_receipt_sha256=sha(args.prepared / 'result.json'),
+        **compression_fields(compression), initramfs_recipe_sha256=recipes,
         driver_source_sha256=DRIVER_SHA, compiler_sha256=sha(Path(compiler_prefix + 'gcc')),
         vmlinux_sha256=sha(vmlinux), module_symvers_sha256=sha(build / 'Module.symvers'),
         in_tree_module_count=len(modules), in_tree_module_sha256=modules,

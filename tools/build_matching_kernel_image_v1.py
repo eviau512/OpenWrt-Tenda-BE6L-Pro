@@ -16,7 +16,8 @@ import os
 import shutil
 import struct
 import subprocess
-from build_fresh_arm64_kernel_v1 import config_values, sha, TOOLCHAIN, EPOCH
+from build_fresh_arm64_kernel_v1 import (config_values, sha, TOOLCHAIN, EPOCH,
+    receipt_compression, admit_compression_config, recipe_hashes, require_raw_cpio)
 from package_native_netifd_v3 import root_digest
 from prepare_ramboot import tree, text, image
 from verify_embedded_compat_cpio import verify
@@ -42,12 +43,19 @@ def main():
     layout = json.loads((args.composition / 'module-layout.json').read_text())
     root = args.composition / 'root'
     cpio = args.archive / 'native.cpio'
+    require_raw_cpio(cpio)
+    compression = receipt_compression(prior)
+    if receipt_compression(component) != compression:
+        raise ValueError('Kernel and signed package initramfs profiles differ')
+    admit_compression_config(config_values((build / '.config').read_text()), compression)
     if not prior['full_kernel_built'] or not component['matching_root_composed']:
         raise ValueError('Incomplete source/build/package admission')
     if component['source_kernel_build_receipt_sha256'] != sha(prior_path):
         raise ValueError('Package root is for another kernel build')
     if args.previous_image:
         previous = json.loads((args.previous_image / 'result.json').read_text())
+        if receipt_compression(previous) != compression:
+            raise ValueError('Previous Image used another initramfs profile')
         if sha(build / '.config') != previous['kernel_config_sha256'] or sha(build / 'arch/arm64/boot/Image') != previous['kernel_sha256']:
             raise ValueError('Owned build changed since the previous Image')
     elif sha(build / '.config') != prior['effective_config_sha256'] or sha(build / 'vmlinux') != prior['vmlinux_sha256']:
@@ -62,6 +70,8 @@ def main():
     integer_binfmt = prior.get('integer_binfmt_builtin', False)
     guest_exe = bool(prior.get('guest_exe_file'))
     guest_interp = bool(prior.get('guest_interp_fd'))
+    if compression == 'xz' and not (integer_binfmt and guest_exe and guest_interp):
+        raise ValueError('XZ requires the complete V2 binfmt/module profile')
     if guest_interp and (prior.get('guest_interp_revision') != 2 or not prior.get('dispatch_failures_terminal') or
                          component.get('guest_interp_revision') != 2 or not component.get('dispatch_failures_terminal')):
         raise ValueError('Superseded V2 dispatch/root cannot be admitted in an Image')
@@ -69,6 +79,10 @@ def main():
         prior.get('guest_exe_contract') != component.get('guest_exe_contract') or
         guest_interp != bool(component.get('guest_interp_fd'))):
         raise ValueError('Kernel/root private executable-retention contracts differ')
+    kernel = args.prepared / 'kernel-source/linux-6.18.55'
+    recipes = recipe_hashes(kernel, compression)
+    if compression == 'xz' and any(receipt.get('initramfs_recipe_sha256') != recipes for receipt in (prior, component)):
+        raise ValueError('Explicit XZ recipe differs from compiled/signed inputs')
     private_elf = []
     if integer_binfmt:
         if (not component.get('integer_binfmt_builtin') or
@@ -109,7 +123,6 @@ def main():
     (build / '.config').write_text(old.replace('CONFIG_INITRAMFS_SOURCE=' + values['CONFIG_INITRAMFS_SOURCE'],
         'CONFIG_INITRAMFS_SOURCE="' + str(cpio.resolve()) + '"'))
     sdk = args.prepared / 'openwrt'
-    kernel = args.prepared / 'kernel-source/linux-6.18.55'
     cross = str(args.bootstrap / TOOLCHAIN / 'bin/aarch64-openwrt-linux-musl-')
     env = dict(os.environ, PATH=str(args.dtc.parent) + ':' + str(args.host_prefix / 'usr/bin') + ':/usr/bin:/bin',
         LD_LIBRARY_PATH=str(args.host_prefix / 'usr/lib/x86_64-linux-gnu'),
@@ -117,6 +130,8 @@ def main():
         KBUILD_BUILD_USER='builder', KBUILD_BUILD_HOST='buildhost', KBUILD_BUILD_VERSION='1',
         KBUILD_BUILD_TIMESTAMP=datetime.fromtimestamp(EPOCH, timezone.utc).strftime('%a %b %d %H:%M:%S UTC %Y'),
         BISON_PKGDATADIR=str(args.host_prefix / 'usr/share/bison'), M4=str(args.host_prefix / 'usr/bin/m4'))
+    for key in ('GZIP', 'XZ_DEFAULTS', 'XZ_OPT'):
+        env.pop(key, None)
     make = [str(args.host_prefix / 'usr/bin/make'), '-C', str(kernel), 'O=' + str(build),
         'ARCH=arm64', 'CROSS_COMPILE=' + cross, 'HOSTCC=' + str(args.kernel_build / 'hostcc'),
         'HOSTCXX=' + str(args.kernel_build / 'hostcxx'),
@@ -134,6 +149,7 @@ def main():
              for key in values.keys() | actual.keys() if values.get(key) != actual.get(key)}
     if set(delta) != {'CONFIG_INITRAMFS_SOURCE'}:
         raise ValueError('Unexpected final-image configuration change')
+    admit_compression_config(actual, compression)
     run('image', make + ['-j4', 'Image'])
     data = (build / 'arch/arm64/boot/Image').read_bytes()
     if data[0x38:0x3c] != b'ARMd':
@@ -141,7 +157,7 @@ def main():
     _, effective, _ = struct.unpack_from('<QQQ', data, 8)
     if not effective >= len(data) or not 0x80200000 + effective <= 0x84000000:
         raise ValueError('Effective Image overlaps the unchanged NPU reservation')
-    embedded = verify(build, data, cpio)
+    embedded = verify(build, data, cpio, prior)
     if before_modules != {p.relative_to(build).as_posix(): sha(p) for p in build.rglob('*.ko')}:
         raise ValueError('Module objects changed during final image build')
     if sha(build / 'Module.symvers') != prior['module_symvers_sha256']:
@@ -184,6 +200,7 @@ def main():
         vmlinux_sha256=sha(build / 'vmlinux'),
         kernel_headroom_bytes=0x84000000 - 0x80200000 - effective,
         kernel_config_sha256=sha(build / '.config'), configuration_delta=delta,
+        initramfs_recipe_sha256=recipes,
         external_cpio_sha256=sha(cpio), **embedded,
         composition_receipt_sha256=sha(args.composition / 'result.json'),
         root_records_sha256=root_pin, installed_packages=component['installed_packages'],

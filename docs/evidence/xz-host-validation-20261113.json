@@ -1,0 +1,587 @@
+{
+  "date": "2026-11-13",
+  "scope": "Host-only actual decoder, profile/config gates and independent admission review; not target peak memory or full A53 compatibility",
+  "profile_gates": {
+    "actual-existing-gzip-object-Image-CPIO": {
+      "passed": true,
+      "rejected": false
+    },
+    "actual-measured-XZ-stream-all-blocks": {
+      "passed": true,
+      "rejected": false
+    },
+    "gzip-unit-positive": {
+      "passed": true,
+      "rejected": false
+    },
+    "gzip-truncated": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated, trailing or multiple initramfs streams"
+    },
+    "gzip-zero-tail": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated, trailing or multiple initramfs streams"
+    },
+    "gzip-junk-tail": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated, trailing or multiple initramfs streams"
+    },
+    "gzip-multiple-streams": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated, trailing or multiple initramfs streams"
+    },
+    "gzip-wrong-CPIO": {
+      "passed": true,
+      "rejected": true,
+      "error": "Embedded initramfs differs from the audited external CPIO"
+    },
+    "gzip-oversized-output": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated, trailing or multiple initramfs streams"
+    },
+    "gzip-wrong-receipt-codec": {
+      "passed": true,
+      "rejected": true,
+      "error": "Only XZ CRC32 stream flags are admitted"
+    },
+    "xz-unit-positive": {
+      "passed": true,
+      "rejected": false
+    },
+    "xz-truncated": {
+      "passed": true,
+      "rejected": true,
+      "error": "Truncated or trailing XZ bytes"
+    },
+    "xz-zero-tail": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ footer or stream flags differ"
+    },
+    "xz-junk-tail": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ footer or stream flags differ"
+    },
+    "xz-multiple-streams": {
+      "passed": true,
+      "rejected": true,
+      "error": "Extra XZ blocks, bytes or concatenated streams"
+    },
+    "xz-wrong-CPIO": {
+      "passed": true,
+      "rejected": true,
+      "error": "Embedded initramfs differs from the audited external CPIO"
+    },
+    "xz-oversized-output": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ index differs from external CPIO size"
+    },
+    "xz-wrong-receipt-codec": {
+      "passed": true,
+      "rejected": true,
+      "error": "Corrupt compressed initramfs"
+    },
+    "gzip-bad-data-CRC": {
+      "passed": true,
+      "rejected": true,
+      "error": "Corrupt compressed initramfs"
+    },
+    "xz-bad-header-CRC": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ metadata CRC32 differs"
+    },
+    "xz-bad-footer-CRC": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ metadata CRC32 differs"
+    },
+    "xz-bad-block-data-CRC": {
+      "passed": true,
+      "rejected": true,
+      "error": "Corrupt compressed initramfs"
+    },
+    "xz-reject-CRC64": {
+      "passed": true,
+      "rejected": true,
+      "error": "Only XZ CRC32 stream flags are admitted"
+    },
+    "xz-reject-2MiB-dictionary": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ dictionary differs from the reviewed1MiB recipe"
+    },
+    "xz-reject-extra-filter": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unsupported XZ filters or reserved block flags"
+    },
+    "xz-reject-noncanonical-VLI": {
+      "passed": true,
+      "rejected": true,
+      "error": "Non-canonical XZ variable-length integer"
+    },
+    "xz-reject-oversized-VLI": {
+      "passed": true,
+      "rejected": true,
+      "error": "Oversized XZ variable-length integer"
+    },
+    "xz-reject-forged-Index-excessive-block-count": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ exceeds the explicit host admission block count bound"
+    },
+    "xz-reject-forged-Index-empty-block": {
+      "passed": true,
+      "rejected": true,
+      "error": "Empty XZ blocks are outside the admitted host profile"
+    },
+    "reject-host-admission-oversized-CPIO": {
+      "passed": true,
+      "rejected": true,
+      "error": "External CPIO exceeds the explicit host admission size bound"
+    },
+    "xz-reject-second-block-dictionary": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ dictionary differs from the reviewed1MiB recipe"
+    },
+    "legacy-gzip-config": {
+      "passed": true,
+      "rejected": false
+    },
+    "explicit-xz-config": {
+      "passed": true,
+      "rejected": false
+    },
+    "reject-missing-CONFIG_RD_XZ": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected configuration drift; do not build or admit"
+    },
+    "reject-missing-CONFIG_DECOMPRESS_XZ": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected configuration drift; do not build or admit"
+    },
+    "reject-missing-CONFIG_INITRAMFS_COMPRESSION_GZIP": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected configuration drift; do not build or admit"
+    },
+    "reject-missing-CONFIG_INITRAMFS_COMPRESSION_XZ": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected configuration drift; do not build or admit"
+    },
+    "reject-unrelated-config-drift": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected configuration drift; do not build or admit"
+    },
+    "reject-xz-with-gzip-receipt": {
+      "passed": true,
+      "rejected": true,
+      "error": "Kernel compression choice differs from the explicit profile"
+    },
+    "reject-gzip-with-xz-receipt": {
+      "passed": true,
+      "rejected": true,
+      "error": "Kernel compression choice differs from the explicit profile"
+    },
+    "legacy-missing-fields-remains-gzip": {
+      "passed": true,
+      "rejected": false
+    },
+    "reject-half-receipt": {
+      "passed": true,
+      "rejected": true,
+      "error": "Missing or unsupported explicit initramfs compression profile"
+    },
+    "reject-unknown-profile": {
+      "passed": true,
+      "rejected": true,
+      "error": "Missing or unsupported explicit initramfs compression profile"
+    },
+    "legacy-kernel-remains-r104": {
+      "passed": true,
+      "rejected": false
+    },
+    "xz-kernel-is-r105": {
+      "passed": true,
+      "rejected": false
+    },
+    "reject-xz-incomplete-V2": {
+      "passed": true,
+      "rejected": true,
+      "error": "XZ requires the complete V2 kernel/package profile"
+    },
+    "real-empty-source-preinit-no-phantom-choice": {
+      "passed": true,
+      "rejected": false
+    },
+    "actual-OpenWrt-baseline-ABI": {
+      "passed": true,
+      "rejected": false
+    },
+    "actual-post-preinit-XZ-preserves-legitimate-ABI": {
+      "passed": true,
+      "rejected": false
+    },
+    "reject-phantom-preinit-choice": {
+      "passed": true,
+      "rejected": true,
+      "error": "Unexpected pre-initramfs XZ ABI baseline"
+    },
+    "actual-source-XZ-recipe": {
+      "passed": true,
+      "rejected": false
+    },
+    "raw-cpio-input": {
+      "passed": true,
+      "rejected": false
+    },
+    "reject-precompressed-source-name": {
+      "passed": true,
+      "rejected": true,
+      "error": "Only an explicit raw .cpio source is admitted; precompressed sources bypass the kernel recipe"
+    },
+    "reject-precompressed-source-bytes": {
+      "passed": true,
+      "rejected": true,
+      "error": "Expected raw newc CPIO bytes"
+    }
+  },
+  "independent_admission_review": {
+    "actual-42-block-xz": {
+      "passed": true,
+      "bytes": 130342912,
+      "sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "metadata": {
+        "xz_block_count": 42,
+        "xz_dictionary_bytes": 1048576,
+        "xz_filters": [
+          "LZMA2"
+        ],
+        "embedded_cpio_check": "CRC32",
+        "host_admission_max_xz_blocks": 4096,
+        "host_admission_max_cpio_bytes": 536870912
+      }
+    },
+    "first-block-dict-2m": {
+      "passed": true,
+      "rejection": "XZ dictionary differs from the reviewed1MiB recipe"
+    },
+    "concatenated-xz": {
+      "passed": true,
+      "rejection": "Extra XZ blocks, bytes or concatenated streams"
+    },
+    "xz-trailing-byte": {
+      "passed": true,
+      "rejection": "Truncated or trailing XZ bytes"
+    },
+    "xz-trailing-zero-word": {
+      "passed": true,
+      "rejection": "XZ footer or stream flags differ"
+    },
+    "xz-truncated": {
+      "passed": true,
+      "rejection": "Truncated or trailing XZ bytes"
+    },
+    "xz-block-data-crc": {
+      "passed": true,
+      "rejection": "Corrupt compressed initramfs"
+    },
+    "second-block-dict-2m": {
+      "passed": true,
+      "rejection": "XZ dictionary differs from the reviewed1MiB recipe"
+    },
+    "4097-record-index-early-bound": {
+      "passed": true,
+      "rejection": "XZ exceeds the explicit host admission block count bound",
+      "vli_calls_before_rejection": 1
+    },
+    "cpio-size-over-512m": {
+      "passed": true,
+      "rejection": "External CPIO exceeds the explicit host admission size bound"
+    },
+    "valid-stream-with-empty-block": {
+      "passed": true,
+      "rejection": "Empty XZ blocks are outside the admitted host profile"
+    },
+    "actual-a1ca-gzip-full-verifier": {
+      "passed": true,
+      "result": {
+        "embedded_cpio_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+        "embedded_cpio_verified": true,
+        "embedded_cpio_offset": 12641140,
+        "embedded_cpio_compressed_bytes": 50377701,
+        "embedded_cpio_section_bytes": 50377701,
+        "embedded_cpio_compression": "gzip",
+        "initramfs_compression": "gzip",
+        "initramfs_compression_profile": "be6l-initramfs-gzip-v1"
+      },
+      "image_sha256": "f3406d41f29e70b86d2225e2ef3b826b97efb955400d5dc1d900bb172f5a4120"
+    }
+  },
+  "decoder_source_files_sha256": {
+    "lib/decompress_unxz.c": "f19d7513991435c7963d2cfb9f71045d9b7a263ccfbd43f584511dbbd2fa2f4d",
+    "include/linux/xz.h": "f17a04b94fcd995111efcbb51b1e1530c882b0e84d9b524d5e674576104cf939",
+    "lib/xz/xz_private.h": "418ffc071af4fa78b6048eb5be4a980ea32b4f23df594dd07b3bfc087ac8d52a",
+    "lib/xz/xz_stream.h": "89e80af27003ad39f3122ad447861ec574fa235a0c6339c26bb48a53c3d9e12b",
+    "lib/xz/xz_lzma2.h": "5681cf01bdcfab8907c02194eeaf9d4415166b3b5d48b50a34df809276f63aa1",
+    "lib/xz/xz_crc32.c": "d67a5b276d162bfee41c05b7e991f5298359bea637cc70e0aff499c07dbdc34f",
+    "lib/xz/xz_dec_stream.c": "d8bae2e220a180f740669be6d0889cea09ced08cd88ff1179edd2446fc783f4f",
+    "lib/xz/xz_dec_lzma2.c": "e42bedbe78c0bb639506945838127e3b9c85933f658297f4c5732d8c596936dc",
+    "lib/xz/xz_dec_bcj.c": "832e658e99ce04663f4ac1d5daa524049e9755d3c3330ba3e5a0e3fe2f24bfb2"
+  },
+  "kernel_sources_unchanged": true,
+  "harness_sha256": "9507b6cc2c488d9745d5b846b38177d713d6dd389eefc5b52abe76883e52554e",
+  "adaptation_header_sha256": "fd7a90cfaec53843ec56374bfd887f4a97ac45c5fe84ac942d021c21017021fb",
+  "decoder_input_xz_sha256": "f54d9c7d1a85955a04f97c02136d7cc88f1f75cc01a781e61b48659b0872030e",
+  "expected_cpio_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+  "expected_cpio_bytes": 130342912,
+  "decoder_cases": {
+    "actual-wrapper-valid": {
+      "mode": "wrapper",
+      "return_code": 0,
+      "consumed": 36496044,
+      "input_bytes": 36496044,
+      "output_bytes": 130342912,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 1082480,
+      "peak_with_adapter_headers": 1082640,
+      "peak_blocks": 5,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "decoded_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "decoded_file_bytes": 130342912,
+      "passed": true,
+      "expected_return_code": 0
+    },
+    "codec-dict-limit-1m-valid": {
+      "mode": "codec",
+      "return_code": 1,
+      "consumed": 36496044,
+      "input_bytes": 36496044,
+      "output_bytes": 130342912,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 1078384,
+      "peak_with_adapter_headers": 1078512,
+      "peak_blocks": 4,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "decoded_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "decoded_file_bytes": 130342912,
+      "passed": true,
+      "expected_return_code": 1
+    },
+    "actual-wrapper-fill-valid": {
+      "mode": "wrapper-fill",
+      "return_code": 0,
+      "consumed": 36496044,
+      "input_bytes": 36496044,
+      "output_bytes": 130342912,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 1086576,
+      "peak_with_adapter_headers": 1086768,
+      "peak_blocks": 6,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "decoded_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "decoded_file_bytes": 130342912,
+      "passed": true,
+      "expected_return_code": 0
+    },
+    "codec-truncated-footer": {
+      "mode": "codec",
+      "return_code": 8,
+      "consumed": 36496043,
+      "input_bytes": 36496043,
+      "output_bytes": 130342912,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 1078384,
+      "peak_with_adapter_headers": 1078512,
+      "peak_blocks": 4,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "passed": true,
+      "expected_return_code": 8
+    },
+    "codec-wrong-block-crc": {
+      "mode": "codec",
+      "return_code": 7,
+      "consumed": 869961,
+      "input_bytes": 36496044,
+      "output_bytes": 3145728,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 1078384,
+      "peak_with_adapter_headers": 1078512,
+      "peak_blocks": 4,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "passed": true,
+      "expected_return_code": 7
+    },
+    "actual-wrapper-truncated-footer": {
+      "mode": "wrapper",
+      "return_code": -1,
+      "consumed": 36496043,
+      "input_bytes": 36496043,
+      "output_bytes": 130342912,
+      "wrapper_error": 1,
+      "output_error": 0,
+      "peak_payload": 1082480,
+      "peak_with_adapter_headers": 1082640,
+      "peak_blocks": 5,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "passed": true,
+      "expected_return_code": -1
+    },
+    "actual-wrapper-wrong-block-crc": {
+      "mode": "wrapper",
+      "return_code": -1,
+      "consumed": 869961,
+      "input_bytes": 36496044,
+      "output_bytes": 3145728,
+      "wrapper_error": 1,
+      "output_error": 0,
+      "peak_payload": 1082480,
+      "peak_with_adapter_headers": 1082640,
+      "peak_blocks": 5,
+      "max_request": 1048576,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "passed": true,
+      "expected_return_code": -1
+    },
+    "codec-over-dict-limit": {
+      "mode": "codec",
+      "return_code": 4,
+      "consumed": 32,
+      "input_bytes": 36496044,
+      "output_bytes": 0,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 29808,
+      "peak_with_adapter_headers": 29904,
+      "peak_blocks": 3,
+      "max_request": 28496,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 1179648,
+      "passed": true,
+      "expected_return_code": 4
+    },
+    "actual-wrapper-allows-dict-2m": {
+      "mode": "wrapper",
+      "return_code": 0,
+      "consumed": 36496044,
+      "input_bytes": 36496044,
+      "output_bytes": 130342912,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 2131056,
+      "peak_with_adapter_headers": 2131216,
+      "peak_blocks": 5,
+      "max_request": 2097152,
+      "denied": 0,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 3145728,
+      "decoded_sha256": "99284164b4f338608c61b8130424625797ff1f28e993a60831a351c5ca61d472",
+      "decoded_file_bytes": 130342912,
+      "passed": true,
+      "expected_return_code": 0
+    },
+    "codec-allocation-cap": {
+      "mode": "codec",
+      "return_code": 3,
+      "consumed": 32,
+      "input_bytes": 36496044,
+      "output_bytes": 0,
+      "wrapper_error": 0,
+      "output_error": 0,
+      "peak_payload": 29808,
+      "peak_with_adapter_headers": 29904,
+      "peak_blocks": 3,
+      "max_request": 1048576,
+      "denied": 1,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 65536,
+      "passed": true,
+      "expected_return_code": 3
+    },
+    "actual-wrapper-allocation-cap": {
+      "mode": "wrapper",
+      "return_code": -1,
+      "consumed": 32,
+      "input_bytes": 36496044,
+      "output_bytes": 0,
+      "wrapper_error": 1,
+      "output_error": 0,
+      "peak_payload": 33904,
+      "peak_with_adapter_headers": 34032,
+      "peak_blocks": 4,
+      "max_request": 1048576,
+      "denied": 1,
+      "live_payload": 0,
+      "live_total": 0,
+      "live_blocks": 0,
+      "allocation_cap": 65536,
+      "passed": true,
+      "expected_return_code": -1
+    }
+  },
+  "counts": {
+    "profile": 54,
+    "review": 12,
+    "decoder": 11
+  },
+  "kernel_decoder_memory_limit_claimed": false
+}

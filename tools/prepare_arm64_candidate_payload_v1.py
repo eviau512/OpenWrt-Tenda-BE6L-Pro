@@ -21,6 +21,7 @@ from plan_integer_binfmt_v1 import ADMITTED_ROOT, tag_private
 from prepare_ramboot import tree, image, text
 from prepare_unattended_intermediate_v1 import encode_dtb
 from verify_embedded_compat_cpio import verify
+from build_fresh_arm64_kernel_v1 import receipt_compression, compression_fields
 
 BASE = Path(__file__).resolve().parents[1]
 PINS = {
@@ -70,6 +71,14 @@ def main():
             (report.get('guest_interp_revision') != 2 or report.get('dispatch_failures_terminal') is not True)):
         raise ValueError('Superseded V2 dispatch cannot be admitted in a RAM payload')
     composition = json.loads((a.composition / 'result.json').read_text())
+    compression = receipt_compression(report)
+    if receipt_compression(composition) != compression:
+        raise ValueError('Candidate and root initramfs compression profiles differ')
+    if compression == 'xz' and (not report.get('integer_binfmt_builtin') or
+            not report.get('guest_interp_fd') or
+            report.get('initramfs_recipe_sha256') != composition.get('initramfs_recipe_sha256') or
+            not report.get('initramfs_recipe_sha256')):
+        raise ValueError('Incomplete explicit XZ candidate/root recipe binding')
     tested = json.loads((a.runtime_test / 'result.json').read_text())
     root = a.composition / 'root'
     root_pin = root_digest(root)
@@ -174,7 +183,7 @@ def main():
     cpio = a.archive / 'native.cpio'
     if sha(cpio) != report['external_cpio_sha256'] or sha(a.kernel / '.config') != report['kernel_config_sha256']:
         raise ValueError('CPIO or current kernel build changed')
-    embedded = verify(a.kernel, data, cpio)
+    embedded = verify(a.kernel, data, cpio, report)
     for name, pin in PINS.items():
         if sha(a.baseline_payload / name) != pin:
             raise ValueError('Proven handoff input changed: ' + name)
@@ -226,6 +235,7 @@ def main():
         guest_interp_fd=bool(report.get('guest_interp_fd')),
         guest_interp_revision=report.get('guest_interp_revision'),
         dispatch_failures_terminal=report.get('dispatch_failures_terminal', False),
+        **compression_fields(compression), initramfs_recipe_sha256=report.get('initramfs_recipe_sha256'),
         embedded_cpio=embedded, dtb_changed_properties=['/chosen/' + key for key in changed],
         loader_source_sha256=sha(source), candidate_receipt_sha256=sha(a.candidate / 'result.json'),
         runtime_test_receipt_sha256=sha(a.runtime_test / 'result.json'),

@@ -1,0 +1,249 @@
+{
+  "date": "2026-11-13",
+  "scope": "Read-only audit of unchanged a1ca inputs and kernel source; new XZ Image not admitted by this receipt",
+  "a1ca_fit_sha256": "a1caa815392447cda4208ebfa95a61698c2d1f8953ba24351df693ed3e5120e1",
+  "payload_manifest_sha256": "87ee97fefca26ff6c3aae23ad4aa949db17debad58ec4d2c2c5694f325ad4a11",
+  "all_payload_file_hashes_matched": true,
+  "dtb_sha256": "e825e4ce064f4909b4547df18f407526e3ebb060bbbb3cfb3b59df3206cc5c15",
+  "bootargs": "console=ttyS0,115200 earlycon panic=10",
+  "bootargs_override_present": false,
+  "psci": {
+    "compatible": "arm,psci-0.2",
+    "method": "smc",
+    "source_defined_reset_only": true,
+    "no_smc_invoked": true
+  },
+  "ram": {
+    "start": "0x80000000",
+    "end": "0xa0000000",
+    "bytes": 536870912
+  },
+  "reserved": [
+    {
+      "node": "/reserved-memory/npu-firmware@84000000",
+      "start": "0x84000000",
+      "end": "0x84400000",
+      "bytes": 4194304,
+      "no_map": true
+    },
+    {
+      "node": "/reserved-memory/npu-pkt@84400000",
+      "start": "0x84400000",
+      "end": "0x85a00000",
+      "bytes": 23068672,
+      "no_map": true
+    }
+  ],
+  "current_image": {
+    "bytes": 64356360,
+    "effective_bytes": 64749568,
+    "load": "0x80200000",
+    "end": "0x83fc0000",
+    "gap_before_npu_bytes": 262144
+  },
+  "config_values": {
+    "CONFIG_PANIC_TIMEOUT": "1",
+    "CONFIG_PANIC_ON_OOPS": "y",
+    "CONFIG_RD_XZ": "not set",
+    "CONFIG_DECOMPRESS_XZ": "not set",
+    "CONFIG_CMDLINE": "\"\"",
+    "CONFIG_SOFTLOCKUP_DETECTOR": "not set",
+    "CONFIG_HARDLOCKUP_DETECTOR": "not set",
+    "CONFIG_AIROHA_WATCHDOG": "y"
+  },
+  "files": {
+    "initramfs": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/init/initramfs.c",
+      "sha256": "19eff86255abea3ca548b20a6ab8e9d040910a7b70027ac34d2ba4fc603d4394"
+    },
+    "init_main": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/init/main.c",
+      "sha256": "d9eda260baab907bcbf193736c5d103b270baae3b99b2db72872a16a78fd9b06"
+    },
+    "unxz": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/lib/decompress_unxz.c",
+      "sha256": "f19d7513991435c7963d2cfb9f71045d9b7a263ccfbd43f584511dbbd2fa2f4d"
+    },
+    "lzma2": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/lib/xz/xz_dec_lzma2.c",
+      "sha256": "e42bedbe78c0bb639506945838127e3b9c85933f658297f4c5732d8c596936dc"
+    },
+    "allocator": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/include/linux/decompress/mm.h",
+      "sha256": "aed7d5d2d88d22ba181174242d2b51d0c741f45b463f409e5eb5b15c9d1b0899"
+    },
+    "arm_setup": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/arch/arm64/kernel/setup.c",
+      "sha256": "d0572642224a071b14de5fdd61243d2086016faf3c29765817fd459b503110d6"
+    },
+    "arm_memory": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/arch/arm64/mm/init.c",
+      "sha256": "91d917e69f96fbf0ece691e79236c23c1ccc25639b6b2e5a05dadc9e3acec8d9"
+    },
+    "arm_restart": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/arch/arm64/kernel/process.c",
+      "sha256": "3abb6c577c5e804418911dbe6f0062ee45a6c0051fbc366f80b13b15338f75b2"
+    },
+    "emergency_restart": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/include/asm-generic/emergency-restart.h",
+      "sha256": "fb674e46cca0962b550437e590a4a2ef1b8980c80f28de0f4cd5f0863f737842"
+    },
+    "psci": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/drivers/firmware/psci/psci.c",
+      "sha256": "16a39d92534b77654135e0a3281f75e53228d297d38b9262e69080515e1a633a"
+    },
+    "panic": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/kernel/panic.c",
+      "sha256": "40378aae0439dbfdceae35def45d7f4075f91ba01b78359ecc1d906c7b5ad863"
+    },
+    "reserved_memory": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/drivers/of/of_reserved_mem.c",
+      "sha256": "1aa359ffc417c3fe7f172bc94ea32d535ba2dea093225c01a2b3b798d326ea66"
+    },
+    "watchdog": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/drivers/watchdog/airoha_wdt.c",
+      "sha256": "a92d8dac1d7f3aaf9e1fc8aa81630940f626ebd74abd982537029f496a78c955"
+    },
+    "usr_recipe": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/usr/Makefile",
+      "sha256": "d9c08e2f59ce77725afcbb260c9776a5d91be0b8e042780a635bf2e3a1ab31dd"
+    },
+    "compression_recipe": {
+      "path": "/root/be6l-guest-interp-source-20261111-r2/kernel-source/linux-6.18.55/scripts/Makefile.lib",
+      "sha256": "45c2d436558440f502cf3fa491b38046bd9ff28e973f2fe0b87267da3a1c3977"
+    }
+  },
+  "definitions": {
+    "U1": {
+      "file": "initramfs",
+      "symbol": "unpack_to_rootfs",
+      "start_line": 511,
+      "end_line": 572
+    },
+    "U2": {
+      "file": "initramfs",
+      "symbol": "do_populate_rootfs",
+      "start_line": 718,
+      "end_line": 761
+    },
+    "U3": {
+      "file": "initramfs",
+      "symbol": "do_name",
+      "start_line": 361,
+      "end_line": 412
+    },
+    "U4": {
+      "file": "initramfs",
+      "symbol": "do_copy",
+      "start_line": 414,
+      "end_line": 434
+    },
+    "X1": {
+      "file": "unxz",
+      "symbol": "unxz",
+      "start_line": 258,
+      "end_line": 398
+    },
+    "X2": {
+      "file": "lzma2",
+      "symbol": "xz_dec_lzma2_reset",
+      "start_line": 1162,
+      "end_line": 1196
+    },
+    "E1": {
+      "file": "arm_setup",
+      "symbol": "setup_machine_fdt",
+      "start_line": 170,
+      "end_line": 208
+    },
+    "E2": {
+      "file": "arm_setup",
+      "symbol": "setup_arch",
+      "start_line": 281,
+      "end_line": 378
+    },
+    "P1": {
+      "file": "psci",
+      "symbol": "psci_sys_reset",
+      "start_line": 309,
+      "end_line": 325
+    },
+    "P2": {
+      "file": "psci",
+      "symbol": "psci_0_2_set_functions",
+      "start_line": 658,
+      "end_line": 675
+    },
+    "P3": {
+      "file": "arm_restart",
+      "symbol": "machine_restart",
+      "start_line": 129,
+      "end_line": 150
+    },
+    "P4": {
+      "file": "panic",
+      "symbol": "panic",
+      "start_line": 358,
+      "end_line": 369
+    },
+    "I1": {
+      "file": "init_main",
+      "symbol": "kernel_init",
+      "start_line": 1458,
+      "end_line": 1531
+    },
+    "I2": {
+      "file": "init_main",
+      "symbol": "kernel_init_freeable",
+      "start_line": 1548,
+      "end_line": 1607
+    },
+    "W1": {
+      "file": "watchdog",
+      "symbol": "airoha_wdt_probe",
+      "start_line": 127,
+      "end_line": 173
+    }
+  },
+  "trampoline": {
+    "sha256": "8d9ca98a6b6d6710654c45f01d6f0acbb6af6391b09b22872ce5b720243969ae",
+    "read_only_disassembly_sha256": "7112d45c6e121660ca1d21e84bbd708de186802aa8d88121cff1723648361722",
+    "handoff_smc_offset": "0x58",
+    "return_fallback_offset": "0x68",
+    "fallback_copy_source": "0x90000000",
+    "fallback_copy_destination": "0x80088000",
+    "fallback_branch_offset": "0xa8",
+    "coverage": "Only if initial handoff returns; no automatic return path from a running ARM64 kernel"
+  },
+  "xz_source_contract": {
+    "initramfs_streaming_flush": true,
+    "mode": "XZ_DYNALLOC",
+    "dictionary_limit_passed_to_decoder": "UINT32_MAX",
+    "dictionary_allocation": "vmalloc from ordinary allocator pages",
+    "output_buffer_bytes": 4096,
+    "input_buffer_is_existing_embedded_stream": true,
+    "standard_xzmisc_recipe": "--check=crc32 --lzma2=dict=1MiB",
+    "existing_measurement_block_count": 42,
+    "existing_measurement_all_dict_bytes": 1048576,
+    "existing_measurement_cpio_bytes": 130342912,
+    "existing_measurement_stream_bytes": 36496044,
+    "existing_measurement_stream_sha256": "f54d9c7d1a85955a04f97c02136d7cc88f1f75cc01a781e61b48659b0872030e",
+    "new_image_actual_stream_verified": false,
+    "host_compressor_rss_is_not_target_decoder_memory": true,
+    "image_to_npu_gap_is_not_dictionary_limit": true
+  },
+  "recovery_limits": [
+    "Detected internal unpack/decode failure reaches panic; timed restart is best effort, not an observed fault-injection recovery",
+    "Bad early DTB loops before panic/reset readiness",
+    "Kernel/decompressor/allocator hard hangs have no established early hardware-watchdog coverage",
+    "Some do_name mkdir/open/create failures continue silently; successful /bin/sh PID1 fallback need not panic or start recovery guard",
+    "PSCI reset failure reaches machine_restart halt loop",
+    "Prior normal idle-NPU userspace expiry recovery does not qualify pre-init faults"
+  ],
+  "new_xz_profile_qualified": false,
+  "full_startup_qualified": false,
+  "hardware_fault_injection": false,
+  "target_executed": false,
+  "existing_source_mutated": false,
+  "host_network_changed": false
+}

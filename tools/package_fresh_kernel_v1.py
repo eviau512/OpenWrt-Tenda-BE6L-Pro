@@ -15,10 +15,40 @@ import re
 import shutil
 import subprocess
 from package_native_netifd_v3 import records, root_digest, copy_path, sha
+from build_fresh_arm64_kernel_v1 import (config_values, receipt_compression, compression_fields,
+    admit_build_config, recipe_hashes)
 
 FIELDS = 'name,version,arch,license,description,depends,provides,install-if,provider-priority,origin,tags,replaces'
 KERNEL = 'arm64-source/build_dir/target-aarch64_cortex-a53_musl/linux-airoha_an7563a64/linux-6.18.55'
 TOOLCHAIN = 'arm64-source/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.4.0_musl'
+
+
+def preinit_abi(text):
+    # Match OpenWrt Kernel/Configure/Default: grep '=[ym]' | LC_ALL=C sort | md5.
+    lines = sorted(line for line in text.splitlines() if re.search('=[ym]', line))
+    return hashlib.md5(('\n'.join(lines) + '\n').encode()).hexdigest()
+
+
+def preinitramfs_compression_config(text, compression):
+    if compression == 'gzip':
+        return text, {}
+    before = config_values(text)
+    if (before.get('CONFIG_RD_XZ') != 'n' or before.get('CONFIG_XZ_DEC') != 'y' or
+            before.get('CONFIG_BLK_DEV_INITRD') != 'y' or before.get('CONFIG_INITRAMFS_SOURCE') != '""' or
+            before.get('CONFIG_DECOMPRESS_XZ', 'n') != 'n' or
+            any(key.startswith('CONFIG_INITRAMFS_COMPRESSION_') and value == 'y' for key, value in before.items())):
+        raise ValueError('Unexpected pre-initramfs XZ ABI baseline')
+    # OpenWrt hashes .config.set before Kernel/Configure/Initramfs applies
+    # RD_* and the compression choice. Do not invent a choice for SOURCE="".
+    return text, {}
+
+
+def kernel_package_revision(binfmt, guest_exe, guest_interp, compression):
+    if compression == 'xz':
+        if not (binfmt and guest_exe and guest_interp):
+            raise ValueError('XZ requires the complete V2 kernel/package profile')
+        return '105'
+    return '104' if guest_interp else '102' if guest_exe else '101' if binfmt else '100'
 
 
 def main():
@@ -44,6 +74,8 @@ def main():
     binfmt = bool(built.get('integer_binfmt_builtin'))
     guest_exe = bool(built.get('guest_exe_file'))
     guest_interp = bool(built.get('guest_interp_fd'))
+    compression = receipt_compression(built)
+    revision = kernel_package_revision(binfmt, guest_exe, guest_interp, compression)
     contract = 'BE6L_X_EXECFD_EXE_INTERPFD_V2' if guest_interp else 'BE6L_X_AT_FLAGS_16_v1'
     if guest_exe and (not binfmt or built.get('guest_exe_contract') != contract):
         raise ValueError('Unsupported private guest-executable kernel contract')
@@ -60,20 +92,22 @@ def main():
     build = args.kernel_build / 'build'
     if not built['full_kernel_built'] or not layout['passed'] or layout['module_count'] != (85 if binfmt else 84):
         raise ValueError('Fresh kernel/layout evidence missing')
+    if layout['kernel_config_sha256'] != built['effective_config_sha256']:
+        raise ValueError('Compiled module layout is for another kernel profile')
     if sha(build / 'Module.symvers') != built['module_symvers_sha256']:
         raise ValueError('Kernel symbol table changed')
     if sha(args.bootstrap / KERNEL / '.config') != built['baseline_config_sha256'] or sha(build / '.config') != built['effective_config_sha256']:
         raise ValueError('Kernel configuration bytes changed after build')
     old_config = (args.bootstrap / KERNEL / '.config').read_text()
     new_config = (build / '.config').read_text()
-    from build_fresh_arm64_kernel_v1 import config_values
     old_values, new_values = config_values(old_config), config_values(new_config)
-    expected_delta = {'CONFIG_INITRAMFS_SOURCE'} | ({'CONFIG_BINFMT_MISC'} if binfmt else set())
-    assert {k for k in old_values.keys() | new_values.keys()
-            if old_values.get(k) != new_values.get(k)} == expected_delta
-    if binfmt and (old_values['CONFIG_BINFMT_MISC'] != 'n' or new_values['CONFIG_BINFMT_MISC'] != 'y'):
-        raise ValueError('Unexpected binfmt kernel configuration')
+    delta = admit_build_config(old_values, new_values, binfmt, compression)
+    if delta != built['configuration_delta']:
+        raise ValueError('Fresh build receipt/configuration delta differs')
     source = args.prepared / 'kernel-source/linux-6.18.55'
+    recipes = recipe_hashes(source, compression)
+    if compression == 'xz' and built.get('initramfs_recipe_sha256') != recipes:
+        raise ValueError('XZ source compression recipe changed since compilation')
     header_hashes = {}
     for name in ('drivers/net/ethernet/airoha/airoha_eth.h',
                  'drivers/net/ethernet/airoha/airoha_regs.h',
@@ -84,9 +118,6 @@ def main():
         header_hashes[name] = sha(source / relative)
     config_set = args.kernel_cache / KERNEL / '.config.set'
     preinit = config_set.read_text()
-    def preinit_abi(text):
-        lines = sorted(line for line in text.splitlines() if re.search('=[ym]', line))
-        return hashlib.md5(('\n'.join(lines) + '\n').encode()).hexdigest()
     old_abi = preinit_abi(preinit)
     if old_abi != 'ebdb6ef0fb8a643c0a13573c2d8c2337':
         raise ValueError('Wrong OpenWrt pre-initramfs ABI configuration')
@@ -94,6 +125,12 @@ def main():
         if preinit.count('# CONFIG_BINFMT_MISC is not set') != 1:
             raise ValueError('Unexpected pre-initramfs binfmt profile')
         preinit = preinit.replace('# CONFIG_BINFMT_MISC is not set', 'CONFIG_BINFMT_MISC=y')
+    preinit, compression_abi_delta = preinitramfs_compression_config(preinit, compression)
+    defaults = args.prepared / 'openwrt/include/kernel-defaults.mk'
+    defaults_text = defaults.read_text()
+    if compression == 'xz' and not (defaults_text.index("grep '=[ym]' $(LINUX_DIR)/.config.set") <
+            defaults_text.index('define Kernel/Configure/Initramfs')):
+        raise ValueError('OpenWrt pre-initramfs ABI/compression stage order differs')
     abi = preinit_abi(preinit)
     work.mkdir(mode=0o700)
     (work / 'kernel-preinitramfs.config.set').write_text(preinit)
@@ -111,10 +148,12 @@ def main():
 
     query = ['query', '--installed', '--format', 'json', '--fields', FIELDS]
     packages = json.loads(run('old-kernel-packages', readonly + query + ['kernel', 'kmod-*']))
+    if binfmt and len(packages) != 57:
+        raise ValueError('The full fresh binfmt kernel requires all57 kernel/module packages')
     old_kernel, = [p for p in packages if p['name'] == 'kernel']
     if old_kernel['version'] != '6.18.55~' + old_abi + ('-r100' if binfmt else '-r1'):
         raise ValueError('Installed kernel ABI pin differs')
-    new_kernel_version = '6.18.55~' + abi + ('-r104' if guest_interp else '-r102' if guest_exe else '-r101' if binfmt else '-r100')
+    new_kernel_version = '6.18.55~' + abi + '-r' + revision
     new_kernel_pin = 'kernel=' + new_kernel_version
     cross = str(args.bootstrap / TOOLCHAIN / 'bin/aarch64-openwrt-linux-musl-')
     env = dict(os.environ, CROSS=cross, NO_RENAME='1', SOURCE_DATE_EPOCH='1792420077')
@@ -202,7 +241,8 @@ def main():
         for package in packages:
             name = package['name']
             old_base, old_release = package['version'].rsplit('-r', 1)
-            version = new_kernel_version if name == 'kernel' else old_base + '-r' + (str(int(old_release)+(4 if guest_interp else 2 if guest_exe else 1)) if binfmt else '100')
+            increment = 5 if compression == 'xz' else 4 if guest_interp else 2 if guest_exe else 1
+            version = new_kernel_version if name == 'kernel' else old_base + '-r' + (str(int(old_release)+increment) if binfmt else '100')
             versions[name] = version
             depends = [new_kernel_pin if item.startswith('kernel=') else item for item in package.get('depends', [])]
             command = [args.apk, 'mkpkg', '--sign-key', key, '--files', stage[name],
@@ -255,6 +295,12 @@ def main():
         openwrt_preinitramfs_abi=abi, module_layout_probe_passed=True, module_crc_enforcement=False,
         unchanged_external_interface_headers=header_hashes,
         external_build_receipt_sha256=external_receipt_sha, integer_binfmt_builtin=binfmt,
+        **compression_fields(compression), initramfs_recipe_sha256=recipes,
+        preinitramfs_compression_configuration_delta=compression_abi_delta,
+        preinitramfs_compression_stage='post-preinitramfs',
+        preinitramfs_compression_inputs={key: value for key, value in config_values(preinit).items()
+            if key.startswith(('CONFIG_INITRAMFS_', 'CONFIG_RD_', 'CONFIG_DECOMPRESS_'))},
+        openwrt_kernel_defaults_sha256=sha(defaults),
         guest_exe_file=guest_exe, guest_exe_contract=built.get('guest_exe_contract'),
         guest_interp_fd=guest_interp,
         guest_interp_revision=built.get('guest_interp_revision'), dispatch_failures_terminal=built.get('dispatch_failures_terminal', False),

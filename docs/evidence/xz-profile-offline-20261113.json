@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-13",
+  "scope": "Explicit XZ full offline admission; target startup pending",
+  "kernel": {
+    "full_kernel_built": true,
+    "in_tree_module_count": 78,
+    "effective_config_sha256": "9ff08c26664c602d678d0e027493b36475b667746039e3fafa811bd50acabfa8",
+    "module_symvers_sha256": "b9a2dd2ba92f0085637228b6b8416bb99a93c93a7b4937a9bf894dcec1616cda",
+    "configuration_delta": {
+      "CONFIG_INITRAMFS_COMPRESSION_XZ": {
+        "before": null,
+        "after": "y"
+      },
+      "CONFIG_INITRAMFS_SOURCE": {
+        "before": "\"/root/be6l-openwrt/n1-image-v3-20261030-r1/rootfs.cpio\"",
+        "after": "\"/root/be6l-native-cpio-20261105-r1/native.cpio\""
+      },
+      "CONFIG_DECOMPRESS_XZ": {
+        "before": null,
+        "after": "y"
+      },
+      "CONFIG_RD_XZ": {
+        "before": "n",
+        "after": "y"
+      },
+      "CONFIG_INITRAMFS_COMPRESSION_GZIP": {
+        "before": "y",
+        "after": "n"
+      },
+      "CONFIG_BINFMT_MISC": {
+        "before": "n",
+        "after": "y"
+      }
+    },
+    "initramfs_compression": "xz",
+    "initramfs_compression_profile": "be6l-initramfs-xz-v1",
+    "initramfs_recipe_sha256": {
+      "usr/Makefile": "d9c08e2f59ce77725afcbb260c9776a5d91be0b8e042780a635bf2e3a1ab31dd",
+      "scripts/Makefile.lib": "45c2d436558440f502cf3fa491b38046bd9ff28e973f2fe0b87267da3a1c3977"
+    }
+  },
+  "image": {
+    "image_sha256": "a74f0524e775a8e0f9640b3fc262a6569a5ce8d069799da4aa90a53fb9b1b339",
+    "image_bytes": 41467992,
+    "kernel_sha256": "212c00de5e08cd3695e1a2f211e488b4821a0432b64aaa37e1123513a1965df1",
+    "kernel_bytes": 50462728,
+    "kernel_effective_bytes": 50855936,
+    "kernel_headroom_bytes": 14155776,
+    "kernel_config_sha256": "f813052fc4d8825bd94131b34858e85549a03d303beef2b8891d22034b076f6d",
+    "vmlinux_sha256": "2f1fcbcdc6d97d29fcb462a7fe865d887f675276c9923a770a570e6c0d15b0b3",
+    "embedded_cpio_sha256": "ad7be32289cea5df810bcea21697f5e4561295a55d5e0decc0dae1c9078a5bf3",
+    "embedded_cpio_compressed_bytes": 36496028,
+    "xz_block_count": 42,
+    "xz_dictionary_bytes": 1048576,
+    "embedded_cpio_check": "CRC32",
+    "root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+    "installed_packages": 219,
+    "rebuilt_in_tree_modules": 77,
+    "rebuilt_external_modules": 7,
+    "retained_external_modules": 0,
+    "dtb_readonly_partitions": 10,
+    "bmt_readonly": true
+  },
+  "packages": {
+    "kernel_package_version": "6.18.55~7b648602069fdc1d228ca9bad74de7f2-r105",
+    "package_count_rebuilt": 57,
+    "normal_signed_component_transaction": true,
+    "openwrt_preinitramfs_abi": "7b648602069fdc1d228ca9bad74de7f2",
+    "preinitramfs_compression_configuration_delta": {},
+    "preinitramfs_compression_stage": "post-preinitramfs"
+  },
+  "host_validation_counts": {
+    "profile_gates": 54,
+    "independent_admission_review": 12,
+    "exact_kernel_decoder": 11
+  },
+  "target_executed": false,
+  "mainroot_standard_compatibility_qualified": false
+}
