@@ -1,0 +1,279 @@
+{
+  "date": "2026-11-13",
+  "kind": "Independent host source prototype; not a Linux driver port",
+  "private_receipt_sha256": "a414817263b0c249cc744a87e31412545e4543b22c82ca013380b0dd1e6efd79",
+  "mt76_source_sha256": "0646b55c7d330b793e216878ef1efe733ecc840f912e6a39b16d6fc0ec5cce61",
+  "native_source_sha256": "c6428b8042fa74316c3a4adddcce9cc836b05cbccef9bafe8b34304577c6af57",
+  "actual_rx_function_sha256": {
+    "mt76_rx_release_amsdu": "f8cc7dd3b6821514d8b6ea370bf60c0cc1fe8edde8434496969dcfdbcb5011a8",
+    "mt76_rx_release_burst": "e6160435f6684ce01f49a1193e347a0b9c7af74474e7dcf9e2c086891fac810f"
+  },
+  "actual_native_scope_function_sha256": {
+    "native_ppe_stop": "9c6cb7d09730d6521fc563c7df657b92314551dacd413e61898c01f2d8b447dc",
+    "native_ppe_restore_idle": "f2a8d51ae5f3321f430269f39f4871de80ca70fb5d7c408e3c25abc52e77f247",
+    "wait_parked": "376e9e70531da592c2a340bab296fbed4ed5a911d01c4e786fc5033e1d45292b",
+    "fault_stop": "eea8c6eb35cbad312d2525cfa3a6c5bf47cb5e783735608d6fecd5159ba918d5"
+  },
+  "prototype_sources_sha256": {
+    "experiments/npu-retired-lease/retired_lease.h": "1cde15061a1d97dbd50afe7447bad42e1953ec4385e2e70e356ab4600e6e4448",
+    "experiments/npu-retired-lease/retired_lease.c": "2f9c69bf43c4bf60d5e090bbd9009c0981fe819864b6b590eaf1f75a74dbb71a",
+    "experiments/npu-retired-lease/model_cases.c": "dc2489d02fbd6cdd617b7f6b2a83073a0a09ef88e8a2d92d9ca16bce084e548a"
+  },
+  "test_tool_sha256": "b319f57d47ea8d2ec3d0483f778d8e122818452659dcf5f97a28c45df3d18c21",
+  "lifecycle_observation_count": 27,
+  "rx_observation_count": 12,
+  "all_expected_observations_passed": true,
+  "baseline_negative_controls_are_safety_passes": false,
+  "synthetic_provider_only": true,
+  "default_missing_provider_denies_release": true,
+  "untagged_completion_generation_inference": false,
+  "hardware_provider_implemented": false,
+  "actual_skb_storage_or_rcu_integration": false,
+  "model_observations": [
+    {
+      "scenario": "unpublished-failure-unwinds-without-hardware-obligation",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "identity-is-copied-without-mac80211-owned-pointer",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "published-obligation-cannot-use-unpublished-abort",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "retire-revokes-untagged-lookup-before-upstream-sta-free",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "numeric-quarantine-blocks-reuse-after-void-callback-returns",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "hardware-proof-does-not-substitute-for-cpu-detach",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "cpu-grace-without-hardware-provider-retains-all-owners",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "provider-timeout-retains-slot-smac-destination-dma",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "late-prior-epoch-proof-rejected",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "same-index-other-radio-proof-rejected",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-foe",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-native-writers",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-output-dma",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-irq-callbacks",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-rx-caches",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "missing-remove-setup",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "abi5-native-only-scope-is-not-all-output-proof",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "synthetic-covered-generation-releases-resources-once",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "host-tagged-old-cache-remains-independent-and-stale-after-reuse",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "negative-control-untagged-old-and-new-events-indistinguishable",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "shutdown-blocks-new-setup-and-station-publication",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "devres-not-released-with-independent-cache-reference",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "devres-not-released-with-setup-callback-in-flight",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "devres-not-released-before-irq-synchronization",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "no-device-provider-means-no-devres-admission",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "synthetic-device-boundary-admits-only-after-all-owners-gone",
+      "passed": true,
+      "hardware_proved": false
+    },
+    {
+      "scenario": "epoch-exhaustion-does-not-wrap-and-republish",
+      "passed": true,
+      "hardware_proved": false
+    }
+  ],
+  "rx_source_observations": [
+    {
+      "scenario": "baseline-normal-control",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 1,
+      "dropped_frames": 0,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "negative-baseline-cross-poll-raw-pointer",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 1,
+      "delivered_frames": 2,
+      "dropped_frames": 0,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-retired-cache-dropped-without-old-wcid-deref",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 1,
+      "dropped_frames": 1,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-live-fragment-control",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 2,
+      "dropped_frames": 0,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-mixed-peer-same-sequence-is-not-merged",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 0,
+      "dropped_frames": 2,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-tag-survives-independent-old-epoch-and-reuse",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 1,
+      "dropped_frames": 1,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "negative-baseline-null-table-and-grace-do-not-rewrite-cache",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 1,
+      "delivered_frames": 2,
+      "dropped_frames": 0,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-mismatching-live-binding-rejected",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 1,
+      "dropped_frames": 1,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-null-station-control",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 1,
+      "dropped_frames": 0,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "actual-header-rejection-releases-all-tags",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 0,
+      "dropped_frames": 2,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-remove-purges-independent-cache-before-devres",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 0,
+      "dropped_frames": 1,
+      "live_native_reachability_proved": false
+    },
+    {
+      "scenario": "prototype-capture-without-prepublished-lease-fails-closed",
+      "expected_observation_passed": true,
+      "raw_retired_pointer_observations": 0,
+      "delivered_frames": 0,
+      "dropped_frames": 1,
+      "live_native_reachability_proved": false
+    }
+  ],
+  "excluded": [
+    "Real IRQ/RCU/RTNL synchronization",
+    "Native packet-format reachability",
+    "Physical FOE/output DMA completion",
+    "Full station/remove/devres integration",
+    "Kernel/module ABI or target qualification"
+  ],
+  "native_binding_admitted": false,
+  "routed_gate_opened": false,
+  "xwrt_94104_complete_port": false,
+  "target_executed": false,
+  "existing_source_mutated": false
+}

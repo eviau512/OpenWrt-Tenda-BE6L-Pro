@@ -1,0 +1,516 @@
+{
+  "date": "2026-11-13",
+  "scope": "Ordinary A53 module build/signature/ELF verification, not complete root compatibility",
+  "selected_package_cache": {
+    "main_packages": 219,
+    "ordinary_names": 153,
+    "exact_signed_archives": 111,
+    "missing_exact_archives_before_build": [
+      "bridger",
+      "chinadns-ng",
+      "coreutils",
+      "coreutils-base64",
+      "coreutils-nohup",
+      "coreutils-timeout",
+      "dns2socks",
+      "dnsmasq-full",
+      "ip-full",
+      "ipt2socks",
+      "libacl",
+      "libattr",
+      "libbpf1",
+      "libcap",
+      "libelf1",
+      "libgmp10",
+      "liblucihttp-lua",
+      "libnetfilter-conntrack3",
+      "libnettle8",
+      "libnfnetlink0",
+      "libopenssl3",
+      "libpcre2",
+      "libpthread",
+      "librt",
+      "libubus-lua",
+      "libuci-lua",
+      "libyaml",
+      "luci-app-passwall",
+      "luci-compat",
+      "luci-i18n-passwall-zh-cn",
+      "luci-lib-base",
+      "luci-lib-ip",
+      "luci-lib-jsonc",
+      "luci-lua-runtime",
+      "lyaml",
+      "microsocks",
+      "resolveip",
+      "sing-box",
+      "tailscale",
+      "tcping",
+      "ucode-mod-lua",
+      "wget-ssl"
+    ],
+    "missing_may_include_virtual_providers": true
+  },
+  "build_receipt_sha256": "141a6071161f9ad0551ddc57cef254c5874fad9a23c20c39f8cea33191ce816c",
+  "archive_receipt_sha256": "f91bc1b093a5eafe70cffc1cef03ada36cdf4c2a852af99b930c49519714b01c",
+  "source_recipe_sha256": {
+    "package/feeds/luci/lucihttp": "c1544e9aedba6e7c4052b0f523b77da98677f11cd80a04c2f67c5abd2e4c057a",
+    "package/system/ubus": "938e4472bf28aeaaa64f0ffbf78f4e784ad03c934e5f92b1d0cbbc12cd0a02e4",
+    "package/system/uci": "548a58ea67abe65de6482e3eef8c6d044f6e65c351b092b3c3ee07216d98d055",
+    "package/feeds/packages/yaml": "7a56dbd976173be70d4592490c9690076a70cd4e5a4a2035c1b054d441cb6d77",
+    "package/feeds/luci/luci-lib-ip": "8ef52f163a97ee38915e2f69272d205264abafa447231ce0b9c906d4bb10606b",
+    "package/feeds/luci/luci-lib-jsonc": "a9de5a873cb3ff827cfd712218b4527241fe50608cc7418e3f877fbd3f5c4446",
+    "package/feeds/luci/luci-lua-runtime": "0e701fa7a837af03cc607e4860a608270a52d732cee58fe4aea2c0c70134aaef",
+    "package/feeds/packages/lyaml": "0d0844cbd9241421233a9901fbb071ba3e0b14bd7ab16bf37ca396214910b60e",
+    "package/feeds/luci/ucode-mod-lua": "3f96e7917d967e5562e3c66492225def7d78cc38b5c536a346a54e82ed9779fb"
+  },
+  "sdk_configuration_sha256": "0f00d13faa7db5c22c58e8d9c515aac225b9385a0d2d86a650fcce9ecde11f71",
+  "public_key_sha256": "20f2e46903b649667b78a5c013d4dcd1b62ae3bb23a92b3d3f1d14082a53a589",
+  "packages": {
+    "liblucihttp-lua": {
+      "file": "liblucihttp-lua-2023.03.15~9b5b683f-r1.apk",
+      "sha256": "a60af262f6ffe74ef382496368147658e3c038d41b25d06ec92536ce027bf4de",
+      "info": {
+        "name": "liblucihttp-lua",
+        "version": "2023.03.15~9b5b683f-r1",
+        "hashes": "a24378e8b3207e4081ee04637e7a99e60fd3ff94",
+        "description": "Lua binding for the LuCI HTTP utility library",
+        "arch": "aarch64_cortex-a53",
+        "license": "ISC",
+        "origin": "/root/be6l-openwrt/source/feeds/luci/contrib/package/lucihttp",
+        "maintainer": "Jo-Philipp Wich <jo@mein.io>",
+        "installed-size": 12315,
+        "depends": [
+          "libc",
+          "liblua5.1.5",
+          "liblucihttp0"
+        ],
+        "provides": [
+          "liblucihttp-lua-any"
+        ],
+        "tags": [
+          "openwrt:section=libs"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/lucihttp.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "liblucihttp.so.0",
+            "liblua.so.5.1.5",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": "lucihttp.so",
+          "rpath": null,
+          "runpath": null,
+          "bytes": 12290,
+          "sha256": "8bf42c59d8f51777eaefff309bb7b30fbc1718e2340a879fca3667de2b33b408"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "libubus-lua": {
+      "file": "libubus-lua-2026.09.25~414c60a2-r1.apk",
+      "sha256": "fc15a19e9ba7e00bd9a0dcba4f63a30b38033cd34fd82a38dad08600e65fa34e",
+      "info": {
+        "name": "libubus-lua",
+        "version": "2026.09.25~414c60a2-r1",
+        "hashes": "761bc97868d299fa691ac0b04fa84c871eb3be53",
+        "description": "Lua binding for the OpenWrt RPC client",
+        "arch": "aarch64_cortex-a53",
+        "license": "LGPL-2.1",
+        "origin": "feeds/base/system/ubus",
+        "maintainer": "Felix Fietkau <nbd@nbd.name>",
+        "installed-size": 20503,
+        "depends": [
+          "libc",
+          "liblua5.1.5",
+          "libubus20260925"
+        ],
+        "provides": [
+          "libubus-lua-any"
+        ],
+        "tags": [
+          "openwrt:section=libs"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/ubus.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "libubus.so.20260925",
+            "libubox.so.20260721",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 20482,
+          "sha256": "5af75dda40852f605a5eb44623d0dc7f051f99b352410902d54b6f1c4ae5bf5f"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "libuci-lua": {
+      "file": "libuci-lua-2025.12.02~66127cd7-r1.apk",
+      "sha256": "d525fde047eea78f69ca91072c7215cceb57d30a80611ddc5085f8e9c2ad6fe0",
+      "info": {
+        "name": "libuci-lua",
+        "version": "2025.12.02~66127cd7-r1",
+        "hashes": "2e1aec5a52ebe63018d0087e78970490a2da6f1d",
+        "description": "Lua plugin for UCI",
+        "arch": "aarch64_cortex-a53",
+        "license": "LGPL-2.1",
+        "origin": "feeds/base/system/uci",
+        "maintainer": "Felix Fietkau <nbd@nbd.name>",
+        "installed-size": 20502,
+        "depends": [
+          "libc",
+          "liblua5.1.5",
+          "libuci20250120"
+        ],
+        "provides": [
+          "libuci-lua-any"
+        ],
+        "tags": [
+          "openwrt:section=libs"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/uci.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "libuci.so.20250120",
+            "libubox.so.20260721",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 20482,
+          "sha256": "3db989d67ec4870bf2216dcfb18de1da9fa264b8ae86b1bdd362a67889824903"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "libyaml": {
+      "file": "libyaml-0.2.5-r2.apk",
+      "sha256": "e8edba75eeab5f7634bc521b47d9fddd5f72a765403f1c6265ce8258856f63a6",
+      "info": {
+        "name": "libyaml",
+        "version": "0.2.5-r2",
+        "hashes": "5163bcd3ed9ae6b671cfc696861932aa987ceb00",
+        "description": "Fast YAML 1.1 parser and emitter library",
+        "arch": "aarch64_cortex-a53",
+        "license": "MIT",
+        "origin": "/root/be6l-openwrt/source/feeds/packages/libs/yaml",
+        "maintainer": "Alexandru Ardelean <ardeleanalex@gmail.com>",
+        "url": "https://pyyaml.org/wiki/LibYAML",
+        "installed-size": 106651,
+        "depends": [
+          "libc"
+        ],
+        "provides": [
+          "libyaml-any"
+        ],
+        "tags": [
+          "openwrt:section=libs",
+          "openwrt:cpe=cpe:/a:pyyaml_project:pyyaml"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/libyaml-0.so.2.0.9": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": "libyaml-0.so.2",
+          "rpath": null,
+          "runpath": null,
+          "bytes": 106579,
+          "sha256": "291084a843a38470321ef08830fc374d2995a262cf6597fdf6f33ceb732daa0b"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "luci-lib-ip": {
+      "file": "luci-lib-ip-26.296.27218~1c67452.apk",
+      "sha256": "a8602b21532d46e7f6f3d16d3b385560e0785f02d6879d923bdfdadba96f57d9",
+      "info": {
+        "name": "luci-lib-ip",
+        "version": "26.296.27218~1c67452",
+        "hashes": "c542bac64eafc9ebf478005c0f6d78dce674e1a8",
+        "description": "Lua library for IP calculation and routing information",
+        "arch": "aarch64_cortex-a53",
+        "license": "Apache-2.0",
+        "origin": "/root/be6l-openwrt/source/feeds/luci/libs/luci-lib-ip",
+        "maintainer": "OpenWrt LuCI community",
+        "url": "https://github.com/openwrt/luci",
+        "installed-size": 28698,
+        "depends": [
+          "libc",
+          "liblua5.1.5",
+          "libnl-tiny1"
+        ],
+        "provides": [
+          "luci-lib-ip-any"
+        ],
+        "tags": [
+          "openwrt:section=luci"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/luci/ip.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "liblua.so.5.1.5",
+            "libnl-tiny.so.1",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 28674,
+          "sha256": "b67e6c089392d33e17cc91a38c41146f0e7af297dba685721e1cd7c1f2708693"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "luci-lib-jsonc": {
+      "file": "luci-lib-jsonc-26.296.27218~1c67452.apk",
+      "sha256": "ac79f44f350df50592c5a3d0e28fa209a92f0beea92f4b675ec229b578db161d",
+      "info": {
+        "name": "luci-lib-jsonc",
+        "version": "26.296.27218~1c67452",
+        "hashes": "a40a611968b3b7a18a1e093eef70a04c6c3cfb64",
+        "description": "Lua binding for JSON-C",
+        "arch": "aarch64_cortex-a53",
+        "license": "Apache-2.0",
+        "origin": "/root/be6l-openwrt/source/feeds/luci/libs/luci-lib-jsonc",
+        "maintainer": "OpenWrt LuCI community",
+        "url": "https://github.com/openwrt/luci",
+        "installed-size": 12317,
+        "depends": [
+          "libc",
+          "libjson-c5",
+          "liblua5.1.5"
+        ],
+        "provides": [
+          "luci-lib-jsonc-any"
+        ],
+        "tags": [
+          "openwrt:section=luci"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/luci/jsonc.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "liblua.so.5.1.5",
+            "libjson-c.so.5",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 12290,
+          "sha256": "230e8d534e385f41bf3901c55841fb81a0aae3d89c37ff368f032bcac29de568"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "luci-lua-runtime": {
+      "file": "luci-lua-runtime-26.296.27218~1c67452.apk",
+      "sha256": "f325f7f3a173e1efb8599b9afab0f44db7c86e316646ba0a42df4f44db42d3f4",
+      "info": {
+        "name": "luci-lua-runtime",
+        "version": "26.296.27218~1c67452",
+        "hashes": "8f375d2edfb753e7dedb3826c4ed7a0bbc2461fc",
+        "description": "LuCI Lua runtime libraries",
+        "arch": "aarch64_cortex-a53",
+        "license": "Apache-2.0",
+        "origin": "/root/be6l-openwrt/source/feeds/luci/modules/luci-lua-runtime",
+        "maintainer": "OpenWrt LuCI community",
+        "url": "https://github.com/openwrt/luci",
+        "installed-size": 90857,
+        "depends": [
+          "libc",
+          "liblucihttp-lua",
+          "libubus-lua",
+          "lua",
+          "luci-base",
+          "luci-lib-base",
+          "luci-lib-ip",
+          "luci-lib-jsonc",
+          "luci-lib-nixio",
+          "ucode-mod-lua"
+        ],
+        "provides": [
+          "luci-lua-runtime-any"
+        ],
+        "tags": [
+          "openwrt:section=luci"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/luci/template/parser.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 24706,
+          "sha256": "91a5bd8b4bd29e99c58e72cabeed6719406513049e05247c51ab3f5973e09e84"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "lyaml": {
+      "file": "lyaml-6.2.7-r2.apk",
+      "sha256": "187d948e493f92ef16f234b6141ca4331dc830b5a4180fa34bbfdf5a9f3e25c3",
+      "info": {
+        "name": "lyaml",
+        "version": "6.2.7-r2",
+        "hashes": "c213cd786a1a7524941197a2f50b531cebf92add",
+        "description": "Lua bindings for libyaml",
+        "arch": "aarch64_cortex-a53",
+        "license": "MIT",
+        "origin": "/root/be6l-openwrt/source/feeds/packages/lang/lua/lyaml",
+        "maintainer": "Mathew McBride <matt@traverse.com.au>",
+        "url": "https://github.com/gvvaughan/lyaml",
+        "installed-size": 54639,
+        "depends": [
+          "libc",
+          "libyaml",
+          "lua"
+        ],
+        "provides": [
+          "lyaml-any"
+        ],
+        "tags": [
+          "openwrt:section=lang"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/lua/yaml.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "libyaml-0.so.2",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 24578,
+          "sha256": "3f897cbcc0bfc02775bb15395f687f6e31e8500a7f2ddfdda448d7c3676f59cf"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    },
+    "ucode-mod-lua": {
+      "file": "ucode-mod-lua-1.apk",
+      "sha256": "419dca0e842bd2366e42b6ca364c45904170372c4f401bd1bd321b62782a6ef1",
+      "info": {
+        "name": "ucode-mod-lua",
+        "version": "1",
+        "hashes": "602af7bd3f071d4a7aec722ba4faae6c2fba85d7",
+        "description": "ucode to Lua bridge library",
+        "arch": "aarch64_cortex-a53",
+        "license": "ISC",
+        "origin": "/root/be6l-openwrt/source/feeds/luci/contrib/package/ucode-mod-lua",
+        "maintainer": "Jo-Philipp Wich <jo@mein.io>",
+        "installed-size": 24600,
+        "depends": [
+          "libc",
+          "liblua5.1.5",
+          "libucode20261009"
+        ],
+        "provides": [
+          "ucode-mod-lua-any"
+        ],
+        "tags": [
+          "openwrt:section=utils"
+        ]
+      },
+      "elf_files": {
+        "usr/lib/ucode/lua.so": {
+          "bits": 64,
+          "machine": 183,
+          "type": 3,
+          "e_flags": "0x0",
+          "interpreter": null,
+          "needed": [
+            "liblua.so.5.1.5",
+            "libgcc_s.so.1",
+            "libc.so"
+          ],
+          "soname": null,
+          "rpath": null,
+          "runpath": null,
+          "bytes": 24578,
+          "sha256": "1942545719fea47f2b1cc2aa1cdc7a2355a6b119a077c8ab8af275483f78eb0a"
+        }
+      },
+      "ordinary_signature_verified": true,
+      "payload_modified": false
+    }
+  },
+  "package_count": 9,
+  "ordinary_elf_count": 9,
+  "all_archive_signatures_verified": true,
+  "target_package_scripts_executed": false,
+  "mainroot_composed": false,
+  "full_apk_dependency_solution": false,
+  "target_executed": false,
+  "standard_a53_package_compatibility_qualified": false
+}

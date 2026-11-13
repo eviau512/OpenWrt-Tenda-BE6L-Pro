@@ -1,0 +1,319 @@
+{
+  "scope": "offline static native bootstrap payload and host-only C policy fixtures; not a composed normal main root",
+  "build_receipt_sha256": "33f9a1a71367e583a76da02994cf150028faba7bb54839c44ee3066fb3434d0d",
+  "host_receipt_sha256": "3e67d2a973ab74490f666944606bae5fd711d44328aee53db891ba848a2f4764",
+  "manifest_id": "0754dd07fbc5f1c0efdaa9a778e4d20ed7ede9a94991b668c004ebf8daa066ec",
+  "input_root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+  "original_root_unchanged": true,
+  "bootstrap_sha256": "cf47d1277c8b6b34cc9d7050bbecd3adba494d67bb0e107ceb27fa7a1953f3bc",
+  "bootstrap_bytes": 477792,
+  "private_marker": "0xbe6a0001",
+  "static_native": true,
+  "aapcs64_soft": true,
+  "fp_simd_register_uses": 0,
+  "audited_instructions": 13645,
+  "native_busybox_sha256": "1c5562bcb7ec47ae5efad6776a9a2b04a33367b20995b49dff357e283ace9f4b",
+  "signed_r5_apk_sha256": "253fc682636d2d40b1e6c016317704b21452c74cc2540d1bffd32223adfa5928",
+  "interpreter_sha256": "7e094b445e34d353c47b91cddde062ce2e2d344678813da5e22b9993953d720d",
+  "complete_input_elf_inventory": true,
+  "manifest_entries": 464,
+  "elf_roles": {
+    "1": 62,
+    "2": 0,
+    "3": 144,
+    "4": 2
+  },
+  "normal_archives_verified": 0,
+  "source_sha256": "406f199e36cd07947b3547e40ef680374e23ceb291f0a9945aa5c9531a84642e",
+  "sha256_source_sha256": "9ee109e8d9b9dd2514249aeb2332f75043c2668fb32ef31b9dbdb1057a07e278",
+  "compiled_header_sha256": "18a7be5f4b8e3b749c4105cd0fe4628971db714de3093189349c7c39b984ad90",
+  "compiler_wrapper_sha256": "0f7e722b182f9ba0e13e8fd2bb1f237f564af288dc749e257250ec430686d0ac",
+  "dtb_sha256": "e825e4ce064f4909b4547df18f407526e3ebb060bbbb3cfb3b59df3206cc5c15",
+  "root_account_native_shell": false,
+  "bootstrap_package_signed": false,
+  "final_root_composed": false,
+  "kernel_F_procfd_qualified": false,
+  "target_executed": false,
+  "candidate_admitted": false,
+  "standard_a53_package_compatibility_qualified": false,
+  "host_checks_passed": 54,
+  "host_checks_total": 54,
+  "host_tests": [
+    {
+      "name": "complete-synthetic-inventory",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "changed-native-hash",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "writable-native-mode",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "missing-private-marker",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "dynamic-private-helper",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "self-copy-differs",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "self-marker-required",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "unlisted-private-elf",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "unlisted-standard-elf",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "unlisted-arm32-elf",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "changed-critical-link",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "writable-ancestor",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "symlink-ancestor",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "symlink-native-file",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "restored-synthetic-inventory",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-0-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-1-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-3-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-55-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-56-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-63-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-64-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-65-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-16383-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-16384-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-16385-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "sha256-1000000-byte",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "deadline-600--1",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "deadline-600-100",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "deadline-600-500",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "deadline-600-800",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "deadline-leading-zero",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-bound",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "heartbeat-foreign-boot",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-future",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-leading-zero",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-extra-token",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-negative",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-not-private",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "heartbeat-symlink",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-exact",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "rule-C-flag",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-missing-X",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-other-inode-fd",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-wrong-magic",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-wrong-mask",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-disabled",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "rule-tail",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "phase-handoff-H",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "phase-handoff-bad",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "phase-handoff-EOF",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "phase-handoff-timeout",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "name": "actual-sealed-root-plus-payload-full-C-inventory",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "name": "actual-r5-corruption",
+      "passed": true,
+      "exit": 1
+    }
+  ],
+  "device_accessed": false,
+  "mounts_performed": false,
+  "normal_package_provenance_branch_tested": false,
+  "normal_return_qualified": false,
+  "early_watchdog_target_qualified": false,
+  "full_apk_db_runtime_hash_omitted_to_avoid_self_reference": true
+}
