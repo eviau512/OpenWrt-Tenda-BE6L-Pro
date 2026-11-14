@@ -148,6 +148,17 @@ def main():
     for action, good, now in (("H", True, "100"), ("bad", False, "100"), ("EOF", False, "100"), ("timeout", False, "600")):
         env = dict(os.environ, BE6L_TEST_BOOTTIME=now)
         check("phase-handoff-" + action, ["--phase-handshake", action], good, env=env)
+    for action in ("same-state", "different-directory-inode", "different-lock-inode", "preexisting-state"):
+        lease_root = w / ("lease-" + action)
+        lease_root.mkdir()
+        check("stable-root-lease-" + action, ["--lease-check", lease_root, action])
+    for force in (5, 30):
+        env = dict(os.environ, BE6L_TEST_ACTIONS="1")
+        q = subprocess.run([binary, "--expiry-actions", str(force)], capture_output=True, timeout=5, env=env)
+        passed = q.returncode == 120 and q.stdout.decode() == "SYNC\nWAIT %d\nREBOOT_SYSCALL\n" % force
+        results.append(dict(name="native-expiry-no-PID1-signal-force-%d" % force, passed=passed, exit=q.returncode))
+        if not passed:
+            raise AssertionError((q.returncode, q.stdout, q.stderr))
     # The real sealed input is copied only into this private test directory.
     actual = w / "actual-root"
     shutil.copytree(a.base_root, actual, symlinks=True)

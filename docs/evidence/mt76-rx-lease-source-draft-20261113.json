@@ -1,0 +1,407 @@
+{
+  "date": "2026-11-13",
+  "kind": "Real private mt76 source integration draft; NOT ADMITTED; not full NPU port",
+  "private_work": "/root/be6l-mt76-rx-lease-draft-20261113-r3",
+  "preparation": {
+    "source": "/root/be6l-external-source-20261106-r1/mt76-2026.10.08~467ae2e3",
+    "private_source": "/root/be6l-mt76-rx-lease-draft-20261113-r3/source",
+    "original_sha256": {
+      "mt76.h": "e00a7864d9f28a37deaeee2915e2c5d7968f46b1413a3a9bc64fd431f51c736c",
+      "mac80211.c": "0646b55c7d330b793e216878ef1efe733ecc840f912e6a39b16d6fc0ec5cce61",
+      "mt7996/main.c": "d175833ff1533eb420e77b82565930cbda9e1abb38e06bee2a2a3bb7f5270269",
+      "mt7996/init.c": "b4bc0441252ce4bd14046f6d3fea38ad501b296e92854cc11dd1ab05143d6dde",
+      "npu.c": "c526fc278e834b17abca8b7e43502c16958e7a31c690ad6388a782e2a48b2371"
+    },
+    "modified_sha256": {
+      "mt76.h": "2c9196a4c565fc14d77fe45be92873f774972c11a01f05526b52f6ce841ae5ea",
+      "mac80211.c": "b6340644bed3308755c374eb6ca6a7906d46cb6b0101ca9af8edf4ce9b7e1f54",
+      "mt7996/main.c": "0adc7179612fd43ee0a837a273a239f0bc6934df497ab1b29adc1073493a3e61",
+      "mt7996/init.c": "4d67c91adb6465140158fa9268d1086263f6058d912a197a5ca65ca29fa8dc63",
+      "npu.c": "94c5d2da288610e068adfa5ea382faa7c36b545db63bf1813a723716cef688e0"
+    },
+    "patch_sha256": "0aa7f542ea5b16e12cd3d40466b5d0a7c8b020c3ae13cbe257fd303e61c59140",
+    "actual_queue_sidecar": true,
+    "skb_cb_layout_unchanged": true,
+    "native_admission_closed": true,
+    "hardware_all_provider": false,
+    "numeric_reuse_within_device_epoch": false,
+    "full_remove_dma_qualified": false,
+    "module_abi_qualified": false,
+    "target_executed": false,
+    "xwrt_lifetime_port_complete": false
+  },
+  "artifacts_sha256": {
+    "patches/next/981-mt76-rx-lease-draft.patch": "0aa7f542ea5b16e12cd3d40466b5d0a7c8b020c3ae13cbe257fd303e61c59140",
+    "tools/prepare_mt76_rx_lease_draft_v1.py": "408c5df21684b9980440ad5d49cfd549d74b6f75d28ff8bba31f93fe1738164a",
+    "tools/compile_mt76_rx_lease_draft_v1.py": "3f657ef0622b5b49ba5109f9b5fc523c723ac6f108b67a219789e1e73749ce78",
+    "tools/test_mt76_rx_lease_draft_v1.py": "85b698e9112ece1025e6c9930c506b455ff8d0e200f7ec84cd9373e689ea77fe"
+  },
+  "context_source": {
+    "dma.c": {
+      "draft_sha256": "79551f6e557330bbbdece857286ac4978e027ebf3e6d3ad03e5d530f95cb2242",
+      "base_sha256": "79551f6e557330bbbdece857286ac4978e027ebf3e6d3ad03e5d530f95cb2242",
+      "definitions": {
+        "mt76_dma_rx_poll": {
+          "first_line": 1204,
+          "last_line": 1227,
+          "sha256": "7873b4f3279a1f6f0e8cf3e93bb02e04023ed31548a9066dc9169e1300a2e9f6"
+        }
+      }
+    },
+    "agg-rx.c": {
+      "draft_sha256": "f40f3b77ad8c4a5e99a4865b394718e64668842d5a047b4d9b5061fae9aed7c4",
+      "base_sha256": "f40f3b77ad8c4a5e99a4865b394718e64668842d5a047b4d9b5061fae9aed7c4",
+      "definitions": {
+        "mt76_rx_aggr_reorder": {
+          "first_line": 148,
+          "last_line": 243,
+          "sha256": "07e91f18b7a35c69a1ea5fc74801d896e3fc21a7623c783614b1a8c3143ea374"
+        },
+        "mt76_rx_aggr_reorder_work": {
+          "first_line": 90,
+          "last_line": 117,
+          "sha256": "fd78c4e0767914a115bd296e09e530f52385eb9d8e14f70b08ebd20cda088315"
+        },
+        "mt76_rx_aggr_shutdown": {
+          "first_line": 268,
+          "last_line": 291,
+          "sha256": "bced18c7d5313611609df9d0a0922716042ac66e08a1082b19f79f344f83f53f"
+        },
+        "mt76_rx_aggr_stop": {
+          "first_line": 292,
+          "last_line": 303,
+          "sha256": "a32cb300243c7380ba74cf5d548f819a3a6957a02421c133e1a08be1233216a3"
+        }
+      }
+    },
+    "mac80211.c": {
+      "draft_sha256": "b6340644bed3308755c374eb6ca6a7906d46cb6b0101ca9af8edf4ce9b7e1f54",
+      "base_sha256": "0646b55c7d330b793e216878ef1efe733ecc840f912e6a39b16d6fc0ec5cce61",
+      "definitions": {
+        "mt76_reset_device": {
+          "first_line": 995,
+          "last_line": 1024,
+          "sha256": "189a6a6cc08bee50043ddb1fe08fd1b2b1eb749b96f44ffc7783d3cc18721e65"
+        },
+        "mt76_free_device": {
+          "first_line": 970,
+          "last_line": 982,
+          "sha256": "d9d0bbedce03a2825e3c2053f7b0d84d3bc6c18fe940283f629cf14fccd5e141"
+        },
+        "mt76_rx_poll_complete": {
+          "first_line": 1802,
+          "last_line": 1822,
+          "sha256": "54282f3cb174e5bae56d49c34eceae6f95e2c8674be89e5fd7bd268c918485c9"
+        },
+        "mt76_wcid_init": {
+          "first_line": 1955,
+          "last_line": 1969,
+          "sha256": "6bfa170351220bf212db8cb3873539885a0a043284b70e7c7de909b3e9168eb3"
+        }
+      }
+    },
+    "mt7996/main.c": {
+      "draft_sha256": "0adc7179612fd43ee0a837a273a239f0bc6934df497ab1b29adc1073493a3e61",
+      "base_sha256": "d175833ff1533eb420e77b82565930cbda9e1abb38e06bee2a2a3bb7f5270269",
+      "definitions": {
+        "mt7996_mac_sta_init_link": {
+          "first_line": 1776,
+          "last_line": 1869,
+          "sha256": "324b081d75609144927da9e654754de49d59e866d84998e1e9449201099d19a0"
+        },
+        "mt7996_mac_sta_remove_link": {
+          "first_line": 1870,
+          "last_line": 1947,
+          "sha256": "df3eb17f0551e96350d057080a11010a6286b209276cc093f9c78edd5db2ab76"
+        },
+        "mt7996_sta_pre_rcu_remove": {
+          "first_line": 2582,
+          "last_line": 2607,
+          "sha256": "289145051090e90fb0d79cb71ccca76cf0cb6d6ad5a43c3e23755f9f3a2892ac"
+        }
+      }
+    },
+    "mt7996/init.c": {
+      "draft_sha256": "4d67c91adb6465140158fa9268d1086263f6058d912a197a5ca65ca29fa8dc63",
+      "base_sha256": "b4bc0441252ce4bd14046f6d3fea38ad501b296e92854cc11dd1ab05143d6dde",
+      "definitions": {
+        "mt7996_cleanup_device": {
+          "first_line": 1866,
+          "last_line": 1921,
+          "sha256": "d2411cef4669ecd19a90031265ec8a907f7add4ae95be7ba6b147298f5cff011"
+        }
+      }
+    },
+    "npu.c": {
+      "draft_sha256": "94c5d2da288610e068adfa5ea382faa7c36b545db63bf1813a723716cef688e0",
+      "base_sha256": "c526fc278e834b17abca8b7e43502c16958e7a31c690ad6388a782e2a48b2371",
+      "definitions": {
+        "mt76_npu_init": {
+          "first_line": 489,
+          "last_line": 572,
+          "sha256": "e486ad6dbe7d476add8caa513c822c16722ff047062c155b2faa5ea927e14783"
+        },
+        "mt76_npu_flush_station": {
+          "first_line": 138,
+          "last_line": 153,
+          "sha256": "12050d94c4b158354365a315397d4a06b8ea969db8afc053a039720a86db0605"
+        }
+      }
+    }
+  },
+  "matching_kernel_build": "/root/be6l-kernel-build-xz-20261113-r1/build",
+  "matching_kernel_pins": {
+    ".config": "f813052fc4d8825bd94131b34858e85549a03d303beef2b8891d22034b076f6d",
+    "include/generated/utsrelease.h": "154c7a7e6c8c9938ec1699dfd8207e3e1ac1744d6569d8af069c127df9af95ae"
+  },
+  "saved_compiler_command_sha256": {
+    "mac80211": "3d1bf2b47e704705fc3bf8fa212d6d94d5e6c086d7c4ddc33e6d777be326c136",
+    "mt7996/main": "9e0b8838a766b19cfcffae59e2d9edfa6a5dbdf706de1424aa989bd561f05978",
+    "mt7996/init": "4ca750b5efb92aa6f90fb6333fa66cb729a829af74a338a863e81f79d59dd548",
+    "npu": "d575c1ad9aed3aba5a37fd8370a4df410b5744be4d792dda780055cbad629623"
+  },
+  "object_compilation": {
+    "actual_arm64_driver_objects_compiled": true,
+    "object_count": 4,
+    "objects": [
+      {
+        "unit": "mac80211",
+        "object_sha256": "c7b454e61a77adef0fdafaab94865c33fd42dd05bdb073e01ea35cd78e43b318",
+        "source_sha256": "b6340644bed3308755c374eb6ca6a7906d46cb6b0101ca9af8edf4ce9b7e1f54"
+      },
+      {
+        "unit": "mt7996/main",
+        "object_sha256": "169e3f765cca1aa89868d9d6ad2145156cce4390586b84a0aee301f3e233a342",
+        "source_sha256": "0adc7179612fd43ee0a837a273a239f0bc6934df497ab1b29adc1073493a3e61"
+      },
+      {
+        "unit": "mt7996/init",
+        "object_sha256": "a0400a5743071ca84ab4a024eca38c6ef5f0971cc277333cc7a106b64b30c895",
+        "source_sha256": "4d67c91adb6465140158fa9268d1086263f6058d912a197a5ca65ca29fa8dc63"
+      },
+      {
+        "unit": "npu",
+        "object_sha256": "06fa905f7e94d2f464d0df2d2abba63e0029c857a21745d3dbe55f3a55285f29",
+        "source_sha256": "94c5d2da288610e068adfa5ea382faa7c36b545db63bf1813a723716cef688e0"
+      }
+    ],
+    "matching_source_rechecked": true,
+    "make_invoked": false,
+    "modules_linked": false,
+    "actual_cache_sidecar": true,
+    "skb_cb_layout_unchanged": true,
+    "kernel_or_module_abi_qualified": false,
+    "hardware_all_provider": false,
+    "native_admission_closed": true,
+    "target_executed": false
+  },
+  "source_extracted_fault_controls": {
+    "actual_integrated_source_function_sha256": {
+      "mt76_rx_lease_native_ready": "8961e11d854bdcd97daf3c478ee7b3b610b13de696e2d552d37d546bd91c3cdf",
+      "mt76_rx_lease_put": "f26756d707cbb807e1551164788891428fae2d1f9255edeb33ab52b805f7be07",
+      "mt76_rx_lease_prepare": "6a193c28f6bfbef0b96f2c68c5e9753e9097091a951b6ce870cbfba8b5617557",
+      "mt76_rx_lease_retire": "e0e555a03e78e06d2ec18db62a3da31f16c8001b73e16303e26fe4844e19be17",
+      "mt76_rx_lease_capture": "de0d2c5c27e4ac3de56d4c7976dba2fad397139b384befb1d016f8cc7487344a",
+      "mt76_rx_lease_resolve": "19988033c2a7e485347ca520ba66ecbe5560f3d09aa118e3433cd79c795b7201",
+      "mt76_rx_lease_purge": "2a4422a86c4490c60c9ab36af15e2d6fc408c8f572f15da6e066ad873e8afde1",
+      "mt76_rx_lease_cleanup": "88a5f2b3e6353b825b905c58d772c011c369bdc3fe95e330af1a0b320a9f6c7a",
+      "mt76_rx_release_amsdu": "7e724f24d0a599c2cddf856dde0dfc7f22f1b4a87a3715c4a064a216f76f04e7",
+      "mt76_rx_release_burst": "0ba253aa537e801274f46c4b1d94cfdb15e756793f1f2e0185bbc0ee543a185d"
+    },
+    "observations": [
+      {
+        "scenario": "baseline-normal-control",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 1,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "negative-baseline-retained-raw-cache-after-sta-retire",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 1,
+        "delivered": 2,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-cache-is-real-sidecar-and-raw-pointer-erased",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-retired-cache-dropped-before-new-peer",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 1,
+        "dropped": 1,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-live-fragment-chain-control",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 2,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-mixed-peer-same-seq-flushed-separately",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 2,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-late-binding-mismatch-dropped",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 1,
+        "dropped": 1,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-allocation-failure-before-publication",
+        "expected_observation_passed": true,
+        "errno": -12,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-retired-number-reuse-denied-without-all-provider",
+        "expected_observation_passed": true,
+        "errno": -16,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-epoch-overflow-before-publication",
+        "expected_observation_passed": true,
+        "errno": -75,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-header-error-releases-cache-owner-once",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 2,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-rro-cross-poll-queue-rejected",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 1,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-unowned-nonstation-pointer-not-cached",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 1,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-null-station-control",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 1,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-retire-idempotent-before-no-fail-sta-free",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-cpu-purge-covers-secondary-phy",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 1,
+        "hardware_proved": false
+      },
+      {
+        "scenario": "draft-native-admission-default-remains-closed",
+        "expected_observation_passed": true,
+        "errno": 0,
+        "raw_retired_pointer_observed": 0,
+        "delivered": 0,
+        "dropped": 0,
+        "hardware_proved": false
+      }
+    ],
+    "source_order_checks": {
+      "owner_before_link_publication": true,
+      "owner_before_wcid_publication": true,
+      "retired_existing_link_cannot_reactivate": true,
+      "generic_reset_transfers_owner": true,
+      "native_gate_before_get": true,
+      "purge_after_irq_napi_cpu_sync": true,
+      "target_only": true,
+      "status_layout_unchanged": true
+    },
+    "all_expected_observations_passed": true,
+    "baseline_negative_control_is_not_a_safety_pass": true,
+    "actual_queue_sidecar": true,
+    "old_standalone_model_used": false,
+    "substituted_operations": [
+      "SKB infrastructure",
+      "allocator",
+      "reference counter primitives",
+      "RCU/locks",
+      "queue bookkeeping"
+    ],
+    "excluded": [
+      "real IRQ/RCU/RTNL concurrency",
+      "native packet reachability",
+      "physical DMA/output withdrawal",
+      "full module ABI/link",
+      "safe full remove/reprobe and cross-device epoch"
+    ],
+    "native_admission_closed": true,
+    "hardware_all_provider": false,
+    "target_executed": false
+  },
+  "baseline_negative_control_is_a_safety_pass": false,
+  "normal_cleanup_cpu_boundary_only": true,
+  "real_hardware_provider": false,
+  "numeric_wcid_reuse_within_device_epoch": false,
+  "full_remove_reprobe_cross_device_epoch_qualified": false,
+  "all_rx_software_reorder_qualified": false,
+  "full_module_abi_link_qualified": false,
+  "hardware_candidate_or_dut_changed": false,
+  "xwrt_94104_complete_port": false
+}

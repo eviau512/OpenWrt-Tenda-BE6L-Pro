@@ -39,7 +39,8 @@
 #define PROC_FS 0x9fa0UL
 #define SYS_FS 0x62656572UL
 #define BINFMT_FS 0x42494e4dUL
-#define GUARD_DIR "/tmp/be6l-recovery-guard"
+#define GUARD_NAME "be6l-recovery-state"
+#define GUARD_DIR "/" GUARD_NAME
 #define MAX_ENTRIES 4096
 struct manifest_entry { const char *path,*digest,*link; uint64_t size; unsigned mode,role,static_native; };
 #include "bootstrap_manifest.h"
@@ -198,18 +199,29 @@ static unsigned long clock_seconds(void)
 }
 static void delay(unsigned seconds)
 {
+#ifdef BE6L_BOOTSTRAP_HOST_TEST
+ if(getenv("BE6L_TEST_ACTIONS")){dprintf(1,"WAIT %u\n",seconds);return;}
+#endif
  struct timespec t={.tv_sec=seconds};while(nanosleep(&t,&t)&&errno==EINTR){}
 }
-_Noreturn static void emergency(const char *why)
+_Noreturn static void native_reboot(const char *why,unsigned wait)
 {
- dprintf(2,"BE6L_NATIVE_FAILURE %s errno=%d\n",why,errno);sync();delay(2);
+ dprintf(2,"BE6L_NATIVE_FAILURE %s errno=%d\n",why,errno);
+#ifdef BE6L_BOOTSTRAP_HOST_TEST
+ if(getenv("BE6L_TEST_ACTIONS"))dprintf(1,"SYNC\n");else sync();
+#else
+ sync();
+#endif
+ delay(wait);
 #ifndef BE6L_BOOTSTRAP_HOST_TEST
  reboot(RB_AUTOBOOT);
  for(;;)pause();
 #else
+ if(getenv("BE6L_TEST_ACTIONS"))dprintf(1,"REBOOT_SYSCALL\n");
  _exit(120);
 #endif
 }
+_Noreturn static void emergency(const char *why){native_reboot(why,2);}
 static int read_text(const char *path,char *out,size_t capacity)
 {
  int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC);ssize_t n;
@@ -317,13 +329,18 @@ static int recovery_config(struct timings *t)
  }
  return valid_timings(t)?0:-1;
 }
+static int guard_state_open(int root,int create)
+{
+ struct stat st,parent;
+ if(protected_dir(root)||fstat(root,&parent))return -1;
+ if(create&&mkdirat(root,GUARD_NAME,0700))return -1; /* only fresh stage two creates it */
+ int fd=openat(root,GUARD_NAME,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
+ if(fd<0||fstat(fd,&st)||st.st_uid||st.st_dev!=parent.st_dev||(st.st_mode&07777)!=0700){if(fd>=0)close(fd);return -1;}return fd;
+}
 static int guard_directory(void)
 {
- struct stat st;int temporary=open("/tmp",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
- if(temporary<0||fstat(temporary,&st)||st.st_uid){if(temporary>=0)close(temporary);return -1;}
- if(mkdirat(temporary,"be6l-recovery-guard",0700)&&errno!=EEXIST){close(temporary);return -1;}
- int fd=openat(temporary,"be6l-recovery-guard",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);close(temporary);
- if(fd<0||fstat(fd,&st)||st.st_uid||(st.st_mode&07777)!=0700){if(fd>=0)close(fd);return -1;}return fd;
+ int root=open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);if(root<0)return -1;
+ int fd=guard_state_open(root,0);close(root);return fd;
 }
 static int private_file(int directory,const char *name,int flags)
 {
@@ -353,30 +370,58 @@ static int marked(int directory,const char *name)
  struct stat st;return !fstatat(directory,name,&st,AT_SYMLINK_NOFOLLOW)&&st.st_uid==0&&
   ((S_ISREG(st.st_mode)&&!(st.st_mode&0022))||S_ISDIR(st.st_mode));
 }
+static int guard_identity(int root,int directory,int lock)
+{
+ struct stat held,named,held_lock,named_lock;
+ return fstat(directory,&held)||fstatat(root,GUARD_NAME,&named,AT_SYMLINK_NOFOLLOW)||
+  !S_ISDIR(named.st_mode)||named.st_uid||(named.st_mode&07777)!=0700||held.st_dev!=named.st_dev||held.st_ino!=named.st_ino||
+  fstat(lock,&held_lock)||fstatat(directory,"native-watch.lock",&named_lock,AT_SYMLINK_NOFOLLOW)||
+  !S_ISREG(named_lock.st_mode)||named_lock.st_uid||(named_lock.st_mode&07777)!=0600||named_lock.st_nlink!=1||
+  held_lock.st_dev!=named_lock.st_dev||held_lock.st_ino!=named_lock.st_ino ? -1:0;
+}
+static int pulse_lock(int directory)
+{
+ int fd=private_file(directory,"pulse.lock",O_RDWR|O_CREAT);
+ if(fd<0)return -1;
+ if(flock(fd,LOCK_EX|LOCK_NB)){int saved=errno;close(fd);errno=saved;return -1;}return fd;
+}
 static int guard_loop(int ready_fd)
 {
- char boot[37];int directory=-1,lock=-1;struct timings t;long last=-1;
+ char boot[37];int root,directory,lock;struct timings t;long last=-1;
  if(platform()||boot_uuid(boot)||recovery_config(&t))return -1;
+ root=open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);if(root<0)return -1;
+ directory=guard_state_open(root,ready_fd>=0);if(directory<0)return -1;
+ lock=private_file(directory,"native-watch.lock",O_RDWR|O_CREAT);if(lock<0)return -1;
  signal(SIGTERM,SIG_IGN);signal(SIGINT,SIG_IGN);signal(SIGHUP,SIG_IGN);
  for(;;){
-  int current=guard_directory();struct stat old,new;
-  if(current<0)return -1;
-  if(directory<0||fstat(directory,&old)||fstat(current,&new)||old.st_dev!=new.st_dev||old.st_ino!=new.st_ino){
-   if(lock>=0)close(lock);if(directory>=0)close(directory);directory=current;lock=private_file(directory,"native-watch.lock",O_RDWR|O_CREAT);
-   if(lock<0)return -1;
-  }else close(current);
+  /* /tmp and /run are remounted by procd. This lease lives on the final
+   * root instead; replacing its directory/lock fails closed, never migrates
+   * a live timer onto a second independent inode. */
+  if(guard_identity(root,directory,lock))return -1;
   if(flock(lock,LOCK_EX|LOCK_NB)){if(errno!=EWOULDBLOCK&&errno!=EAGAIN)return -1;delay(1);continue;}
   if(ready_fd>=0){if(write_all(ready_fd,"R",1))return -1;close(ready_fd);ready_fd=-1;}
   if(recovery_config(&t))return -1;
   unsigned long now=clock_seconds();if(now==ULONG_MAX||now>999999999)return -1;
   long stamp=heartbeat_stamp(directory,boot,now);if(stamp>last)last=stamp;
   if(t.enabled&&!marked(directory,"disarmed")&&!marked(directory,"fired")&&now>=deadline(t.grace,t.timeout,last)){
-   now=clock_seconds();stamp=heartbeat_stamp(directory,boot,now);if(stamp>last)last=stamp;
-   if(now>=deadline(t.grace,t.timeout,last)&&!marked(directory,"disarmed")){
-    if(mkdirat(directory,"fired",0700)){if(errno==EEXIST)continue;return -1;}
-    dprintf(2,"BE6L_NATIVE_GUARD_EXPIRED %s %lu\n",boot,now);
-    kill(1,SIGTERM);delay((unsigned)t.force);emergency("native heartbeat expiry");
+   int pulse=pulse_lock(directory);
+   if(pulse<0){
+    if((errno==EWOULDBLOCK||errno==EAGAIN)&&now<deadline(t.grace,t.timeout,last)+t.force){delay(1);continue;}
+    return -1;
    }
+   now=clock_seconds();stamp=heartbeat_stamp(directory,boot,now);if(stamp>last)last=stamp;
+   if(now>=deadline(t.grace,t.timeout,last)&&!marked(directory,"disarmed")&&!marked(directory,"fired")){
+    if(guard_identity(root,directory,lock)){close(pulse);return -1;}
+    if(mkdirat(directory,"fired",0700)){close(pulse);return -1;}
+    close(pulse);
+    dprintf(2,"BE6L_NATIVE_GUARD_EXPIRED %s %lu\n",boot,now);
+    /* procd STATE_HALT sends SIGKILL to all userspace after SIGTERM. Do
+     * not start that path and thereby destroy this forced fallback. This
+     * RAM-only emergency waits force_after then calls the native syscall.
+     * Attached-NPU driver quiescence/restart success is NOT established. */
+    native_reboot("native heartbeat expiry",(unsigned)t.force);
+   }
+   close(pulse);
   }
   delay((unsigned)t.poll);
  }
@@ -391,6 +436,8 @@ static int guard_command(int argc,char **argv)
   if(guard_loop(-1))emergency("native guard failed");return 1;
  }
  if(argc!=2||(directory=guard_directory())<0)return 1;
+ int pulse=-1;
+ if(strcmp(argv[1],"status")){pulse=pulse_lock(directory);if(pulse<0){close(directory);return 1;}}
  int result=0;
  if(!strcmp(argv[1],"heartbeat")||!strcmp(argv[1],"arm")){
   const char *ssh=getenv("SSH_CONNECTION");now=clock_seconds();
@@ -402,7 +449,7 @@ static int guard_command(int argc,char **argv)
  }else if(!strcmp(argv[1],"status")){
   printf("boot_id=%s\nstate=%s\n",boot,marked(directory,"fired")?"fired":marked(directory,"disarmed")?"disarmed":"armed");
  }else result=1;
- close(directory);return result;
+ if(pulse>=0)close(pulse);close(directory);return result;
 }
 static int native_shell(int argc,char **argv)
 {
@@ -435,6 +482,7 @@ static int early_main(int argc,char **argv)
  int root=open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC);if(root<0||verify_root(root))emergency(failure);
  if(!second){
   struct stat st;if(!fstatat(root,"new_root",&st,AT_SYMLINK_NOFOLLOW)||errno!=ENOENT)emergency("preexisting root-copy destination");
+  if(!fstatat(root,GUARD_NAME,&st,AT_SYMLINK_NOFOLLOW)||errno!=ENOENT)emergency("old guard state before root copy");
   int pipefd[2];if(pipe2(pipefd,O_CLOEXEC))emergency("phase pipe");pid_t watcher=fork();if(watcher<0)emergency("phase watcher fork");
   if(!watcher){close(pipefd[1]);if(phase_zero_watch(pipefd[0]))emergency("early stage timeout or lost handoff");_exit(0);}
   close(pipefd[0]);if(fcntl(pipefd[1],F_SETFD,0))emergency("phase descriptor");
@@ -443,6 +491,8 @@ static int early_main(int argc,char **argv)
   char *args[]={"sh","/" NATIVE_INIT_PATH,NULL};char *environment[]={"PATH=/usr/sbin:/usr/bin:/sbin:/bin","INITRAMFS=1",ack,pid,NULL};
   close(root);syscall(SYS_execveat,fd,"",args,environment,AT_EMPTY_PATH);emergency("native init exec");
  }
+ struct stat old_state;
+ if(!fstatat(root,GUARD_NAME,&old_state,AT_SYMLINK_NOFOLLOW)||errno!=ENOENT)emergency("copied guard state on final root");
  if(mount_checked("proc","/proc",PROC_FS)||mount_checked("sysfs","/sys",SYS_FS)||platform()||mount_checked("binfmt_misc","/proc/sys/fs/binfmt_misc",BINFMT_FS)||register_binfmt(root))emergency(failure);
  int ready[2];if(pipe2(ready,O_CLOEXEC))emergency("native guard readiness");pid_t guard=fork();if(guard<0)emergency("native guard fork");
  if(!guard){
@@ -472,6 +522,20 @@ int main(int argc,char **argv)
  if(argc==4&&!strcmp(argv[1],"--rule-readback")){char data[2048];if(read_text(argv[2],data,sizeof(data))<0)return 1;return rule_readback(data,argv[3])?1:0;}
  if(argc==5&&!strcmp(argv[1],"--heartbeat-parse")){unsigned long now;if(number(argv[4],&now))return 1;int fd=open(argv[2],O_RDONLY|O_DIRECTORY|O_NOFOLLOW);if(fd<0)return 1;long stamp=heartbeat_stamp(fd,argv[3],now);close(fd);if(stamp<0)return 1;printf("%ld\n",stamp);return 0;}
  if(argc==3&&!strcmp(argv[1],"--phase-handshake")){int p[2];if(pipe(p))return 1;if(!strcmp(argv[2],"H"))write_all(p[1],"H",1);else if(!strcmp(argv[2],"bad"))write_all(p[1],"X",1);if(strcmp(argv[2],"timeout"))close(p[1]);int result=phase_zero_watch(p[0]);close(p[0]);if(!strcmp(argv[2],"timeout"))close(p[1]);return result?1:0;}
+ if(argc==3&&!strcmp(argv[1],"--expiry-actions")){unsigned long force;if(number(argv[2],&force)||force<5||force>30||!getenv("BE6L_TEST_ACTIONS"))return 1;native_reboot("host expiry action sequence",(unsigned)force);}
+ if(argc==4&&!strcmp(argv[1],"--lease-check")){
+  int root=open(argv[2],O_RDONLY|O_DIRECTORY|O_NOFOLLOW),directory,lock,other;
+  if(root<0||(directory=guard_state_open(root,1))<0||(lock=private_file(directory,"native-watch.lock",O_RDWR|O_CREAT))<0||flock(lock,LOCK_EX|LOCK_NB))return 1;
+  other=private_file(directory,"native-watch.lock",O_RDWR|O_CREAT);
+  if(other<0||flock(other,LOCK_EX|LOCK_NB)==0||(errno!=EWOULDBLOCK&&errno!=EAGAIN)||guard_identity(root,directory,lock))return 1;close(other);
+  /* WSL may deny renaming an open directory. Supply a second named inode
+   * to the actual identity predicate; live replacement still needs a DUT
+   * RAMFS fixture and is not claimed by this host check. */
+  if(!strcmp(argv[3],"different-directory-inode")){if(mkdirat(root,"alternate",0700))return 1;int alternate=openat(root,"alternate",O_RDONLY|O_DIRECTORY|O_NOFOLLOW);if(alternate<0||mkdirat(alternate,GUARD_NAME,0700))return 1;return guard_identity(alternate,directory,lock)?0:1;}
+  if(!strcmp(argv[3],"different-lock-inode")){other=private_file(directory,"other-watch.lock",O_RDWR|O_CREAT);if(other<0)return 1;return guard_identity(root,directory,other)?0:1;}
+  if(!strcmp(argv[3],"preexisting-state"))return guard_state_open(root,1)<0?0:1;
+  if(strcmp(argv[3],"same-state"))return 1;return guard_identity(root,directory,lock)?1:0;
+ }
  return 64;
 }
 #else

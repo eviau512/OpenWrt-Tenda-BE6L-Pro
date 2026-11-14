@@ -1,0 +1,421 @@
+From: BE6L source research
+Subject: [DRAFT NOT ADMITTED] mt76 independent RX cache lease
+
+Actual per-queue sidecar, closed native admission, no hardware ALL provider.
+Retired WCIDs are never reused in a device epoch: capacity/reset restrictions.
+CPU metadata cleanup is not a full void-remove/devres DMA ownership solution.
+
+--- a/mt76.h
++++ b/mt76.h
+@@ -387,7 +387,17 @@
+ #define MT_WCID_TX_INFO_TXPWR_ADJ	GENMASK(25, 18)
+ #define MT_WCID_TX_INFO_SET		BIT(31)
+ 
++/* Independent CPU-cache metadata. No station/device/key pointers. */
++struct mt76_rx_lease {
++	refcount_t refs;
++	atomic_t live;
++	u64 epoch;
++	u16 idx;
++	u8 band, addr[ETH_ALEN];
++};
++
+ struct mt76_wcid {
++	struct mt76_rx_lease __rcu *rx_lease;
+ 	struct mt76_rx_tid __rcu *aggr[IEEE80211_NUM_TIDS];
+ 
+ 	atomic_t non_aql_packets;
+@@ -928,6 +938,7 @@
+ 		struct sk_buff *head;
+ 		struct sk_buff **tail;
+ 		u16 seqno;
++		struct mt76_rx_lease *lease;
+ 	} rx_amsdu[__MT_RXQ_MAX];
+ 
+ 	struct mt76_freq_range_power *frp;
+@@ -1007,6 +1018,11 @@
+ 	u32 wcid_mask[DIV_ROUND_UP(MT76_N_WCIDS, 32)];
+ 
+ 	u64 vif_mask;
++
++	/* DRAFT: no retired number reuse without a covering ALL provider. */
++	bool rx_lease_enabled;
++	u64 rx_lease_epoch;
++	struct mt76_rx_lease *rx_retired[MT76_N_WCIDS];
+ 
+ 	struct mt76_wcid global_wcid;
+ 	struct mt76_wcid __rcu *wcid[MT76_N_WCIDS];
+@@ -1335,6 +1351,11 @@
+ void *mt76_dma_alloc_coherent(struct mt76_dev *dev, size_t size,
+ 			      dma_addr_t *dma_addr, gfp_t gfp);
+ void mt76_free_device(struct mt76_dev *dev);
++bool mt76_rx_lease_native_ready(struct mt76_dev *dev);
++int mt76_rx_lease_prepare(struct mt76_dev *dev, struct mt76_wcid *wcid,
++			  u16 idx, u8 band, const u8 *addr);
++void mt76_rx_lease_retire(struct mt76_dev *dev, struct mt76_wcid *wcid);
++void mt76_rx_lease_purge(struct mt76_dev *dev);
+ void mt76_reset_device(struct mt76_dev *dev);
+ void mt76_unregister_phy(struct mt76_phy *phy);
+ 
+--- a/mac80211.c
++++ b/mac80211.c
+@@ -826,6 +826,147 @@
+ }
+ EXPORT_SYMBOL_GPL(mt76_unregister_device);
+ 
++
++/* DRAFT: CPU-cache owner and numeric lease, not a DMA-drain provider. */
++bool mt76_rx_lease_native_ready(struct mt76_dev *dev)
++{
++	/* No setter: ALL wired/native/output/remove coverage is not implemented. */
++	return false;
++}
++EXPORT_SYMBOL_GPL(mt76_rx_lease_native_ready);
++
++static void mt76_rx_lease_put(struct mt76_rx_lease *lease)
++{
++	if (lease && refcount_dec_and_test(&lease->refs))
++		kfree(lease);
++}
++
++int mt76_rx_lease_prepare(struct mt76_dev *dev, struct mt76_wcid *wcid,
++			 u16 idx, u8 band, const u8 *addr)
++{
++	struct mt76_rx_lease *lease;
++	u64 epoch;
++
++	lockdep_assert_held(&dev->mutex);
++	if (!dev->rx_lease_enabled)
++		return 0;
++	if (idx >= MT76_N_WCIDS)
++		return -EINVAL;
++	if (dev->rx_retired[idx] || rcu_access_pointer(wcid->rx_lease))
++		return -EBUSY;
++	if (dev->rx_lease_epoch == U64_MAX)
++		return -EOVERFLOW;
++	lease = kzalloc(sizeof(*lease), GFP_KERNEL);
++	if (!lease)
++		return -ENOMEM;
++	epoch = ++dev->rx_lease_epoch;
++	refcount_set(&lease->refs, 1); /* Transferred to retired[] on removal. */
++	atomic_set(&lease->live, 1);
++	lease->idx = idx;
++	lease->band = band;
++	lease->epoch = epoch;
++	ether_addr_copy(lease->addr, addr);
++	/* Allocation and copied identity precede the real WCID publication. */
++	rcu_assign_pointer(wcid->rx_lease, lease);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mt76_rx_lease_prepare);
++
++void mt76_rx_lease_retire(struct mt76_dev *dev, struct mt76_wcid *wcid)
++{
++	struct mt76_rx_lease *lease;
++
++	lockdep_assert_held(&dev->mutex);
++	lease = rcu_dereference_protected(wcid->rx_lease,
++					lockdep_is_held(&dev->mutex));
++	if (!lease)
++		return;
++	/* Revoke before normal table unpublication. A reader which already
++	 * borrowed a real WCID stays inside the pre-existing RX RCU span. */
++	atomic_set(&lease->live, 0);
++	if (WARN_ON_ONCE(dev->rx_retired[lease->idx]))
++		return; /* Invariant violation cannot authorize number reuse. */
++	dev->rx_retired[lease->idx] = lease;
++	RCU_INIT_POINTER(wcid->rx_lease, NULL);
++	/* No put: untagged late completions carry only idx. Keep it unavailable
++	 * for this device epoch; ALL provider support is intentionally absent. */
++}
++EXPORT_SYMBOL_GPL(mt76_rx_lease_retire);
++
++static struct mt76_rx_lease *
++mt76_rx_lease_capture(struct mt76_wcid *wcid)
++{
++	struct mt76_rx_lease *lease;
++
++	RCU_LOCKDEP_WARN(!rcu_read_lock_held(), "RX lease capture outside RCU");
++	lease = rcu_dereference(wcid->rx_lease);
++	if (!lease || !atomic_read(&lease->live) ||
++	    !refcount_inc_not_zero(&lease->refs))
++		return NULL;
++	return lease;
++}
++
++static bool mt76_rx_lease_resolve(struct mt76_dev *dev,
++				struct mt76_rx_lease *lease,
++				struct mt76_wcid **result)
++{
++	struct mt76_wcid *wcid;
++
++	RCU_LOCKDEP_WARN(!rcu_read_lock_held(), "RX lease resolve outside RCU");
++	*result = NULL;
++	if (!lease)
++		return true; /* Original packet had no station identity. */
++	if (!atomic_read(&lease->live) || lease->idx >= MT76_N_WCIDS)
++		return false;
++	wcid = rcu_dereference(dev->wcid[lease->idx]);
++	if (!wcid || rcu_access_pointer(wcid->rx_lease) != lease)
++		return false;
++	*result = wcid;
++	return true;
++}
++
++void mt76_rx_lease_purge(struct mt76_dev *dev)
++{
++	int band, q;
++
++	/* Caller must mask/synchronize IRQs, disable NAPI and synchronize_net
++	 * first. This routine does not create any of those guarantees itself.
++	 * mt7996_cleanup_device supplies that CPU boundary before calling. */
++	for (band = 0; band <= ARRAY_SIZE(dev->phys); band++) {
++		struct mt76_phy *phy = band ? dev->phys[band - 1] : &dev->phy;
++
++		if (!phy || (band && phy == &dev->phy))
++			continue;
++		for (q = 0; q < ARRAY_SIZE(phy->rx_amsdu); q++) {
++			struct sk_buff *skb = phy->rx_amsdu[q].head;
++			struct mt76_rx_lease *lease = phy->rx_amsdu[q].lease;
++
++			phy->rx_amsdu[q].head = NULL;
++			phy->rx_amsdu[q].tail = NULL;
++			phy->rx_amsdu[q].lease = NULL;
++			if (skb)
++				dev_kfree_skb(skb);
++			mt76_rx_lease_put(lease);
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(mt76_rx_lease_purge);
++
++static void mt76_rx_lease_cleanup(struct mt76_dev *dev)
++{
++	int idx;
++
++	/* CPU metadata only. This is NOT an ALL output-resource/reset fence and
++	 * cannot veto Linux's void remove/devres release. Draft remains unadmitted.
++	 * Cache callbacks must already be stopped; leases contain no dev pointer. */
++	mt76_rx_lease_purge(dev);
++	synchronize_rcu();
++	for (idx = 0; idx < ARRAY_SIZE(dev->rx_retired); idx++) {
++		mt76_rx_lease_put(dev->rx_retired[idx]);
++		dev->rx_retired[idx] = NULL;
++	}
++}
++
+ void mt76_free_device(struct mt76_dev *dev)
+ {
+ 	mt76_worker_teardown(&dev->tx_worker);
+@@ -834,6 +975,8 @@
+ 		dev->wq = NULL;
+ 	}
+ 	mt76_npu_deinit(dev);
++	if (dev->rx_lease_enabled)
++		mt76_rx_lease_cleanup(dev);
+ 	ieee80211_free_hw(dev->hw);
+ }
+ EXPORT_SYMBOL_GPL(mt76_free_device);
+@@ -861,6 +1004,8 @@
+ 		if (!wcid)
+ 			continue;
+ 
++		if (dev->rx_lease_enabled)
++			mt76_rx_lease_retire(dev, wcid);
+ 		wcid->sta = 0;
+ 		rcu_assign_pointer(dev->wcid[i], NULL);
+ 		mt76_wcid_cleanup(dev, wcid);
+@@ -901,9 +1046,29 @@
+ 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
+ 	struct mt76_dev *dev = phy->dev;
+ 	struct mt76_queue *rxq = &dev->q_rx[q];
++	struct mt76_rx_lease *lease = phy->rx_amsdu[q].lease;
++	struct mt76_wcid *wcid;
++	struct sk_buff *frame;
+ 
+ 	phy->rx_amsdu[q].head = NULL;
+ 	phy->rx_amsdu[q].tail = NULL;
++	phy->rx_amsdu[q].lease = NULL;
++
++	if (dev->rx_lease_enabled) {
++		/* Never restore a raw pointer onto a different RRO poll queue. */
++		if ((mt76_queue_is_wed_rro_data(rxq) &&
++		     dev->hwrro_mode == MT76_HWRRO_V3) ||
++		    !mt76_rx_lease_resolve(dev, lease, &wcid)) {
++			mt76_rx_lease_put(lease);
++			dev_kfree_skb(skb);
++			return;
++		}
++		/* Same poll/RCU span must extend through rx_poll_complete. */
++		for (frame = skb; frame;
++		     frame = frame == skb ? skb_shinfo(skb)->frag_list : frame->next)
++			((struct mt76_rx_status *)frame->cb)->wcid = wcid;
++		mt76_rx_lease_put(lease);
++	}
+ 
+ 	/*
+ 	 * Validate if the amsdu has a proper first subframe.
+@@ -943,19 +1108,43 @@
+ 				  struct sk_buff *skb)
+ {
+ 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
++	struct mt76_dev *dev = phy->dev;
++	struct mt76_rx_lease *lease = NULL;
++
++	if (dev->rx_lease_enabled) {
++		struct mt76_wcid *wcid = status->wcid;
++
++		/* Actual storage is the queue sidecar, not added skb->cb bytes.
++		 * Every cached frame's pointer is erased before a poll can end. */
++		if (wcid) {
++			lease = mt76_rx_lease_capture(wcid);
++			if (!lease) {
++				/* A non-station/vif WCID has no owner in this draft.
++				 * Do not retain a borrowed pointer as a fallback. */
++				dev_kfree_skb(skb);
++				return;
++			}
++		}
++		status->wcid = NULL;
++	}
+ 
+ 	if (phy->rx_amsdu[q].head &&
+ 	    (!status->amsdu || status->first_amsdu ||
+-	     status->seqno != phy->rx_amsdu[q].seqno))
++	     status->seqno != phy->rx_amsdu[q].seqno ||
++	     (dev->rx_lease_enabled && phy->rx_amsdu[q].lease != lease)))
+ 		mt76_rx_release_amsdu(phy, q);
+ 
+ 	if (!phy->rx_amsdu[q].head) {
+ 		phy->rx_amsdu[q].tail = &skb_shinfo(skb)->frag_list;
+ 		phy->rx_amsdu[q].seqno = status->seqno;
+ 		phy->rx_amsdu[q].head = skb;
++		phy->rx_amsdu[q].lease = lease;
+ 	} else {
+ 		*phy->rx_amsdu[q].tail = skb;
+ 		phy->rx_amsdu[q].tail = &skb->next;
++		/* A single independently referenced owner covers this same-peer
++		 * fragment chain. No fragment carries a raw station pointer. */
++		mt76_rx_lease_put(lease);
+ 	}
+ 
+ 	if (!status->amsdu || status->last_amsdu)
+--- a/mt7996/main.c
++++ b/mt7996/main.c
+@@ -1782,11 +1782,14 @@
+ 	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
+ 	struct mt7996_phy *phy = mt7996_vif_link_phy(link);
+ 	struct mt7996_sta_link *msta_link;
+-	int idx;
++	int idx, err;
+ 
+ 	if (!phy)
+ 		return -EINVAL;
+ 
++	if (msta->reset_wcid[link_id] &&
++	    dev->mt76.rx_retired[msta->reset_wcid[link_id] - 1])
++		return -EOPNOTSUPP; /* Full ALL-reset proof still missing. */
+ 	if (msta->reset_wcid[link_id]) {
+ 		idx = msta->reset_wcid[link_id] - 1;
+ 		msta->reset_wcid[link_id] = 0;
+@@ -1805,8 +1808,9 @@
+ 				}
+ 				return -ENOSPC;
+ 			}
+-		} while (dev->mt76.mmio.an7552 &&
+-			 test_bit(idx, dev->npu_rx_retired));
++		} while (dev->mt76.rx_retired[idx] ||
++			 (dev->mt76.mmio.an7552 &&
++			  test_bit(idx, dev->npu_rx_retired)));
+ 	}
+ 
+ 	if (mt7996_sta_deflink_busy(dev, msta)) {
+@@ -1817,6 +1821,15 @@
+ 		}
+ 	} else {
+ 		msta_link = &msta->deflink;
++	}
++
++	err = mt76_rx_lease_prepare(&dev->mt76, &msta_link->wcid, idx,
++				    phy->mt76->band_idx, link_sta->addr);
++	if (err) {
++		if (msta_link != &msta->deflink)
++			kfree(msta_link);
++		mt76_wcid_mask_clear(dev->mt76.wcid_mask, idx);
++		return err;
+ 	}
+ 
+ 	if (msta->deflink_id == IEEE80211_LINK_UNSPECIFIED)
+@@ -1871,6 +1884,9 @@
+ 		return;
+ 	}
+ 
++	/* This cannot veto mac80211 free: retire copied metadata instead. */
++	mt76_rx_lease_retire(&dev->mt76, &msta_link->wcid);
++
+ 	if (dev->recovery.hw_full_reset)
+ 		msta->reset_wcid[link_id] = msta_link->wcid.idx + 1;
+ 
+@@ -1919,8 +1935,9 @@
+ 
+ 		rcu_assign_pointer(msta->link[link_id], NULL);
+ 		rcu_assign_pointer(dev->mt76.wcid[msta_link->wcid.idx], NULL);
+-		if (!dev->mt76.mmio.an7552 ||
+-		    !test_bit(msta_link->wcid.idx, dev->npu_rx_retired))
++		if (!dev->mt76.rx_retired[msta_link->wcid.idx] &&
++		    (!dev->mt76.mmio.an7552 ||
++		     !test_bit(msta_link->wcid.idx, dev->npu_rx_retired)))
+ 			mt76_wcid_mask_clear(dev->mt76.wcid_mask, msta_link->wcid.idx);
+ 		if (msta_link != &msta->deflink)
+ 			kfree_rcu(msta_link, rcu_head);
+@@ -1986,6 +2003,10 @@
+ 
+ 		msta_link = mt76_dereference(msta->link[link_id], &dev->mt76);
+ 		if (msta_link) {
++			if (dev->mt76.rx_retired[msta_link->wcid.idx]) {
++				err = -EOPNOTSUPP;
++				goto error_unlink;
++			}
+ 			msta_link->wcid.link_valid = true;
+ 			mt7996_sta_link_hdr_trans_set(msta, msta_link);
+ 			if (msta->deflink_id == IEEE80211_LINK_UNSPECIFIED)
+@@ -2573,6 +2594,8 @@
+ 		struct mt7996_sta_link *msta_link;
+ 
+ 		msta_link = mt7996_sta_link_protected(dev, msta, link_id);
++		if (msta_link)
++			mt76_rx_lease_retire(&dev->mt76, &msta_link->wcid);
+ 		if (msta_link)
+ 			rcu_assign_pointer(dev->mt76.wcid[msta_link->wcid.idx],
+ 					   NULL);
+--- a/mt7996/init.c
++++ b/mt7996/init.c
+@@ -488,6 +488,7 @@
+ 	u16 max_subframes = dev->has_eht ? IEEE80211_MAX_AMPDU_BUF_EHT :
+ 					   IEEE80211_MAX_AMPDU_BUF_HE;
+ 
++	mdev->rx_lease_enabled = is_mt7992(mdev); /* BE6L source draft only. */
+ 	hw->queues = 4;
+ 	hw->max_rx_aggregation_subframes = max_subframes;
+ 	hw->max_tx_aggregation_subframes = max_subframes;
+@@ -1909,6 +1910,7 @@
+ 	 */
+ 	synchronize_net();
+ 	tasklet_kill(&dev->mt76.irq_tasklet);
++	mt76_rx_lease_purge(&dev->mt76); /* IRQ/NAPI + synchronize_net above. */
+ 	mt7996_irq_disable(dev, ~0);
+ 	mt7996_mcu_exit(dev);
+ 	mt7996_dma_disable(dev, true);
+--- a/npu.c
++++ b/npu.c
+@@ -491,6 +491,10 @@
+ 	struct airoha_ppe_dev *ppe_dev;
+ 	struct airoha_npu *npu;
+ 	int err = 0;
++
++	/* Closed before get/boot: the source draft has no ALL provider. */
++	if (is_mt7992(dev) && !mt76_rx_lease_native_ready(dev))
++		return 0;
+ 
+ 	if (is_mt7992(dev)) {
+ 		struct an7552_npu *native = an7552_npu_get(dev->dev);

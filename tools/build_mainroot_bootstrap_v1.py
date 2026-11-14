@@ -146,6 +146,49 @@ def audit_integer(path, prefix):
     return count
 
 
+def verified_normal_provenance(packages, keys, apk, work, run):
+    """Actual signature/extract/metadata branch, shared with a bounded fixture.
+
+    Returns normal ELF provenance, never installs or executes a target package.
+    """
+    if not isinstance(packages, list) or not packages or len(packages) > 512:
+        raise ValueError("Explicit bounded normal package list required")
+    normal, normal_packages = {}, []
+    for i, value in enumerate(packages):
+        package = Path(value).resolve()
+        run("normal-%d-verify" % i, [apk, "--network=no", "--keys-dir", keys, "verify", package])
+        metadata = run("normal-%d-metadata" % i, [apk, "adbdump", package]).decode()
+        fields = {}
+        for key in ("name", "version", "arch"):
+            matches = re.findall(r"^  " + key + r": (\S+)$", metadata, re.M)
+            if len(matches) != 1:
+                raise ValueError("Ambiguous signed package metadata")
+            fields[key] = matches[0]
+        if fields["arch"] not in ("aarch64_cortex-a53", "all", "noarch") or fields["name"].startswith("be6l-"):
+            raise ValueError("Normal archive arch/name is not ordinary A53/noarch")
+        dest = work / ("verified-normal-%d" % i)
+        dest.mkdir()
+        run("normal-%d-extract" % i, [apk, "--network=no", "--keys-dir", keys, "extract", "--no-chown", "--destination", dest, package])
+        for file in dest.rglob("*"):
+            if file.is_symlink() or not file.is_file():
+                continue
+            data = file.read_bytes()
+            if elf(data) == 2:
+                name = file.relative_to(dest).as_posix()
+                item = dict(sha256=hashlib.sha256(data).hexdigest(), P=fields["name"], V=fields["version"], A=fields["arch"])
+                if name in normal and normal[name] != item:
+                    raise ValueError("Normal archive ELF collision: " + name)
+                normal[name] = item
+        normal_packages.append(dict(sha256=sha(package), **fields))
+    return normal, normal_packages
+
+
+def verify_normal_file(name, file, owned, normal):
+    verified = normal.get(name)
+    if not verified or verified["sha256"] != sha(file) or owned.get(name) != {k: verified[k] for k in ("P", "V", "A")}:
+        raise ValueError("Normal A53 bytes/owner lack exact signed archive provenance: " + name)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", type=Path, required=True)
@@ -170,7 +213,7 @@ def main():
     if sha(root / BUSYBOX) != BUSYBOX_SHA or sha(root / "init") != INIT_SHA:
         raise ValueError("Unreviewed native BusyBox or original root-copy init")
     for item in root.iterdir():
-        if not re.fullmatch("[A-Za-z0-9_.+-]+", item.name) or item.name in ("new_root",):
+        if not re.fullmatch("[A-Za-z0-9_.+-]+", item.name) or item.name in ("new_root", "be6l-recovery-state"):
             raise ValueError("Unsafe original root-copy top-level name")
     dt = tree(a.dtb.read_bytes())
     properties = [n for n, props in dt.items() if "airoha,bmt-read-only" in props]
@@ -200,34 +243,7 @@ def main():
         if not a.normal_keys_dir:
             raise ValueError("Normal package public trust directory required")
         packages = json.loads(a.normal_package_list.read_text())
-        if not isinstance(packages, list) or not packages or len(packages) > 512:
-            raise ValueError("Explicit bounded normal package list required")
-        for i, value in enumerate(packages):
-            package = Path(value).resolve()
-            run("normal-%d-verify" % i, [a.apk, "--network=no", "--keys-dir", a.normal_keys_dir, "verify", package])
-            metadata = run("normal-%d-metadata" % i, [a.apk, "adbdump", package]).decode()
-            fields = {}
-            for key in ("name", "version", "arch"):
-                matches = re.findall(r"^  " + key + r": (\S+)$", metadata, re.M)
-                if len(matches) != 1:
-                    raise ValueError("Ambiguous signed package metadata")
-                fields[key] = matches[0]
-            if fields["arch"] not in ("aarch64_cortex-a53", "all", "noarch") or fields["name"].startswith("be6l-"):
-                raise ValueError("Normal archive arch/name is not ordinary A53/noarch")
-            dest = work / ("verified-normal-%d" % i)
-            dest.mkdir()
-            run("normal-%d-extract" % i, [a.apk, "--network=no", "--keys-dir", a.normal_keys_dir, "extract", "--no-chown", "--destination", dest, package])
-            for file in dest.rglob("*"):
-                if file.is_symlink() or not file.is_file():
-                    continue
-                data = file.read_bytes()
-                if elf(data) == 2:
-                    name = file.relative_to(dest).as_posix()
-                    item = dict(sha256=hashlib.sha256(data).hexdigest(), P=fields["name"], V=fields["version"], A=fields["arch"])
-                    if name in normal and normal[name] != item:
-                        raise ValueError("Normal archive ELF collision: " + name)
-                    normal[name] = item
-            normal_packages.append(dict(sha256=sha(package), **fields))
+        normal, normal_packages = verified_normal_provenance(packages, a.normal_keys_dir, a.apk, work, run)
     owned = owners(root)
     entries = []
     replaced = {"init", NATIVE_INIT, BOOTSTRAP, EMULATOR, "usr/sbin/be6l-recovery-guard", "usr/libexec/be6l/native-recovery-shell"}
@@ -246,9 +262,7 @@ def main():
             critical = name == "etc/config/be6l-recovery" or name.startswith("etc/ld-musl-") and name.endswith(".path")
             if role or critical:
                 if role == 2:
-                    verified = normal.get(name)
-                    if not verified or verified["sha256"] != sha(file) or owned.get(name) != {k: verified[k] for k in ("P", "V", "A")}:
-                        raise ValueError("Normal A53 bytes/owner lack exact signed archive provenance: " + name)
+                    verify_normal_file(name, file, owned, normal)
                 entries.append(manifest_entry(name, file, native=name == BUSYBOX))
     payload = work / "payload"
     (payload / NATIVE_INIT).parent.mkdir(parents=True)

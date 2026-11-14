@@ -1,0 +1,247 @@
+{
+  "date": "2026-11-13",
+  "kind": "Signed unchanged ARM32 SSH component and private access metadata revision; not admitted main root",
+  "private_result_sha256": "ecaa33247bd9f11cbba87a451f21c53bb39479003820798d556a3b9e44f2f125",
+  "builder_sha256": "79a5f1d420e3ea862e4dab5b94427561eb6c20f5b9005983a2d6b57a3f3e15a0",
+  "result": {
+    "name": "be6l-arm32-dropbear",
+    "version": "2026.94-r103",
+    "arch": "arm_cortex-a7",
+    "depends": [
+      "be6l-arm32-runtime=1.0.137005195660218-r1"
+    ],
+    "provides": [],
+    "replaces": [
+      "dropbear"
+    ],
+    "package": "be6l-arm32-dropbear-2026.94-r103.apk",
+    "package_sha256": "dec2fcc82a92f57065a0732fb2e3db2b3f67951a38f96eb011b939d51567954b",
+    "access_name": "be6l-ram-access",
+    "access_version": "1.0.0-r2",
+    "access_arch": "noarch",
+    "access_depends": [
+      "be6l-arm32-dropbear=2026.94-r103"
+    ],
+    "access_payload_unchanged": true,
+    "access_credential_file_count": 3,
+    "runtime_result_sha256": "9389f7e76048d3829cd2b26c491ffa3c69a9368aac71673e32b19b8511f46a44",
+    "runtime_package_sha256": "eee99e60bc9976c24aadbae9a295bd068683ffbdbae8b9eebb31ebb8e0c2d24e",
+    "source_root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+    "source_root_unchanged": true,
+    "normal_signature_verification_passed": true,
+    "extracted_payload_exact": true,
+    "isolated_two_package_normal_transaction": true,
+    "isolated_access_metadata_transaction": true,
+    "missing_exact_runtime_rejected": true,
+    "private_three_package_normal_transfer": false,
+    "private_three_package_transaction_exit": 1,
+    "canonical_arm32_interpreter_owned_by_old_libc_blocks_runtime": true,
+    "private_root_partial_after_rejected_runtime_transaction": true,
+    "actual_installed_ssh_identity": {
+      "name": "be6l-arm32-dropbear",
+      "version": "2026.94-r103",
+      "arch": "arm_cortex-a7",
+      "depends": [
+        "be6l-arm32-runtime=1.0.137005195660218-r1"
+      ]
+    },
+    "actual_installed_access_identity": {
+      "name": "be6l-ram-access",
+      "version": "1.0.0-r2",
+      "arch": "noarch",
+      "depends": [
+        "be6l-arm32-dropbear=2026.94-r103"
+      ]
+    },
+    "canonical_service_payload_unchanged": true,
+    "ssh_userdata_passwd_and_startup_unchanged": true,
+    "protected_private_path_count": 44,
+    "protected_conffile_merger_needed": false,
+    "narrow_ssh_replaces_ownership_verified": true,
+    "old_dropbear_removed_by_normal_transaction": false,
+    "old_name_reverse_dependencies": {
+      "be6l-recovery-guard": [
+        "dropbear"
+      ]
+    },
+    "old_removal_simulation_exit": 1,
+    "combined_guard_migration_required": true,
+    "source_destination_manifest_sha256": "d78f673adf67376e910e00e03b7ec2cadd147e73984cb2563759a53dc5ff19f1",
+    "needed_closure_sha256": "74ccf507c69f3cb8880a4f972635c2de36709b68e41b6b9958ac3a9b7c16c3e4",
+    "checked_needed_edges": 2,
+    "canonical_interpreter": "/lib/ld-musl-arm.so.1",
+    "all_native_dso_needed_private_arm32": true,
+    "private_signing_key_removed": true,
+    "mainroot_coexistence_qualified": false,
+    "target_executed": false,
+    "vm_plugin_isolation_qualified": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "ssh_source_destination_manifest": {
+    "etc/config/dropbear": {
+      "destination": "etc/config/dropbear",
+      "source": {
+        "sha256": "b80472937a530c79953f9f84168ed58aa8a7af2aa083ebba71f68488bf9f87a3",
+        "mode": 384
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "b80472937a530c79953f9f84168ed58aa8a7af2aa083ebba71f68488bf9f87a3",
+        "mode": 384
+      }
+    },
+    "etc/init.d/dropbear": {
+      "destination": "etc/init.d/dropbear",
+      "source": {
+        "sha256": "af910af501ef0f6587562aa5bc7cff1d61d8066e41d2c77f8c70e9f3c68d5457",
+        "mode": 493
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "af910af501ef0f6587562aa5bc7cff1d61d8066e41d2c77f8c70e9f3c68d5457",
+        "mode": 493
+      }
+    },
+    "etc/uci-defaults/50-dropbear": {
+      "destination": "etc/uci-defaults/50-dropbear",
+      "source": {
+        "sha256": "4f8f948fba8fef0af18dbd3c18c8efdf668c45884c6a4839622458069e69653a",
+        "mode": 420
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "4f8f948fba8fef0af18dbd3c18c8efdf668c45884c6a4839622458069e69653a",
+        "mode": 420
+      }
+    },
+    "lib/apk/packages/dropbear.alternatives": {
+      "destination": "lib/apk/packages/be6l-arm32-dropbear.alternatives",
+      "source": {
+        "sha256": "7ef9c5fb292a09397f1a9c597de8ee060c4280f312962772f9e52ed618e15e16",
+        "mode": 420
+      },
+      "transformation": "package-specific metadata path rename",
+      "packaged": {
+        "sha256": "7ef9c5fb292a09397f1a9c597de8ee060c4280f312962772f9e52ed618e15e16",
+        "mode": 420
+      }
+    },
+    "lib/apk/packages/dropbear.conffiles": {
+      "destination": "lib/apk/packages/be6l-arm32-dropbear.conffiles",
+      "source": {
+        "sha256": "b0a625817d9897c770390f39b8b9e3c68f7f4eca6cacf93cbe136a1299ae2ced",
+        "mode": 420
+      },
+      "transformation": "package-specific metadata path rename",
+      "packaged": {
+        "sha256": "b0a625817d9897c770390f39b8b9e3c68f7f4eca6cacf93cbe136a1299ae2ced",
+        "mode": 420
+      }
+    },
+    "lib/apk/packages/dropbear.conffiles_static": {
+      "destination": "lib/apk/packages/be6l-arm32-dropbear.conffiles_static",
+      "source": {
+        "sha256": "5c534dce9fe66f81274d494527aa7e585e4a6118d960c74b178dd62fae54163e",
+        "mode": 420
+      },
+      "transformation": "package-specific metadata path rename",
+      "packaged": {
+        "sha256": "5c534dce9fe66f81274d494527aa7e585e4a6118d960c74b178dd62fae54163e",
+        "mode": 420
+      }
+    },
+    "lib/apk/packages/dropbear.list": {
+      "destination": "lib/apk/packages/be6l-arm32-dropbear.list",
+      "source": {
+        "sha256": "652fc23d55b8a0dadad78db3aa39ebee80973121ab80af79a21d3c78fa608601",
+        "mode": 420
+      },
+      "transformation": "regenerate exact destination ownership list after metadata rename",
+      "packaged": {
+        "sha256": "e10620e385ddafd6dab83e1bccc214ea00db27f8d3e2274dad24dcc9bb7b7770",
+        "mode": 420
+      }
+    },
+    "lib/preinit/99_10_failsafe_dropbear": {
+      "destination": "lib/preinit/99_10_failsafe_dropbear",
+      "source": {
+        "sha256": "518283c8ffb8eb47dfdcf672789b3ddf7af391ab9c50105f6be971afb48e64cb",
+        "mode": 420
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "518283c8ffb8eb47dfdcf672789b3ddf7af391ab9c50105f6be971afb48e64cb",
+        "mode": 420
+      }
+    },
+    "lib/upgrade/keep.d/dropbear": {
+      "destination": "lib/upgrade/keep.d/dropbear",
+      "source": {
+        "sha256": "cd1167db61549cb4b1999184e39b71357f2d58b9ddd645e245aea147bbf96b35",
+        "mode": 420
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "cd1167db61549cb4b1999184e39b71357f2d58b9ddd645e245aea147bbf96b35",
+        "mode": 420
+      }
+    },
+    "usr/bin/dbclient": {
+      "destination": "usr/bin/dbclient",
+      "source": {
+        "symlink": "../sbin/dropbear"
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "symlink": "../sbin/dropbear"
+      }
+    },
+    "usr/bin/dropbearkey": {
+      "destination": "usr/bin/dropbearkey",
+      "source": {
+        "symlink": "../sbin/dropbear"
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "symlink": "../sbin/dropbear"
+      }
+    },
+    "usr/sbin/dropbear": {
+      "destination": "usr/sbin/dropbear",
+      "source": {
+        "sha256": "0021b4d326c160445bc0fb82680625c1612ccbdd924f58e835ddeb9b10e915f3",
+        "mode": 493
+      },
+      "transformation": "unchanged canonical payload",
+      "packaged": {
+        "sha256": "0021b4d326c160445bc0fb82680625c1612ccbdd924f58e835ddeb9b10e915f3",
+        "mode": 493
+      }
+    }
+  },
+  "native_ssh_needed_closure": [
+    {
+      "needed": "libgcc_s.so.1",
+      "resolved": "lib/be6l-arm32/libgcc_s.so.1",
+      "sha256": "4506a246dcc881fef1be974e7984193753f7c28b063a1d1540e6f06575296d60"
+    },
+    {
+      "needed": "libc.so",
+      "resolved": "lib/be6l-arm32/libc.so",
+      "sha256": "cc0e90050db431abe14d7fbd86c98f9fb052b2d75f0d6fcfbf01ee7bdfbea713"
+    }
+  ],
+  "secret_contents_or_individual_credential_hashes_exported": false,
+  "access_package_artifact_published": false,
+  "source_scripts_or_target_executables_run": false,
+  "database_manually_edited": false,
+  "force_or_untrusted_used": false,
+  "independent_complete_existing_path_check": {
+    "allowed_existing_path_changes": [
+      "etc/apk/world",
+      "lib/apk/db/installed"
+    ],
+    "all_other_existing_file_bytes_modes_aliases_preserved": true
+  },
+  "old_removal_solver_observation": "dropbear is not removed because be6l-recovery-guard requires it"
+}

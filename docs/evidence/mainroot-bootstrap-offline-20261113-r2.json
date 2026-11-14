@@ -1,0 +1,713 @@
+{
+  "scope": "corrected native bootstrap offline source/host/signature/conffile/provenance fixtures; not normal mainroot or runtime qualification",
+  "receipt_sha256": {
+    "build": "f9988fa6607633ba299bf0b3b325b9e0a1913c9630bf9fbc989f9cf43f93c28a",
+    "host": "7da5dc9a11e31a5ee967e9179a02f8c553db77de5ce257581c7fd8179f91b680",
+    "signed_fixture": "a53fc88a1a8788d583bc91a426748a4e88eef32a2e3d1fa1ace7905e4300ca4d",
+    "normal_provenance": "3b1eee3f169f382bb4b6132673343e7ce72fe8ee574665a292eb460b4b002f53",
+    "private_ssh_guard_component": "c5478908b64742b0f600773b5b578e8585eed2af81bf31a7f18bcbfda9757ae5"
+  },
+  "build": {
+    "manifest_id": "0754dd07fbc5f1c0efdaa9a778e4d20ed7ede9a94991b668c004ebf8daa066ec",
+    "input_root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+    "original_root_unchanged": true,
+    "bootstrap_sha256": "38f77809e5ef9ab2f4e1c6454d6ec0363be81422947b161e9cb515b88b6ee712",
+    "bootstrap_bytes": 476528,
+    "private_marker": "0xbe6a0001",
+    "static_native": true,
+    "aapcs64_soft": true,
+    "fp_simd_register_uses": 0,
+    "audited_instructions": 13762,
+    "native_busybox_sha256": "1c5562bcb7ec47ae5efad6776a9a2b04a33367b20995b49dff357e283ace9f4b",
+    "signed_r5_apk_sha256": "253fc682636d2d40b1e6c016317704b21452c74cc2540d1bffd32223adfa5928",
+    "interpreter_sha256": "7e094b445e34d353c47b91cddde062ce2e2d344678813da5e22b9993953d720d",
+    "complete_input_elf_inventory": true,
+    "manifest_entries": 464,
+    "elf_roles": {
+      "1": 62,
+      "2": 0,
+      "3": 144,
+      "4": 2
+    },
+    "normal_archives_verified": 0,
+    "source_sha256": "97d86ff03c7ea7628941f51ca75ed875de250d845d12fbe399dca5dc30bd3eda",
+    "sha256_source_sha256": "9ee109e8d9b9dd2514249aeb2332f75043c2668fb32ef31b9dbdb1057a07e278",
+    "compiled_header_sha256": "18a7be5f4b8e3b749c4105cd0fe4628971db714de3093189349c7c39b984ad90",
+    "compiler_wrapper_sha256": "0f7e722b182f9ba0e13e8fd2bb1f237f564af288dc749e257250ec430686d0ac",
+    "dtb_sha256": "e825e4ce064f4909b4547df18f407526e3ebb060bbbb3cfb3b59df3206cc5c15",
+    "root_account_native_shell": false,
+    "bootstrap_package_signed": false,
+    "final_root_composed": false,
+    "kernel_F_procfd_qualified": false,
+    "target_executed": false,
+    "candidate_admitted": false,
+    "standard_a53_package_compatibility_qualified": false
+  },
+  "host_checks": {
+    "passed": 60,
+    "total": 60,
+    "tests": [
+      {
+        "name": "complete-synthetic-inventory",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "changed-native-hash",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "writable-native-mode",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "missing-private-marker",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "dynamic-private-helper",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "self-copy-differs",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "self-marker-required",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "unlisted-private-elf",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "unlisted-standard-elf",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "unlisted-arm32-elf",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "changed-critical-link",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "writable-ancestor",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "symlink-ancestor",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "symlink-native-file",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "restored-synthetic-inventory",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-0-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-1-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-3-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-55-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-56-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-63-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-64-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-65-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-16383-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-16384-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-16385-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "sha256-1000000-byte",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "deadline-600--1",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "deadline-600-100",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "deadline-600-500",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "deadline-600-800",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "deadline-leading-zero",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-bound",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "heartbeat-foreign-boot",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-future",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-leading-zero",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-extra-token",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-negative",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-not-private",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "heartbeat-symlink",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-exact",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "rule-C-flag",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-missing-X",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-other-inode-fd",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-wrong-magic",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-wrong-mask",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-disabled",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "rule-tail",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "phase-handoff-H",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "phase-handoff-bad",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "phase-handoff-EOF",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "phase-handoff-timeout",
+        "passed": true,
+        "exit": 1
+      },
+      {
+        "name": "stable-root-lease-same-state",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "stable-root-lease-different-directory-inode",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "stable-root-lease-different-lock-inode",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "stable-root-lease-preexisting-state",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "native-expiry-no-PID1-signal-force-5",
+        "passed": true,
+        "exit": 120
+      },
+      {
+        "name": "native-expiry-no-PID1-signal-force-30",
+        "passed": true,
+        "exit": 120
+      },
+      {
+        "name": "actual-sealed-root-plus-payload-full-C-inventory",
+        "passed": true,
+        "exit": 0
+      },
+      {
+        "name": "actual-r5-corruption",
+        "passed": true,
+        "exit": 1
+      }
+    ],
+    "source_sha256": "97d86ff03c7ea7628941f51ca75ed875de250d845d12fbe399dca5dc30bd3eda",
+    "target_code_executed": false,
+    "actual_binfmt_kernel_F_procfd_qualified": false
+  },
+  "signed_fixture": {
+    "normal_signed_bootstrap_transactions": true,
+    "normal_signed_guard_upgrade": true,
+    "normal_signed_passwd_only_shell_transaction": true,
+    "explicit_replaces_base_files": true,
+    "original_init_owner": null,
+    "temporary_protection_rule_used": false,
+    "default_protection_always_enabled": true,
+    "exact_frozen_apk_new_conffile_accepted": true,
+    "actual_default_protection_negative_passed": true,
+    "modified_original_conffile_rejected_intact": true,
+    "accepted_passwd_apk_audit_clean": true,
+    "original_passwd_uid_gid_mode_preserved": true,
+    "root_password_fields_unchanged": true,
+    "shadow_group_userdata_hostkeys_unchanged": true,
+    "protected_existing_paths_checked": 5,
+    "original_root_unchanged": true,
+    "input_root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+    "output_root_records_sha256": "6903429b16802d3aa9b75eaaa274b37e4df6348702b509bdcad8a5bc88654fd2",
+    "packages": {
+      "be6l-mainroot-bootstrap": {
+        "name": "be6l-mainroot-bootstrap",
+        "version": "1.0.0-r1",
+        "arch": "aarch64_be6l_soft_experimental",
+        "sha256": "529e0d076d0450ee18b778ca6455513bd56af69626e26637b9532c2094b7060c"
+      },
+      "be6l-recovery-guard": {
+        "name": "be6l-recovery-guard",
+        "version": "1.0.0-r3",
+        "arch": "noarch",
+        "sha256": "ed88a4c7ade8b48366332c565e6b2c0041e53c628ac7cb8a93d8bdb21bc7e185"
+      },
+      "be6l-native-recovery-config": {
+        "name": "be6l-native-recovery-config",
+        "version": "1.0.0-r1",
+        "arch": "noarch",
+        "sha256": "13cf1c97b7f4c86aab37f89c4136b3338d85dd815e2e25ce1f6a63a98e91b0f2"
+      },
+      "config-protection-negative": {
+        "name": "be6l-native-recovery-config",
+        "version": "1.0.0-r2",
+        "arch": "noarch",
+        "sha256": "d8b817c67cfd77c4e05e277570ca2d1548790d9fa81b1da4a3d6d6bd17b797b7"
+      }
+    },
+    "ownership": {
+      "init": {
+        "P": "be6l-mainroot-bootstrap",
+        "V": "1.0.0-r1",
+        "A": "aarch64_be6l_soft_experimental"
+      },
+      "usr/libexec/be6l/mainroot-bootstrap": {
+        "P": "be6l-mainroot-bootstrap",
+        "V": "1.0.0-r1",
+        "A": "aarch64_be6l_soft_experimental"
+      },
+      "usr/libexec/be6l/native-recovery-shell": {
+        "P": "be6l-mainroot-bootstrap",
+        "V": "1.0.0-r1",
+        "A": "aarch64_be6l_soft_experimental"
+      },
+      "usr/sbin/be6l-recovery-guard": {
+        "P": "be6l-recovery-guard",
+        "V": "1.0.0-r3",
+        "A": "noarch"
+      },
+      "etc/passwd": {
+        "P": "be6l-native-recovery-config",
+        "V": "1.0.0-r1",
+        "A": "noarch"
+      }
+    },
+    "native_dropbear_owner": {
+      "P": "dropbear",
+      "V": "2026.94-r3",
+      "A": "arm_cortex-a7"
+    },
+    "compiled_manifest_full_fixture_passed": true,
+    "host_verifier_sha256": "a7bca199932a42854cfc1ff08214dfc482f19d4d0a3a20606ef7e5c556c9f3e3",
+    "private_signing_key_removed": true,
+    "source_sha256": "cd452d6fffb37c8e5abbc9a8e8188856717f291fdd3871f36f0bffdb181199f1",
+    "scripts_executed": false,
+    "force_options_used": false,
+    "untrusted_options_used": false,
+    "manual_apk_db_edits": false
+  },
+  "normal_provenance": {
+    "normal_provenance_branch_checks_passed": 12,
+    "checks": [
+      {
+        "name": "28-original-signatures-and-PVA",
+        "passed": true
+      },
+      {
+        "name": "30-normal-ELF-byte-and-installed-owner",
+        "passed": true
+      },
+      {
+        "name": "wrong-owner-P",
+        "passed": true
+      },
+      {
+        "name": "wrong-owner-V",
+        "passed": true
+      },
+      {
+        "name": "wrong-owner-A",
+        "passed": true
+      },
+      {
+        "name": "missing-installed-owner",
+        "passed": true
+      },
+      {
+        "name": "modified-normal-payload",
+        "passed": true
+      },
+      {
+        "name": "unlisted-normal-path",
+        "passed": true
+      },
+      {
+        "name": "empty-archive-list",
+        "passed": true
+      },
+      {
+        "name": "oversized-archive-list",
+        "passed": true
+      },
+      {
+        "name": "tampered-signed-archive",
+        "passed": true
+      },
+      {
+        "name": "signed-private-ABI-is-not-ordinary-A53",
+        "passed": true
+      }
+    ],
+    "signed_original_archives_verified": 28,
+    "standard_elf_byte_owner_checks": 30,
+    "original_fixture_receipt_sha256": "289b9cc0a50a2bf48f2137cbada219f917f59b7d63e75b50dde98111e95eea14",
+    "original_root_records_sha256": "9f79509bd68ddbfc51392a477338be63e2c1eeb849d825ef124496c11bed9ff2",
+    "original_root_and_archives_unchanged": true,
+    "normal_archives": [
+      {
+        "sha256": "243e2c5aa12994b892a21cae79b4231eb7dba5913c173dbbf85b95f5905362c0",
+        "name": "libc",
+        "version": "1.2.6-r5",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "e9bd2a1a4ed6f5612a8818b9e4782c495aa2927bedefdc7b04caa3a85c468f73",
+        "name": "libgcc1",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "475061ca6a9d598c0a58059be1aba82a2590e55810a67f580c73bee80bd10c6d",
+        "name": "libstdcpp6",
+        "version": "14.4.0-r5",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "4504f3bd62eaaae7e437f30b5a4b678612907fd3f2f0583a1d542606991fbc36",
+        "name": "busybox",
+        "version": "1.38.0-r3",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "b99590a7f7ec8e5eecb4b8ead51a05ffc841b951735e929c44732bb6fd4372c7",
+        "name": "ucode",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "e2c72e89d5b439d34ac27c174c774f49a095019df013c05783e029f1f1a9fb88",
+        "name": "libucode20261009",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "afa69201d4eaa01cf4ec051975aab5459d9c3e020b8ef47461a840363d34d17e",
+        "name": "libjson-c5",
+        "version": "0.19-r2",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "8944cd4092c7bdac1a4f3b0368de998b82a17937ae82e5dc9b6894931ea5c7fe",
+        "name": "btop",
+        "version": "1.4.7-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "415465ca434a3e52dbccb31dd6c3484d642b27577613ab3c7d32b687aa5d0d59",
+        "name": "liblua5.1.5",
+        "version": "5.1.5-r11",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "032532bd54fdefd4e7fe870f83b484796d687c9f18a40eb898c4b482ba9e098d",
+        "name": "lua",
+        "version": "5.1.5-r11",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "ff5bb6e00067b534012808740355e6cbba51bef8d56df01df8c591535f1eb98d",
+        "name": "luci-lib-nixio",
+        "version": "26.296.27218~1c67452",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "2bb179c5b31d49943e0c35db91b2b33a54abee2777de568ec41b5862635a5244",
+        "name": "curl",
+        "version": "8.23.0-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "d32a3628f6fd0a32c66c30161288b4040b75fb5363e8e43a2dc4f997993ceedd",
+        "name": "libcurl4",
+        "version": "8.23.0-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "36dfeec285135ee9b530ac56811d0f90fede92e897e29875267ad908c0705ef5",
+        "name": "libmbedtls21",
+        "version": "3.6.7-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "e0512cbce59ef45d0c9ac996f08dbec45b8aad447f00d6062ddf5e9977529e88",
+        "name": "libnghttp2-14",
+        "version": "1.70.0-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "5d4e987000255b940956be36804a66e02fd82b6c5ddb0b929080d565dade74d0",
+        "name": "zlib",
+        "version": "2.3.3-r2",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "5efaad6252d28e2a4bd7f1a0fd624d702ceb99aa1a04397bbbb748ca54ed1ecc",
+        "name": "ca-bundle",
+        "version": "20260816-r1",
+        "arch": "noarch"
+      },
+      {
+        "sha256": "c12e7640359b3203c8fbe79d4445e692374cd502a38e178a2c60d03e42c6a90b",
+        "name": "libubox20260721",
+        "version": "2026.07.21~e7608b69-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "9c87c9ce83b02c72a8c05203eb7bd9fab2056b5a9ff392b582a9433e670ad5a3",
+        "name": "libblobmsg-json20260721",
+        "version": "2026.07.21~e7608b69-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "1c235bf2e0a3a396b727835ca74935df9b27ff525614f7f4ed499ac3349cf933",
+        "name": "libubus20260925",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "5371c725548061d2e3bc1ecb2667f63c1b27d6ab7679eecaeb529cba8195ba39",
+        "name": "ubusd",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "c177b062d28bbf1b084a2dd98b54b2fd4d1aecfa156014b7b830c8291535f1c3",
+        "name": "ubus",
+        "version": "2026.09.25~414c60a2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "5428b76ca0c2e50be96a6de272748bdc846fa956e23d3f270cbb4e1942664143",
+        "name": "libuci20250120",
+        "version": "2025.12.02~66127cd7-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "5826990db24e0a317c0881b782dcf1d41014780c51097fc8fed447a90aef2250",
+        "name": "uci",
+        "version": "2025.12.02~66127cd7-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "c4a1f5a845cd19387733bb2fad2e4a2d7817dd51243d487e587d89fcbb0429aa",
+        "name": "jsonfilter",
+        "version": "2026.03.16~b9034210-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "dbf2dce9b387bd54d84e4a392020f58db8f0425ca1eef909244be4672f712f47",
+        "name": "ucode-mod-fs",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "b31808f33cdc7ff164ed60faa571ae4a3dd3282609d5eb3ca565d4d78b3a4326",
+        "name": "ucode-mod-uci",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53"
+      },
+      {
+        "sha256": "df588e63e0dd4f926e3124d7b052dec943ee36cb2e5c9f652d61fc4d8e99d603",
+        "name": "ucode-mod-ubus",
+        "version": "2026.10.18~d2e8b8d2-r1",
+        "arch": "aarch64_cortex-a53"
+      }
+    ],
+    "source_sha256": "0f620af9586d75c66fcd6a18d9fd3e46390f4287ea916e56560c9ec231991478",
+    "builder_source_sha256": "9d4216d55be697c0514a081f39b6e5db5482971d73eb029cbcbc393809a0ab34",
+    "isolated_fixture_only": true,
+    "hybrid_root_created": false,
+    "package_installation": false,
+    "old_execution_workloads_repeated": false
+  },
+  "runtime_gates": {
+    "F_procfd": false,
+    "early_native_watchdog": false,
+    "actual_tmp_run_remount": false,
+    "real_state_replacement_race": false,
+    "force_after_wallclock": false,
+    "attached_NPU_reboot": false,
+    "normal_mainroot": false,
+    "full_standard_A53_compatibility": false
+  },
+  "state_directory": "/be6l-recovery-state",
+  "state_must_not_exist_before_or_after_copy": true,
+  "expiry_sequence": "sync; wait configured force_after; native reboot syscall (no SIGTERM to PID1)",
+  "target_executed": false,
+  "candidate_admitted": false,
+  "private_ssh_guard_component": {
+    "normal_signed_guard_component": true,
+    "name": "be6l-recovery-guard",
+    "version": "1.0.0-r4",
+    "arch": "noarch",
+    "package_sha256": "e8d1262afd52c17e33eeb509369550c9ea6d69ed3944d355912bce547747d7d8",
+    "dependencies": [
+      "be6l-mainroot-bootstrap=1.0.0-r1",
+      "be6l-arm32-dropbear=2026.94-r103",
+      "procd",
+      "uci",
+      "busybox"
+    ],
+    "generic_dropbear_dependency": false,
+    "original_root_unchanged": true,
+    "source_root_records_sha256": "fb2dd79b67d25c069bb32355ea7cf9d1ae2c5eed229c253c6acd1d1a2cff87e2",
+    "source_sha256": "2112832eb018c84233ce05f77d4a1aafa4148afec943e53e81f84646c4aba424",
+    "private_signing_key_removed": true,
+    "root_transaction_performed": false,
+    "compiled_manifest_regenerated": false,
+    "target_executed": false,
+    "candidate_admitted": false
+  }
+}

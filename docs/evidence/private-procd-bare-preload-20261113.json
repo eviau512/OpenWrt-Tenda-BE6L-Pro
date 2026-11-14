@@ -1,0 +1,575 @@
+{
+  "revision": 1,
+  "profile": "BE6L_MAINROOT_NATIVE_BOOTSTRAP",
+  "source_root_records_sha256": "24fe2675ad6cca26b5abff0f4d871f152937180d9888b3bee1dcc0d99567d441",
+  "builder_sha256": "1d669d6978e4992725a3d0255744bd8d7058db1d4e5f9c1930fa677d861554f4",
+  "reused_logger_receipt_sha256": "bcf20b0bf9a32ecee04af409de6d8c1faa100c0523fc27bddfdda76e9b9d4384",
+  "host_test_receipt_sha256": "6581f078bb9933e262b867872e94b1e26c60e628d0499eb6e7d12bfc74752975",
+  "host_test_cases": 10,
+  "actual_three_musl_dynlink_sha256": {
+    "arm": "a12efe3464982f83fab5da801b61d4124f0f6c836db8eae90862914aa22b5b38",
+    "a53": "a12efe3464982f83fab5da801b61d4124f0f6c836db8eae90862914aa22b5b38",
+    "soft": "a12efe3464982f83fab5da801b61d4124f0f6c836db8eae90862914aa22b5b38"
+  },
+  "compiler_sha256": {
+    "a53": "d29d8e0d036a048f2311091d34346c0e9e83b652491e5a11649a278d599ad4ec",
+    "arm32": "6911926f100035817dc618994cf4d2c956a849486ca2154a2799d4880f33f487",
+    "soft_wrapper": "bb670cc8b117dbf6c56c5a11bb044cfaec75cf5defb306a1c93ccd934879fd58",
+    "soft_link_wrapper": "c40c64fab6fe4aedb40fd62b40737711108bc96898edf1974d9a3702744a9537"
+  },
+  "toolchain_libc_sha256": {
+    "a53": "15bdd9f2bbb0e66c810c7d565c605f01ebd21a4a631dd65e540dc1ae426c0ff3",
+    "arm32": "29f776718d63c974a46cfe6e77a8b55f7984c495551723abb6cb33c0390bd25d"
+  },
+  "patch_sha256": "23390767206720457d9138d33f01f0d3fc3d1953f206b08e55759df6c6b4f920",
+  "experiment_sha256": {
+    "setlbf.c": "ba2f99a6abb2894a075322cfa78638048390775d4f748b7a856ef564934bc237",
+    "bootstrap-mount.h": "f6ebc4d978d12ce8ad9afdaba1cfefe47a58b8a6b3ee564d66783a96caf5f8ee",
+    "host-fixture.c": "5d46bfee094d04d75ca6b248fcc2b3943b108425e35c1680b512ba5aa59671cf"
+  },
+  "library_name": "libbe6l-setlbf.so",
+  "library_paths": {
+    "be6l-setlbf-arm32": "lib/be6l-arm32/libbe6l-setlbf.so",
+    "be6l-setlbf-a64-soft": "lib/aarch64-soft/libbe6l-setlbf.so",
+    "be6l-setlbf-a53": "usr/lib/libbe6l-setlbf.so"
+  },
+  "compiled_private_jail": "/usr/libexec/be6l/ujail",
+  "jail_readonly_nodeps_paths": [
+    "/lib/be6l-arm32",
+    "/usr/lib/be6l-arm32",
+    "/lib/ld-musl-arm.so.1",
+    "/etc/ld-musl-arm.path",
+    "/lib/aarch64-soft",
+    "/lib/ld-musl-aarch64-soft.so.1",
+    "/etc/ld-musl-aarch64-soft.path",
+    "/opt/be6l-a64-soft/lib",
+    "/usr/lib/be6l-a64-soft",
+    "/usr/lib/libbe6l-setlbf.so"
+  ],
+  "constructor_stdout_unbuffered": true,
+  "constructor_environment_cleared": false,
+  "final_exec_calls_preserved": true,
+  "filesystem_profile_preserves_correct_proc_sys_tmp": true,
+  "wrong_bootstrap_filesystem_waits_for_native_recovery": true,
+  "normal_archives_modified": false,
+  "new_normal_abi_archive_is_custom": true,
+  "secureexec_qualified": false,
+  "seccomp_tracing_supported": false,
+  "external_root_and_oci_logging_jail_qualified": false,
+  "audit": {
+    "be6l-setlbf-arm32": {
+      "path": "lib/be6l-arm32/libbe6l-setlbf.so",
+      "arch": "arm_cortex-a7",
+      "sha256": "1bafaee82b9c239817c65d0cae46ed1068df2452bcac789e1bb35b74a34b77d8",
+      "elf": {
+        "bits": 32,
+        "machine": 40,
+        "type": 3,
+        "e_flags": "0x5000200",
+        "interpreter": null,
+        "needed": [
+          "libc.so"
+        ],
+        "soname": "libbe6l-setlbf.so",
+        "rpath": null,
+        "runpath": null,
+        "bytes": 5532,
+        "sha256": "1bafaee82b9c239817c65d0cae46ed1068df2452bcac789e1bb35b74a34b77d8"
+      },
+      "defined_dynamic_exports": [],
+      "fp_simd_uses": 0,
+      "custom_standard_abi": false,
+      "upstream_archive": false
+    },
+    "be6l-setlbf-a64-soft": {
+      "path": "lib/aarch64-soft/libbe6l-setlbf.so",
+      "arch": "aarch64_be6l_soft_experimental",
+      "sha256": "8ba105a6f8c49cead5f43aa0d07cb672453c333602843f0775f47e367440f321",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": null,
+        "needed": [
+          "libc.so"
+        ],
+        "soname": "libbe6l-setlbf.so",
+        "rpath": null,
+        "runpath": null,
+        "bytes": 68872,
+        "sha256": "8ba105a6f8c49cead5f43aa0d07cb672453c333602843f0775f47e367440f321"
+      },
+      "defined_dynamic_exports": [
+        "_fini",
+        "_init"
+      ],
+      "fp_simd_uses": 0,
+      "custom_standard_abi": false,
+      "upstream_archive": false
+    },
+    "be6l-setlbf-a53": {
+      "path": "usr/lib/libbe6l-setlbf.so",
+      "arch": "aarch64_cortex-a53",
+      "sha256": "0c0c325eb917e7a9c17ed74df9fe356c50cffb3d77895e11a5cc98892bc84438",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0x0",
+        "interpreter": null,
+        "needed": [
+          "libc.so"
+        ],
+        "soname": "libbe6l-setlbf.so",
+        "rpath": null,
+        "runpath": null,
+        "bytes": 67728,
+        "sha256": "0c0c325eb917e7a9c17ed74df9fe356c50cffb3d77895e11a5cc98892bc84438"
+      },
+      "defined_dynamic_exports": [],
+      "fp_simd_uses": 0,
+      "custom_standard_abi": true,
+      "upstream_archive": false
+    },
+    "sbin/procd": {
+      "sha256": "c67d1842bf0e6706513f501068fc16a41cc7a42243d17576980029f0c6f43a18",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libubox.so",
+          "libubus.so",
+          "libjson-c.so.5",
+          "libblobmsg_json.so",
+          "libjson_script.so",
+          "libudebug.so",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": "/usr/lib:",
+        "runpath": null,
+        "bytes": 542408,
+        "sha256": "c67d1842bf0e6706513f501068fc16a41cc7a42243d17576980029f0c6f43a18"
+      },
+      "fp_simd_uses": 0
+    },
+    "sbin/init": {
+      "sha256": "00256d3b5a47fa808c5fe8a706bcf8f9053f81d339d92c75ec7043928607e0c9",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libubox.so",
+          "libubus.so",
+          "libjson-c.so.5",
+          "libblobmsg_json.so",
+          "libjson_script.so",
+          "libudebug.so",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": "/usr/lib:",
+        "runpath": null,
+        "bytes": 119976,
+        "sha256": "00256d3b5a47fa808c5fe8a706bcf8f9053f81d339d92c75ec7043928607e0c9"
+      },
+      "fp_simd_uses": 0
+    },
+    "sbin/askfirst": {
+      "sha256": "001baedec026556ec2f1b73b198fc88eef45810a5aea9c5d744f0a69887a24a4",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 72472,
+        "sha256": "001baedec026556ec2f1b73b198fc88eef45810a5aea9c5d744f0a69887a24a4"
+      },
+      "fp_simd_uses": 0
+    },
+    "sbin/udevtrigger": {
+      "sha256": "f14d9ec24b55a2128f831407fa510bc963673451dd035466269a7e60d7ba06e2",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 79320,
+        "sha256": "f14d9ec24b55a2128f831407fa510bc963673451dd035466269a7e60d7ba06e2"
+      },
+      "fp_simd_uses": 0
+    },
+    "sbin/upgraded": {
+      "sha256": "70fd7377d9396a3fef932e83013d07eacd5af2344e26b8afe7d0341d68c34571",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libubox.so",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": "/usr/lib:",
+        "runpath": null,
+        "bytes": 83208,
+        "sha256": "70fd7377d9396a3fef932e83013d07eacd5af2344e26b8afe7d0341d68c34571"
+      },
+      "fp_simd_uses": 0
+    },
+    "usr/libexec/be6l/ujail": {
+      "sha256": "91f3f2bc2425ae472d7b6c4b60776f9575f44e6dc53487f5b8c5d7c665a278ea",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libubox.so",
+          "libubus.so",
+          "libuci.so",
+          "libblobmsg_json.so",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": "/usr/lib:",
+        "runpath": null,
+        "bytes": 693576,
+        "sha256": "91f3f2bc2425ae472d7b6c4b60776f9575f44e6dc53487f5b8c5d7c665a278ea"
+      },
+      "fp_simd_uses": 0
+    }
+  },
+  "cross_fixtures": {
+    "arm32": {
+      "sha256": "4223e6716c4820a74a159e6fa0ae5ba34417c880b3db02787c632fc9d9000666",
+      "elf": {
+        "bits": 32,
+        "machine": 40,
+        "type": 2,
+        "e_flags": "0x5000200",
+        "interpreter": "/lib/ld-musl-arm.so.1",
+        "needed": [
+          "libgcc_s.so.1",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 10428,
+        "sha256": "4223e6716c4820a74a159e6fa0ae5ba34417c880b3db02787c632fc9d9000666"
+      },
+      "executed": false,
+      "role": "synthetic integer launch/buffering fixture, not an ordinary package"
+    },
+    "a64-soft": {
+      "sha256": "484a72a4d5024e21c4688f0c28b5eb2828be136d6cd01184546b6cbd58b9fb54",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 3,
+        "e_flags": "0xbe6a0001",
+        "interpreter": "/lib/ld-musl-aarch64-soft.so.1",
+        "needed": [
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 71752,
+        "sha256": "484a72a4d5024e21c4688f0c28b5eb2828be136d6cd01184546b6cbd58b9fb54"
+      },
+      "executed": false,
+      "role": "synthetic integer launch/buffering fixture, not an ordinary package"
+    },
+    "a53": {
+      "sha256": "9ef44bc96085b1d5f6c7e38409299d7bdf94f00f98a8aec7faec9af1b61d4324",
+      "elf": {
+        "bits": 64,
+        "machine": 183,
+        "type": 2,
+        "e_flags": "0x0",
+        "interpreter": "/lib/ld-musl-aarch64.so.1",
+        "needed": [
+          "libgcc_s.so.1",
+          "libc.so"
+        ],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 73856,
+        "sha256": "9ef44bc96085b1d5f6c7e38409299d7bdf94f00f98a8aec7faec9af1b61d4324"
+      },
+      "executed": false,
+      "role": "synthetic integer launch/buffering fixture, not an ordinary package"
+    },
+    "arm32-static": {
+      "sha256": "74857a50f2d16889612d5a357188dc1a62c4220c582d0d1e3607e16e1e5102c7",
+      "elf": {
+        "bits": 32,
+        "machine": 40,
+        "type": 2,
+        "e_flags": "0x5000200",
+        "interpreter": null,
+        "needed": [],
+        "soname": null,
+        "rpath": null,
+        "runpath": null,
+        "bytes": 231836,
+        "sha256": "74857a50f2d16889612d5a357188dc1a62c4220c582d0d1e3607e16e1e5102c7"
+      },
+      "executed": false,
+      "role": "synthetic integer launch/buffering fixture, not an ordinary package"
+    }
+  },
+  "packages": {
+    "be6l-setlbf-arm32": {
+      "file": "approved/be6l-setlbf-arm32-1.0-r1.apk",
+      "sha256": "d39e4d7eb4f9a6770d6acbb88186abff3e0e69ad6153046cec4e66ce297e87ae",
+      "name": "be6l-setlbf-arm32",
+      "version": "1.0-r1",
+      "arch": "arm_cortex-a7",
+      "depends": [
+        "be6l-arm32-runtime=1.0.137005195660218-r1"
+      ]
+    },
+    "be6l-setlbf-a64-soft": {
+      "file": "approved/be6l-setlbf-a64-soft-1.0-r1.apk",
+      "sha256": "a30734e62ebde2e8adbf2728a3045af61bd4fc2c5ab859e25b079272a4157644",
+      "name": "be6l-setlbf-a64-soft",
+      "version": "1.0-r1",
+      "arch": "aarch64_be6l_soft_experimental",
+      "depends": [
+        "be6l-soft-runtime=0.3.229818857581054-r1"
+      ]
+    },
+    "be6l-setlbf-a53": {
+      "file": "approved/be6l-setlbf-a53-1.0-r1.apk",
+      "sha256": "9aab6eb152e442c8f8bbdb757d07bd52cf4b81b8736c714161afbccaad5ca96d",
+      "name": "be6l-setlbf-a53",
+      "version": "1.0-r1",
+      "arch": "aarch64_cortex-a53",
+      "depends": [
+        "libc"
+      ]
+    },
+    "procd": {
+      "file": "approved/procd-2026.10.26.157004332030651-r107.apk",
+      "sha256": "cff6b52295fc958d203965f80288e09a05f698de6028988f4ee714f06af0512e",
+      "name": "procd",
+      "version": "2026.10.26.157004332030651-r107",
+      "arch": "aarch64_be6l_soft_experimental",
+      "depends": [
+        "be6l-arm32-procd-compat=0.2.157004332030651-r1",
+        "be6l-soft-runtime=0.3.229818857581054-r1",
+        "jshn",
+        "ubox",
+        "ubus",
+        "ubusd",
+        "be6l-setlbf-arm32=1.0-r1",
+        "be6l-setlbf-a64-soft=1.0-r1",
+        "be6l-setlbf-a53=1.0-r1"
+      ]
+    }
+  },
+  "signing_key_removed": true,
+  "source_root_unchanged": true,
+  "signed_archives_verified_and_extracted": true,
+  "target_executed": false,
+  "jail_runtime_qualified": false,
+  "full_service_chain_target_qualified": false,
+  "mainroot_composition_qualified": false,
+  "full_standard_a53_package_compatibility_qualified": false,
+  "payload_manifest_sha256": "434e4b1823c700b60d890b3b0f0acc11170e11c0ce23df714ec29de27136ee3d",
+  "private_work": "/root/be6l-procd-preload-20261113-r6",
+  "full_receipt_sha256": "055b57669ea0a666c47d8c0173403c72f956255198b95cd89308171d6f0649d3",
+  "source_tree_file_count": 79,
+  "source_tree_records_sha256": "c557eea9f1260ce21ff70cafcb9bf4af3761f8807a7498e785736b7131f3b00f",
+  "host_test": {
+    "work": "/root/be6l-procd-preload-host-20261113-r4",
+    "passed_case_count": 9,
+    "case_count": 10,
+    "cases": [
+      {
+        "name": "bare-slot0",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot0/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5799 argv0=/root/be6l-procd-preload-host-20261113-r4/slot0/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot0/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "bare-slot1",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot1/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5800 argv0=/root/be6l-procd-preload-host-20261113-r4/slot1/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot1/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "bare-slot2",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot2/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5801 argv0=/root/be6l-procd-preload-host-20261113-r4/slot2/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot2/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "buffered-negative-control",
+        "pass_": true,
+        "live_unbuffered": false,
+        "mapped_loggers": [],
+        "report": "READY pid=5802 argv0=/root/be6l-procd-preload-host-20261113-r4/slot0/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot0/probe preload=<unset>"
+      },
+      {
+        "name": "dynamic-helper-different-slot",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot1/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5803 argv0=/root/be6l-procd-preload-host-20261113-r4/slot1/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot1/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "static-helper-to-different-slot",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot2/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5804 argv0=/root/be6l-procd-preload-host-20261113-r4/slot2/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot2/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "fork-exec-descendant",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot2/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5806 argv0=/root/be6l-procd-preload-host-20261113-r4/slot2/probe execfn=/root/be6l-procd-preload-host-20261113-r4/slot2/probe preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "kernel-shebang-original-execfn",
+        "pass_": true,
+        "live_unbuffered": true,
+        "mapped_loggers": [
+          "/root/be6l-procd-preload-host-20261113-r4/slot0/lib/libbe6l-setlbf.so"
+        ],
+        "report": "READY pid=5807 argv0=/root/be6l-procd-preload-host-20261113-r4/slot0/probe execfn=/root/be6l-procd-preload-host-20261113-r4/direct-script preload=libbe6l-setlbf.so"
+      },
+      {
+        "name": "cloexec-empty-path-shebang-ENOENT",
+        "pass_": false,
+        "status": "UNSUPPORTED_ENOSYS",
+        "measured_errno": "EXECVEAT_ERRNO=38",
+        "target_qualified": false
+      },
+      {
+        "name": "mount-policy-six-branches",
+        "pass_": true
+      }
+    ],
+    "host_kernel": "4.4.0-19041-Microsoft WSL1"
+  },
+  "payload_manifest": {
+    "be6l-setlbf-arm32": {
+      "lib/be6l-arm32/libbe6l-setlbf.so": {
+        "sha256": "1bafaee82b9c239817c65d0cae46ed1068df2452bcac789e1bb35b74a34b77d8",
+        "mode": 493
+      }
+    },
+    "be6l-setlbf-a64-soft": {
+      "lib/aarch64-soft/libbe6l-setlbf.so": {
+        "sha256": "8ba105a6f8c49cead5f43aa0d07cb672453c333602843f0775f47e367440f321",
+        "mode": 493
+      }
+    },
+    "be6l-setlbf-a53": {
+      "usr/lib/libbe6l-setlbf.so": {
+        "sha256": "0c0c325eb917e7a9c17ed74df9fe356c50cffb3d77895e11a5cc98892bc84438",
+        "mode": 493
+      }
+    },
+    "procd": {
+      "etc/hotplug-preinit.json": {
+        "sha256": "3d282a401d2408b657212f952884d9309b0922472770df55e2fb203079a4ad52",
+        "mode": 420
+      },
+      "etc/hotplug.json": {
+        "sha256": "ce5390d269a4cfd460b0e47307d6a35d188c06b5fb605461105d792fe9b84fb3",
+        "mode": 420
+      },
+      "sbin/askfirst": {
+        "sha256": "001baedec026556ec2f1b73b198fc88eef45810a5aea9c5d744f0a69887a24a4",
+        "mode": 493
+      },
+      "sbin/init": {
+        "sha256": "00256d3b5a47fa808c5fe8a706bcf8f9053f81d339d92c75ec7043928607e0c9",
+        "mode": 493
+      },
+      "sbin/procd": {
+        "sha256": "c67d1842bf0e6706513f501068fc16a41cc7a42243d17576980029f0c6f43a18",
+        "mode": 493
+      },
+      "sbin/reload_config": {
+        "sha256": "f1527a793209e14b6325e8afd57e0e11600a285016e5b854f299a59bb6fa4e15",
+        "mode": 493
+      },
+      "sbin/service": {
+        "sha256": "0af985e33112a7613bb6b9402413c445085cde4d76131da6088c18fc7c228716",
+        "mode": 493
+      },
+      "sbin/udevtrigger": {
+        "sha256": "f14d9ec24b55a2128f831407fa510bc963673451dd035466269a7e60d7ba06e2",
+        "mode": 493
+      },
+      "sbin/upgraded": {
+        "sha256": "70fd7377d9396a3fef932e83013d07eacd5af2344e26b8afe7d0341d68c34571",
+        "mode": 493
+      },
+      "usr/libexec/be6l/ujail": {
+        "sha256": "91f3f2bc2425ae472d7b6c4b60776f9575f44e6dc53487f5b8c5d7c665a278ea",
+        "mode": 493
+      },
+      "lib/functions/procd.sh": {
+        "sha256": "e4f597cbda9616791eb0c30bd8bd7940b760fd1000522892aec37daa9529eb03",
+        "mode": 420
+      },
+      "lib/apk/packages/procd.list": {
+        "sha256": "5a1993802f8083893ff0b7b724731f6bd9a81f484e2cd5ca4c9e7a60d350eec3",
+        "mode": 420
+      },
+      "lib/apk/packages/procd.rusers": {
+        "sha256": "4c676d253228c2a3b75acaf75712efd3968e679e85ab3aebcbc158ba3bccacd6",
+        "mode": 420
+      }
+    }
+  }
+}
